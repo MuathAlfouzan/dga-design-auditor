@@ -1,15 +1,27 @@
 #!/usr/bin/env node
 /*
- * parity.mjs — proves the pure-core extraction did not change the maths.
+ * parity.mjs — proves the maths does not drift.
  *
- * Re-scores a real saved audit (qiwa.sa/ar, 17 Aug 2026) through src/score.js and
- * requires the verdict to match the score.json the original Node script produced:
- * 64.89 / 8 of 23 / Partial / blocker A2.
+ * Re-scores a real captured page through src/score.js and requires the verdict to
+ * match the baseline the original Node engine produced before the pure-core
+ * extraction: 64.89 / 8 of 23 / Partial / blocker A2, and all 53 findings
+ * identical down to their severity and wording.
  *
- * If this fails, the refactor changed behaviour and is not done. A compliance
- * score that shifts when the code is reorganised is not a compliance score.
+ * The fixture beside this file is a genuine capture of a government portal with
+ * its identity removed — URLs, titles, selectors, text content and custom
+ * properties are all replaced. None of that feeds the score, so the verdict is
+ * unchanged; that it is unchanged is itself evidence the scrub touched nothing
+ * load-bearing.
  *
- *   node test/parity.mjs [path/to/report-dir]
+ * It stays real rather than synthetic because real pages are messy in ways a
+ * hand-written fixture is not: 60 distinct colours, hundreds of off-scale
+ * spacings, 371 physical against 182 logical declarations. selftest.mjs covers
+ * the clean cases and the gate rules; this covers the ones that actually occur.
+ *
+ * If this fails, a change altered behaviour. A compliance score that shifts when
+ * the code is reorganised is not a compliance score.
+ *
+ *   node test/parity.mjs [path/to/capture-dir]
  */
 
 import { readFileSync, existsSync } from 'node:fs';
@@ -19,55 +31,44 @@ import { score } from '../src/score.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(HERE, '..');
-const REPORT = process.argv[2] || join(process.env.HOME, '.claude/dga/reports/qiwa-sa-ar-2026-08-17');
+const FIXTURE = process.argv[2] || join(HERE, 'fixtures/regression');
 
-const EXPECTED = { score: 64.89, checksPassed: 8, checksCounted: 23, band: 'partial', blocker: 'A2' };
-
-if (!existsSync(join(REPORT, 'score.json'))) {
-  console.error(`parity.mjs: no baseline at ${REPORT}/score.json`);
-  console.error('This gate needs the saved Qiwa audit. Point it at a report directory that has one.');
+if (!existsSync(join(FIXTURE, 'expected.json'))) {
+  console.error(`parity.mjs: no baseline at ${FIXTURE}/expected.json`);
+  console.error('Point this at a capture directory holding expected.json, judged.json and observed-*.json.');
   process.exit(2);
 }
 
 const J = (p) => JSON.parse(readFileSync(p, 'utf8'));
-const baseline = J(join(REPORT, 'score.json'));
+const expected = J(join(FIXTURE, 'expected.json'));
 const rubric = J(join(REPO, 'data/rubric.json'));
 const tokens = J(join(REPO, 'data/tokens.json'));
-const judged = J(join(REPORT, 'judged.json'));
-const captures = ['observed-desktop-light.json', 'observed-mobile-light.json'].map((f) => J(join(REPORT, f)));
+const judged = J(join(FIXTURE, 'judged.json'));
+const captures = ['observed-desktop-light.json', 'observed-mobile-light.json'].map((f) => J(join(FIXTURE, f)));
 
-const fresh = score({
-  rubric, tokens, captures, judged,
-  options: { targetType: 'site', targetName: 'Qiwa (Arabic)', targetUrl: 'https://www.qiwa.sa/ar', na: ['C3', 'I1', 'I2'] },
-});
+const fresh = score({ rubric, tokens, captures, judged, options: expected.scoreOptions });
 
 let bad = 0;
 const check = (name, got, want) => {
   const ok = JSON.stringify(got) === JSON.stringify(want);
-  console.log(`  ${ok ? '\x1b[32m✔\x1b[0m' : '\x1b[31m✘\x1b[0m'} ${name}${ok ? '' : `\n      got ${JSON.stringify(got)}  want ${JSON.stringify(want)}`}`);
+  console.log(`  ${ok ? '\x1b[32m✔\x1b[0m' : '\x1b[31m✘\x1b[0m'} ${name}${ok ? '' : `\n      got ${JSON.stringify(got)}\n      want ${JSON.stringify(want)}`}`);
   if (!ok) bad++;
 };
 
-console.log('\n  Parity — pure core vs the original Node script\n  ' + '─'.repeat(52));
-check('score', fresh.score, baseline.score);
-check('score matches the recorded 64.89', fresh.score, EXPECTED.score);
-check('checks passed', fresh.checksPassed, baseline.checksPassed);
-check('checks counted', fresh.checksCounted, baseline.checksCounted);
-check('earned / available', [fresh.earned, fresh.available], [baseline.earned, baseline.available]);
-check('band', fresh.band.id, baseline.band.id);
-check('cappedFrom', fresh.cappedFrom, baseline.cappedFrom);
-check('failed blockers', fresh.failedBlockers.map((b) => b.id), baseline.failedBlockers.map((b) => b.id));
-check('blocker is A2', fresh.failedBlockers.map((b) => b.id), [EXPECTED.blocker]);
-check('finding count', fresh.findings.length, baseline.findings.length);
+console.log('\n  Parity — pure core vs the original Node engine\n  ' + '─'.repeat(52));
+check('score', fresh.score, expected.score);
+check('checks passed', fresh.checksPassed, expected.checksPassed);
+check('checks counted', fresh.checksCounted, expected.checksCounted);
+check('earned / available', [fresh.earned, fresh.available], [expected.earned, expected.available]);
+check('band', fresh.band.id, expected.band);
+check('cappedFrom', fresh.cappedFrom, expected.cappedFrom);
+check('failed blockers', fresh.failedBlockers.map((b) => b.id), expected.failedBlockers);
+check('finding count', fresh.findings.length, expected.findingCount);
 
 const sig = (f) => `${f.checkId}|${f.severity}|${f.summary}`;
-const a = fresh.findings.map(sig).sort();
-const b = baseline.findings.map(sig).sort();
-check('every finding identical (id · severity · summary)', a, b);
-
-const perCat = (v) => v.categories.map((c) => `${c.id}:${c.earned}/${c.available}`);
-check('per-category points', perCat(fresh), perCat(baseline));
+check('every finding identical (id · severity · summary)', fresh.findings.map(sig).sort(), expected.findingSignatures);
+check('per-category points', fresh.categories.map((c) => `${c.id}:${c.earned}/${c.available}`), expected.perCategory);
 
 console.log('\n  ' + '─'.repeat(52));
-console.log(bad ? `\x1b[31m  ${bad} failing — the refactor changed behaviour\x1b[0m\n` : '\x1b[32m  parity holds\x1b[0m\n');
+console.log(bad ? `\x1b[31m  ${bad} failing — behaviour changed\x1b[0m\n` : '\x1b[32m  parity holds\x1b[0m\n');
 process.exit(bad ? 1 : 0);

@@ -1,0 +1,15 @@
+{
+  "$comment": "Judged-check ratios for the regression fixture. Each is a counted assessment made against data/components.json on the desktop capture. C3, I1 and I2 are absent by design — they were passed --na, which is part of what this fixture pins.",
+  "P1": {
+    "ratio": 0.816,
+    "notes": "31 of 38 instances compliant (prose removed with the source page)"
+  },
+  "P2": {
+    "ratio": 0.531,
+    "notes": "17 of 32 instances compliant (prose removed with the source page)"
+  },
+  "P3": {
+    "ratio": 0.211,
+    "notes": "8 of 38 instances compliant (prose removed with the source page)"
+  }
+}
