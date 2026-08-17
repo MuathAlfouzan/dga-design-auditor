@@ -512,8 +512,22 @@ export function probe(OPTS_IN = {}) {
     url: location.href,
     title: document.title,
     viewport: { width: window.innerWidth, height: window.innerHeight, dpr: window.devicePixelRatio },
+    // What the viewer PREFERS. Recorded for information only — never bucket a
+    // capture on this. A page with no dark theme renders light on a machine set
+    // to dark, and bucketing on the preference silently empties the light set.
     colorScheme: matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
     documentDark: /dark/.test(document.documentElement.className) || document.documentElement.getAttribute('data-theme') === 'dark',
+    // What the page ACTUALLY RENDERED, from the luminance of the ground the
+    // content sits on. This is what the colour checks bucket by.
+    renderedScheme: (() => {
+      let bg = parseColor(getComputedStyle(document.body).backgroundColor);
+      if (!bg || bg.a < 1) {
+        const rootBg = parseColor(getComputedStyle(document.documentElement).backgroundColor);
+        if (rootBg && rootBg.a >= 1) bg = rootBg;
+      }
+      if (!bg || bg.a <= 0) return 'light'; // an unpainted ground is white by default
+      return luminance(bg) < 0.45 ? 'dark' : 'light';
+    })(),
     document: {
       dir: document.documentElement.getAttribute('dir') || getComputedStyle(document.documentElement).direction,
       lang: document.documentElement.getAttribute('lang') || null,

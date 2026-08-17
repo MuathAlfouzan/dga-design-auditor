@@ -532,8 +532,22 @@ function probe(OPTS_IN = {}) {
     url: location.href,
     title: document.title,
     viewport: { width: window.innerWidth, height: window.innerHeight, dpr: window.devicePixelRatio },
+    // What the viewer PREFERS. Recorded for information only — never bucket a
+    // capture on this. A page with no dark theme renders light on a machine set
+    // to dark, and bucketing on the preference silently empties the light set.
     colorScheme: matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
     documentDark: /dark/.test(document.documentElement.className) || document.documentElement.getAttribute('data-theme') === 'dark',
+    // What the page ACTUALLY RENDERED, from the luminance of the ground the
+    // content sits on. This is what the colour checks bucket by.
+    renderedScheme: (() => {
+      let bg = parseColor(getComputedStyle(document.body).backgroundColor);
+      if (!bg || bg.a < 1) {
+        const rootBg = parseColor(getComputedStyle(document.documentElement).backgroundColor);
+        if (rootBg && rootBg.a >= 1) bg = rootBg;
+      }
+      if (!bg || bg.a <= 0) return 'light'; // an unpainted ground is white by default
+      return luminance(bg) < 0.45 ? 'dark' : 'light';
+    })(),
     document: {
       dir: document.documentElement.getAttribute('dir') || getComputedStyle(document.documentElement).direction,
       lang: document.documentElement.getAttribute('lang') || null,
@@ -835,9 +849,16 @@ function score({ rubric, tokens, captures = [], judged = {}, options = {} }) {
 
   /* ------------------------------------------------------------ checks */
 
-  const darkCaptures = captures.filter((c) => c.colorScheme === 'dark' || c.documentDark);
-  const lightOnly = (c) => !(c.colorScheme === 'dark' || c.documentDark);
-  const darkOnly = (c) => c.colorScheme === 'dark' || c.documentDark;
+  // Bucket on what the page RENDERED, not on what the viewer prefers. A site
+  // with no dark theme still renders light on a machine set to dark, and
+  // bucketing on the media query empties the light set — which silently voids
+  // the whole 18-point colour category and reports it as "nothing to measure".
+  // Captures predating renderedScheme fall back to the theme class, then the
+  // preference.
+  const schemeOf = (c) => c.renderedScheme || (c.documentDark ? 'dark' : c.colorScheme) || 'light';
+  const darkCaptures = captures.filter((c) => schemeOf(c) === 'dark');
+  const lightOnly = (c) => schemeOf(c) !== 'dark';
+  const darkOnly = (c) => schemeOf(c) === 'dark';
 
   const auto = {};
 

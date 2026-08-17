@@ -233,9 +233,16 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
 
   /* ------------------------------------------------------------ checks */
 
-  const darkCaptures = captures.filter((c) => c.colorScheme === 'dark' || c.documentDark);
-  const lightOnly = (c) => !(c.colorScheme === 'dark' || c.documentDark);
-  const darkOnly = (c) => c.colorScheme === 'dark' || c.documentDark;
+  // Bucket on what the page RENDERED, not on what the viewer prefers. A site
+  // with no dark theme still renders light on a machine set to dark, and
+  // bucketing on the media query empties the light set — which silently voids
+  // the whole 18-point colour category and reports it as "nothing to measure".
+  // Captures predating renderedScheme fall back to the theme class, then the
+  // preference.
+  const schemeOf = (c) => c.renderedScheme || (c.documentDark ? 'dark' : c.colorScheme) || 'light';
+  const darkCaptures = captures.filter((c) => schemeOf(c) === 'dark');
+  const lightOnly = (c) => schemeOf(c) !== 'dark';
+  const darkOnly = (c) => schemeOf(c) === 'dark';
 
   const auto = {};
 

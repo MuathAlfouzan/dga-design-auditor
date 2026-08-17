@@ -71,7 +71,8 @@ const tokens = {
 
 const t = (pairs) => ({ total: pairs.reduce((a, [, n]) => a + n, 0), values: pairs.map(([value, count]) => ({ value, count, samples: ['main > div.card'] })) });
 
-function capture({ label, width, container, gutter, textRuns = 100, textPassing = 100, contrastFindings = [] }) {
+function capture({ label, width, container, gutter, textRuns = 100, textPassing = 100, contrastFindings = [],
+                   colorScheme = 'light', renderedScheme = 'light' }) {
   return {
     schema: 'dga-observed/1',
     label,
@@ -79,7 +80,8 @@ function capture({ label, width, container, gutter, textRuns = 100, textPassing 
     url: 'https://fixture.test/',
     title: 'Fixture',
     viewport: { width, height: 800, dpr: 2 },
-    colorScheme: 'light',
+    colorScheme,
+    renderedScheme,
     documentDark: false,
     document: { dir: 'ltr', lang: 'en', elementsExamined: 400, elementsTotal: 400, truncated: false },
     rootCustomProperties: {},
@@ -220,6 +222,39 @@ check('unsynced ledger refuses to score', unsynced.status === 3, `got ${unsynced
 const again = run(['--observed', desktop, '--observed', mobile, '--judged', judgedPath]);
 const strip = (j) => JSON.stringify({ ...j, scoredAt: null });
 check('the same input scores identically twice', strip(clean.json) === strip(again.json), `${clean.json?.score} vs ${again.json?.score}`);
+
+/* 6 — a dark-mode MACHINE auditing a light page must still score colour.
+   Found on a real audit: the viewer's OS was in dark mode, the target had no
+   dark theme and rendered light, and bucketing on prefers-color-scheme emptied
+   the light set. C1 and C2 came back "nothing of this kind present to measure"
+   and the entire 18-point colour category left the denominator without a word. */
+const darkMachine = run([
+  '--observed', w('observed-darkmachine.json', capture({ label: 'desktop', width: 1280, container: 1200, gutter: 24, colorScheme: 'dark', renderedScheme: 'light' })),
+  '--judged', judgedPath,
+]);
+const dmColour = darkMachine.json?.categories?.find((c) => c.id === 'color');
+check(
+  'a dark-mode machine on a light page still scores colour',
+  dmColour?.available === 15,
+  `colour available ${dmColour?.available} (expected 15: C1 8 + C2 4 + C3 3, C4 n/a without a dark set)`
+);
+check(
+  '…and C1 is graded rather than written off as nothing to measure',
+  dmColour?.checks?.find((k) => k.id === 'C1')?.status === 'pass',
+  `C1 ${dmColour?.checks?.find((k) => k.id === 'C1')?.status} — ${dmColour?.checks?.find((k) => k.id === 'C1')?.reason || ''}`
+);
+
+/* …while a genuinely dark page still routes to the dark set, which is empty in
+   this ledger, so C1 correctly finds nothing. */
+const trulyDark = run([
+  '--observed', w('observed-trulydark.json', capture({ label: 'dark', width: 1280, container: 1200, gutter: 24, colorScheme: 'dark', renderedScheme: 'dark' })),
+  '--judged', judgedPath,
+]);
+check(
+  'a genuinely dark render still routes to the dark set',
+  trulyDark.json?.categories?.find((c) => c.id === 'color')?.checks?.find((k) => k.id === 'C1')?.status === 'n/a',
+  `C1 ${trulyDark.json?.categories?.find((c) => c.id === 'color')?.checks?.find((k) => k.id === 'C1')?.status}`
+);
 
 console.log('\n  ' + '─'.repeat(50));
 console.log(failures ? `\x1b[31m  ${failures} failing\x1b[0m` : '\x1b[32m  all passing\x1b[0m');
