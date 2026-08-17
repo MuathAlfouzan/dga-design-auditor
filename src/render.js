@@ -314,6 +314,7 @@ const html = `<title>${esc(S.target?.name || 'Design')} Compliance Audit</title>
       <span>Audited <b>${esc(fmtDate(S.scoredAt))}</b></span>
       <span>Target <b>${esc(S.target?.type || '—')}</b></span>
       <span>Ledger synced <b>${esc(S.ledger?.synced ? fmtDate(S.ledger.synced) : 'never')}</b></span>
+      ${S.ledger?.dgaVersion ? `<span>DGA release <b>${esc(S.ledger.dgaVersion)}</b></span>` : ''}
       <span>Captures <b>${(S.target?.captures || []).length}</b></span>
     </div>
   </header>

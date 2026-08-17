@@ -10,19 +10,40 @@
     "./probe": "./src/probe.js",
     "./render": "./src/render.js",
     "./bundle": "./dist/dga-rate.js",
-    "./data/*": "./data/*"
+    "./data/*": "./data/*",
+    "./updates": "./src/updates.js"
   },
-  "files": ["src", "dist", "data", "docs", "AGENTS.md", "README.md"],
+  "files": [
+    "src",
+    "dist",
+    "data",
+    "docs",
+    "AGENTS.md",
+    "README.md"
+  ],
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node test/selftest.mjs && node test/parity.mjs && node test/probe.test.mjs",
+    "test": "node test/selftest.mjs && node test/parity.mjs && node test/probe.test.mjs && node test/updates.test.mjs",
     "test:score": "node test/selftest.mjs",
     "test:parity": "node test/parity.mjs",
-    "test:probe": "node test/probe.test.mjs"
+    "test:probe": "node test/probe.test.mjs",
+    "test:updates": "node test/updates.test.mjs"
   },
   "keywords": [
-    "dga", "sdga", "platforms-code", "design-system", "compliance",
-    "accessibility", "wcag", "rtl", "arabic", "saudi", "design-tokens", "audit"
+    "dga",
+    "sdga",
+    "platforms-code",
+    "design-system",
+    "compliance",
+    "accessibility",
+    "wcag",
+    "rtl",
+    "arabic",
+    "saudi",
+    "design-tokens",
+    "audit"
   ],
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  }
 }

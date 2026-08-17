@@ -39,7 +39,9 @@
         "Typography 2:4",
         "Effect styles 2:5",
         "Spacing, radius & grids 2:6"
-      ]
+      ],
+      "lastPublished": "2025-07-02",
+      "lastPublishedNote": "Added icon ring color."
     },
     {
       "id": "1392264328585493958",
@@ -78,7 +80,9 @@
         "Card 8940:22264",
         "UI Shell Nav Header 429:130167",
         "Tags 12:539"
-      ]
+      ],
+      "lastPublished": "2025-11-03",
+      "lastPublishedNote": "Digital Stamp text."
     },
     {
       "id": "1392269191144731080",
@@ -95,7 +99,9 @@
       ],
       "why": "The official icon set. Supplies the size scale, stroke weight, and the icon inventory itself — without it I1 degrades to 'does this look like one family', which is the weakest check in the rubric.",
       "deferred": true,
-      "deferredReason": "Skipped on request, 17 Aug 2026. While deferred, I1 (icon set) is scored n/a rather than judged — a check whose baseline was deliberately not loaded should leave the denominator, not be guessed at. Sync this file to bring I1 back."
+      "deferredReason": "Skipped on request, 17 Aug 2026. While deferred, I1 (icon set) is scored n/a rather than judged — a check whose baseline was deliberately not loaded should leave the denominator, not be guessed at. Sync this file to bring I1 back. Independently vindicated on 18 Aug 2026: the file's own update log carries a DGA notice dated 11 Jan 2026 saying the icon library is mid-rewrite and icons may be temporarily unavailable. Syncing it now would capture a library in flux.",
+      "lastPublished": "2026-01-11",
+      "lastPublishedNote": "DGA notice: the icon library is being updated and icons may be temporarily unavailable."
     },
     {
       "id": "1392271796654597578",
@@ -122,7 +128,9 @@
         "UI Shell - Tab Bar 8332:23832",
         "Checkbox 954:11220 (cross-check)"
       ],
-      "finding": "Component anatomy is identical to desktop; only the shell differs (Tab Bar / Navigation Bar / Splash Screen)."
+      "finding": "Component anatomy is identical to desktop; only the shell differs (Tab Bar / Navigation Bar / Splash Screen).",
+      "lastPublished": null,
+      "lastPublishedNote": "No ---- Updates ---- block; the file has never been amended since publication."
     },
     {
       "id": "1412792257811427893",
@@ -287,5 +295,13 @@
       "synced": null
     }
   ],
-  "$deferred": "A source marked deferred:true is a deliberate skip, not an outstanding gap. Report it separately from pending sources so the two are never confused."
+  "$deferred": "A source marked deferred:true is a deliberate skip, not an outstanding gap. Report it separately from pending sources so the two are never confused.",
+  "dgaVersion": {
+    "version": "1.0.3",
+    "released": "2025-11-04",
+    "changelog": "https://design.dga.gov.sa/updates/change-log",
+    "detail": "https://design.dga.gov.sa/updates/change-log/version-history-1-0-3",
+    "$note": "The system-wide release the ledger was extracted against. The changelog page is a client-rendered SPA and Arabic-only, so it cannot be fetched without a browser — see src/updates.js."
+  },
+  "$freshness": "lastPublished on each system source is the newest date in that file's Figma '---- Updates ----' block, read 18 Aug 2026. Compare it against synced to know whether a re-sync is due; src/updates.js does this and AGENTS.md says how to gather the inputs."
 }

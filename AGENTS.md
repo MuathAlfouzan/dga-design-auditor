@@ -188,3 +188,50 @@ you did not know to look for.
 
 Campaign files — National Day, Founding Day, Hajj — are never synced. Their palettes are
 seasonal artwork and would teach the auditor that a campaign colour is compliant.
+
+---
+
+## Is the ledger still current?
+
+The score is only as good as the baseline it was measured against, so every report
+states what that baseline is — `ledger.dgaVersion` and `ledger.synced` come back in the
+verdict and need no network. Whether something **newer** has been published is a
+separate, deliberate check.
+
+**Neither source can be fetched without a browser.** DGA's changelog is a
+client-rendered SPA, and Figma's community pages return 403 to anything that is not a
+browser. Both were tested. So gathering the inputs is your job; `src/updates.js` only
+does the parsing and comparison, which keeps the fallible part testable.
+
+Gather three things, then hand them to `compareFreshness()`:
+
+1. **The system version** — open `https://design.dga.gov.sa/updates/change-log` and read
+   the page text. It is Arabic-only; entries look like `الإصدار 1.0.3 - 4 نوفمبر 2025`.
+   Pass the text to `parseChangelog()`. Per-version detail lives at
+   `/updates/change-log/version-history-1-0-3`.
+2. **Per-file logs** — for each `system`-tier entry in `data/sources.json`, open its
+   community URL and read the `description` out of the page's `application/ld+json`
+   (`CreativeWork.description`). It carries a `---- Updates ----` block. Pass each to
+   `parseFileUpdates()`. From a figma.com page you can fetch the others same-origin and
+   do all four in one call.
+3. **What the ledger recorded** — `data/sources.json` and `data/tokens.json`.
+
+```js
+import { parseChangelog, parseFileUpdates, compareFreshness, freshnessLine } from './src/updates.js';
+const freshness = compareFreshness({ sources, changelog, published, syncedAt: tokens.synced, dgaVersion: tokens.dgaVersion });
+freshnessLine(freshness);  // one line, safe to put at the top of a report
+```
+
+**What the comparison knows that a date alone does not:**
+
+- A **deferred** source moving does not make the ledger stale. Skipping Icons is a
+  decision, not drift, and re-raising it every check is nagging.
+- **Template-tier files are ignored.** They are page references, not token sources.
+- A file with **no `---- Updates ----` block** has never been amended. That is not an
+  error and not a gap — Mobile Components is like this.
+- A log entry saying a file is **mid-rewrite** is surfaced as a `notice`, because it is
+  a reason *not* to sync. Icons currently carries one dated 11 Jan 2026.
+
+Report the verdict plainly. If the ledger is behind, say which file changed and what its
+log says changed in it — "Components Library, 3 Nov 2025: Digital Stamp text" is
+actionable in a way that "something moved" is not.

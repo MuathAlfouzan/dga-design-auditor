@@ -683,7 +683,7 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
       type: targetType,
       captures: captures.map((c) => ({ label: c.label, viewport: c.viewport, colorScheme: c.colorScheme, url: c.url })),
     },
-    ledger: { synced: tokens.synced, source: tokens.source },
+    ledger: { synced: tokens.synced, source: tokens.source, dgaVersion: tokens.dgaVersion || null },
     scoredAt: new Date().toISOString(),
     score: finalScore,
     earned: round2(earnedTotal),
