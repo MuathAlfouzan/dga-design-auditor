@@ -1,0 +1,225 @@
+{
+  "$comment": "DGA Platforms Code component anatomy, extracted by /dga-sync. Feeds the judged checks P1-P3 — the auditor reads this to know what a compliant button or input actually measures, instead of guessing from a screenshot. Measurements are the values bound to the component's own Figma variables, in px.",
+  "synced": "2026-08-17",
+  "$notes": [
+    "Measurements here are the component-scoped variables the library binds (Button/buttons-*-padding, Form/Input-container-padding-*, Card/card-lg-gap, Notification/notification-*). Heights were not exposed as variables and are left null rather than measured off a screenshot.",
+    "The library has 48 component pages. Four are recorded here — the ones a compliance audit meets most often. Extend by running get_variable_defs on the remaining page ids as audits turn up components not covered.",
+    "Variant and state names come from the button token families (primary / neutral / black / oncolor / transparent / danger-primary / danger-secondary, each with default, hovered, pressed, selected, focused, disabled), which is the library's own state model.",
+    "SYNC 2 — Foundations (1392267405633663431) added Table anatomy from the Effect styles page. Button, Text input, Card and Inline alert measurements were re-confirmed against Foundations and did not change."
+  ],
+  "source": {
+    "standard": "DGA Platforms Code",
+    "publisher": "SDGA / Digital Government Authority, Saudi Arabia",
+    "profile": "https://www.figma.com/@sdga",
+    "manifest": "See sources.json"
+  },
+  "components": [
+    {
+      "name": "Button",
+      "figmaNodeId": "1:1183",
+      "variants": [
+        "primary",
+        "neutral",
+        "black",
+        "oncolor",
+        "transparent",
+        "danger-primary",
+        "danger-secondary"
+      ],
+      "sizes": [
+        {
+          "name": "lg",
+          "height": null,
+          "paddingInline": 16,
+          "iconGap": 4,
+          "fontSize": 16,
+          "radius": 4
+        },
+        {
+          "name": "md",
+          "height": null,
+          "paddingInline": 12,
+          "iconGap": 4,
+          "fontSize": 14,
+          "radius": 4
+        },
+        {
+          "name": "sm",
+          "height": null,
+          "paddingInline": 8,
+          "iconGap": 4,
+          "fontSize": 12,
+          "radius": 4
+        }
+      ],
+      "states": [
+        "default",
+        "hovered",
+        "pressed",
+        "selected",
+        "focused",
+        "disabled"
+      ],
+      "anatomy": "Optional leading icon, label, optional trailing icon. Gap is 4 at every size — only the inline padding and type step change. Corner is radius-sm (4) throughout, not the size-dependent radius some systems use.",
+      "identifiers": {
+        "roles": [
+          "button"
+        ],
+        "tags": [
+          "button",
+          "a"
+        ],
+        "classHints": []
+      }
+    },
+    {
+      "name": "Text input",
+      "figmaNodeId": "954:19434",
+      "variants": [
+        "default",
+        "darker",
+        "lighter"
+      ],
+      "sizes": [
+        {
+          "name": "default",
+          "height": null,
+          "paddingInlineStart": 8,
+          "paddingInlineEnd": 16,
+          "iconGap": 8,
+          "labelGap": 8,
+          "fontSize": 16,
+          "radius": 4
+        }
+      ],
+      "states": [
+        "default",
+        "hovered",
+        "pressed",
+        "focused",
+        "filled",
+        "readonly",
+        "error",
+        "disabled"
+      ],
+      "anatomy": "Label above field with an 8 gap; field carries a 1px border (border colour changes per state), radius-sm (4). Placeholder uses text-secondary-paragraph, filled text uses text-default. Error state swaps the border to field-border-error.",
+      "identifiers": {
+        "roles": [
+          "textbox"
+        ],
+        "tags": [
+          "input",
+          "textarea"
+        ],
+        "classHints": []
+      }
+    },
+    {
+      "name": "Card",
+      "figmaNodeId": "8940:22264",
+      "variants": [
+        "default"
+      ],
+      "sizes": [
+        {
+          "name": "lg",
+          "height": null,
+          "gap": 24,
+          "fontSize": 18,
+          "radius": 16
+        }
+      ],
+      "states": [
+        "default",
+        "disabled"
+      ],
+      "anatomy": "background-card on radius-lg (16), internal gap 24, title at Text lg/Bold (18/28). Elevation is Shadows/shadow-md when raised.",
+      "identifiers": {
+        "roles": [
+          "article",
+          "group"
+        ],
+        "tags": [
+          "article",
+          "section",
+          "div"
+        ],
+        "classHints": [
+          "card"
+        ]
+      }
+    },
+    {
+      "name": "Inline alert / Notification",
+      "figmaNodeId": "1730:46041",
+      "variants": [
+        "info",
+        "success",
+        "warning",
+        "error"
+      ],
+      "sizes": [
+        {
+          "name": "default",
+          "height": null,
+          "padding": 16,
+          "paddingInline": 24,
+          "gap": 16,
+          "radius": 8
+        }
+      ],
+      "states": [
+        "default"
+      ],
+      "anatomy": "Icon, then title at Text md/Semibold with body at Text sm/Regular separated by text-content-gap 8, then an optional button group with buttons-group-gap 8. Each variant pairs its background-<role>-25 surface with its border-<role>-light edge and text-<role> label — the three always move together.",
+      "identifiers": {
+        "roles": [
+          "alert",
+          "status"
+        ],
+        "tags": [
+          "div"
+        ],
+        "classHints": [
+          "alert",
+          "notification",
+          "toast"
+        ]
+      }
+    },
+    {
+      "name": "Table",
+      "figmaNodeId": "2:5 (Foundations/Effect styles)",
+      "variants": [
+        "default"
+      ],
+      "sizes": [
+        {
+          "name": "default",
+          "height": null,
+          "cellPaddingInline": 16,
+          "cellPaddingBlock": 8,
+          "cellGap": 8,
+          "fontSize": 14,
+          "radius": 8
+        }
+      ],
+      "states": [
+        "default",
+        "header"
+      ],
+      "anatomy": "Header row on table-background-header #f3f4f6 with table-text-head #384250; cells separated by table-cell-border #d2d6db. Cell padding is 16 inline / 8 block with an 8 gap between cell contents.",
+      "identifiers": {
+        "roles": [
+          "table"
+        ],
+        "tags": [
+          "table"
+        ],
+        "classHints": [
+          "table"
+        ]
+      }
+    }
+  ]
+}

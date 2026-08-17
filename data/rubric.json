@@ -1,0 +1,448 @@
+{
+  "$comment": "The 100-point DGA compliance rubric. This file is the source of truth for the score — score.mjs reads it and does arithmetic, nothing more. Weights sum to 100 across 9 categories, 28 checks. Edit weights here to retune; never hand-adjust a score.",
+  "version": 1,
+  "standard": {
+    "name": "DGA Platforms Code",
+    "arabicName": "كود المنصات",
+    "authority": "Digital Government Authority, Saudi Arabia",
+    "source": "https://www.figma.com/community/file/1392264328585493958/components-library-platforms-code"
+  },
+
+  "bands": [
+    { "id": "compliant", "label": "Compliant", "min": 90 },
+    { "id": "substantial", "label": "Substantially compliant", "min": 75 },
+    { "id": "partial", "label": "Partial", "min": 60 },
+    { "id": "non-compliant", "label": "Non-compliant", "min": 0 }
+  ],
+
+  "$gate": "Government gate: any failed check with blocker:true caps the band at 'partial' regardless of the numeric score. The number is never altered — the band carries the gate, and the report names the blocker that capped it.",
+  "blockerCapBand": "partial",
+
+  "$passThreshold": "How much compliance counts as a check being 'met' for the X-of-N headline. Ordinary checks pass at 90% — a couple of stray values on a large page is drift, not a failure. Blocker checks pass only at 100%, because WCAG conformance and mark usage are not proportional: one text run below 4.5:1 means the page does not conform, however good the other ninety-nine are.",
+  "passThreshold": { "default": 0.9, "blocker": 1.0 },
+
+  "$thresholds": "Tolerances used by the auditor's matchers. deltaE is the CSS Color 4 deltaEOK — Euclidean distance in OKLab, scaled x100 — so 2.0 is about one just-noticeable difference: a designer cannot see a pass and can see a fail.",
+  "thresholds": {
+    "colorMatchDeltaE": 2.0,
+    "colorNearMissDeltaE": 10.0,
+    "contrastNormalText": 4.5,
+    "contrastLargeText": 3.0,
+    "contrastNonText": 3.0,
+    "largeTextPx": 24,
+    "largeBoldPx": 18.66,
+    "minTargetPx": 24,
+    "offPaletteMinOccurrences": 3,
+    "coverageIgnoreBelowOccurrences": 1
+  },
+
+  "categories": [
+    {
+      "id": "color",
+      "label": "Color & tokens",
+      "weight": 18,
+      "checks": [
+        {
+          "id": "C1",
+          "weight": 8,
+          "title": "Color token coverage",
+          "description": "Every text, background, border and fill color resolves to a DGA color token.",
+          "applies_to": "both",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Occurrence-weighted share of color-bearing declarations within deltaE <= colorMatchDeltaE of some ledger color.",
+          "blocker": false,
+          "fix": "Replace the literal color with the named DGA token. The finding names the nearest token for each offender."
+        },
+        {
+          "id": "C2",
+          "weight": 4,
+          "title": "No off-palette brand color",
+          "description": "No color far from every DGA token (deltaE > colorNearMissDeltaE) is used repeatedly as a brand or accent surface.",
+          "applies_to": "both",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "1 minus the occurrence-weighted share of far-off-palette colors used at least offPaletteMinOccurrences times. Near-misses are C1's problem, not this one.",
+          "blocker": true,
+          "fix": "An unrecognisable brand color is an identity violation, not a styling preference. Move it onto the DGA palette or get the addition approved into the library."
+        },
+        {
+          "id": "C3",
+          "weight": 3,
+          "title": "Semantic colors used semantically",
+          "description": "success / warning / error / info tokens appear only in their semantic roles, and those roles use no other color.",
+          "applies_to": "both",
+          "method": "judged",
+          "scoring": "fraction",
+          "measure": "Share of semantic-token usages whose surrounding role matches the token's meaning, plus destructive/among-status affordances that use the correct token.",
+          "blocker": false,
+          "fix": "Error text in the brand green, or a success toast in red, breaks the one convention users carry between government platforms."
+        },
+        {
+          "id": "C4",
+          "weight": 3,
+          "title": "Dark theme from the DS dark set",
+          "description": "If the target ships a dark theme, its colors come from the DGA dark-mode tokens rather than ad-hoc darkening.",
+          "applies_to": "both",
+          "method": "auto",
+          "scoring": "fraction",
+          "na_when": "target has no dark theme",
+          "measure": "Same coverage calculation as C1, run against the dark-scheme capture and the ledger's dark set.",
+          "blocker": false,
+          "fix": "Point the dark theme at the DGA dark tokens. Inverting or dimming light tokens drifts within one release."
+        }
+      ]
+    },
+
+    {
+      "id": "typography",
+      "label": "Typography",
+      "weight": 16,
+      "checks": [
+        {
+          "id": "T1",
+          "weight": 5,
+          "title": "Typeface stack",
+          "description": "Latin and Arabic text render in the DGA typefaces, each script in the face specified for it.",
+          "applies_to": "both",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Occurrence-weighted share of rendered text whose resolved font family is in the ledger's font stack for that script.",
+          "blocker": false,
+          "fix": "A substituted face is the single most visible compliance failure — it reads as a different government at a glance."
+        },
+        {
+          "id": "T2",
+          "weight": 5,
+          "title": "Type scale",
+          "description": "Font sizes come from the DGA type ramp.",
+          "applies_to": "both",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Occurrence-weighted share of computed font-size values matching a ramp step exactly (px, after rem resolution).",
+          "blocker": false,
+          "fix": "Snap to the nearest ramp step; the finding names it."
+        },
+        {
+          "id": "T3",
+          "weight": 3,
+          "title": "Font weights",
+          "description": "Only the weights the DGA system defines are used.",
+          "applies_to": "both",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Occurrence-weighted share of computed font-weight values in the ledger's allowed weight set.",
+          "blocker": false,
+          "fix": "Synthetic or off-scale weights render inconsistently across platforms, especially in Arabic."
+        },
+        {
+          "id": "T4",
+          "weight": 3,
+          "title": "Line height and tracking",
+          "description": "Line-height and letter-spacing match the ramp step's paired values.",
+          "applies_to": "both",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Share of text runs whose (size, line-height, letter-spacing) triple matches a ramp step. Arabic needs its own leading, so mismatches here are counted per script.",
+          "blocker": false,
+          "fix": "Set the ramp's paired leading rather than a global multiplier — Arabic ascenders and descenders need the extra room."
+        }
+      ]
+    },
+
+    {
+      "id": "spacing",
+      "label": "Spacing & layout",
+      "weight": 12,
+      "checks": [
+        {
+          "id": "S1",
+          "weight": 6,
+          "title": "Spacing scale",
+          "description": "Padding, margin and gap values sit on the DGA spacing grid.",
+          "applies_to": "both",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Occurrence-weighted share of non-zero spacing values matching a scale step.",
+          "blocker": false,
+          "fix": "Off-grid spacing is what makes an otherwise on-token page feel unlike the rest of the platform."
+        },
+        {
+          "id": "S2",
+          "weight": 3,
+          "title": "Container widths and gutters",
+          "description": "Page container max-widths, gutters and column behaviour follow the DGA breakpoints.",
+          "applies_to": "site",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Measured at desktop, tablet and mobile captures; each breakpoint whose container width and gutter match the ledger scores its third.",
+          "blocker": false,
+          "fix": "Match the DGA container at each breakpoint so content lines up across linked government services."
+        },
+        {
+          "id": "S3",
+          "weight": 3,
+          "title": "Vertical rhythm",
+          "description": "Section and block spacing uses the DGA rhythm steps rather than arbitrary gaps.",
+          "applies_to": "both",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Share of between-section vertical gaps matching a rhythm step.",
+          "blocker": false,
+          "fix": "Use the rhythm steps for section separation; the page reads as one document rather than stacked fragments."
+        }
+      ]
+    },
+
+    {
+      "id": "shape",
+      "label": "Shape & elevation",
+      "weight": 8,
+      "checks": [
+        {
+          "id": "E1",
+          "weight": 3,
+          "title": "Corner radii",
+          "description": "border-radius values come from the DGA radius scale.",
+          "applies_to": "both",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Occurrence-weighted share of non-zero radii matching a scale step (fully-round pills excluded and checked against the pill token).",
+          "blocker": false,
+          "fix": "Snap to the nearest radius step."
+        },
+        {
+          "id": "E2",
+          "weight": 2,
+          "title": "Borders",
+          "description": "Border widths and colors come from the DGA border tokens.",
+          "applies_to": "both",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Share of visible borders whose width is on the scale and whose color is a ledger border token.",
+          "blocker": false,
+          "fix": "Use the border tokens; hairlines that vary by a fraction of a pixel show up as banding on scaled displays."
+        },
+        {
+          "id": "E3",
+          "weight": 3,
+          "title": "Elevation",
+          "description": "box-shadow values come from the DGA elevation set.",
+          "applies_to": "both",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Occurrence-weighted share of non-none shadows matching an elevation token within a small numeric tolerance.",
+          "blocker": false,
+          "fix": "Use the named elevation level. Hand-tuned shadows break the depth ordering the system defines."
+        }
+      ]
+    },
+
+    {
+      "id": "components",
+      "label": "Components",
+      "weight": 18,
+      "checks": [
+        {
+          "id": "P1",
+          "weight": 8,
+          "title": "DS components, not rebuilds",
+          "description": "Buttons, inputs, selects, cards, tabs, tables, navigation, modals and alerts correspond to DGA components rather than bespoke reimplementations.",
+          "applies_to": "both",
+          "method": "judged",
+          "scoring": "fraction",
+          "measure": "Share of identified component instances matching a DGA component by anatomy. On Figma targets, whether the instance is a library instance rather than a detached or hand-drawn frame.",
+          "blocker": false,
+          "fix": "Adopt the library component. A rebuild that looks right today is the thing that drifts at the next DGA release."
+        },
+        {
+          "id": "P2",
+          "weight": 5,
+          "title": "Variants, sizes and states",
+          "description": "Component variants (primary / secondary / tertiary), sizes and interaction states are the ones the system defines.",
+          "applies_to": "both",
+          "method": "judged",
+          "scoring": "fraction",
+          "measure": "Share of instances whose variant, size and hover/active/disabled/focus treatments match the spec.",
+          "blocker": false,
+          "fix": "Missing disabled or focus treatments are the usual failure; both are specified, neither is optional."
+        },
+        {
+          "id": "P3",
+          "weight": 5,
+          "title": "Component anatomy",
+          "description": "Internal padding, icon-and-label spacing and order, and minimum heights match the component spec.",
+          "applies_to": "both",
+          "method": "judged",
+          "scoring": "fraction",
+          "measure": "Share of instances whose measured internal geometry matches the spec within 1px.",
+          "blocker": false,
+          "fix": "Restore the specified padding and min-height. Squeezed buttons are also the usual cause of an A4 target-size failure."
+        }
+      ]
+    },
+
+    {
+      "id": "brand",
+      "label": "Iconography & brand",
+      "weight": 6,
+      "checks": [
+        {
+          "id": "I1",
+          "weight": 3,
+          "title": "Icon set",
+          "description": "Icons come from the DGA icon set, at scale sizes, with the specified stroke weight.",
+          "applies_to": "both",
+          "method": "judged",
+          "scoring": "fraction",
+          "measure": "Share of icons identifiable as DGA set members at a scale size. Mixed icon libraries on one page fail proportionally.",
+          "blocker": false,
+          "fix": "Standardise on the DGA icon set. Two icon families on one screen is visible even to users who cannot name why."
+        },
+        {
+          "id": "I2",
+          "weight": 3,
+          "title": "Logo and lockup",
+          "description": "Official marks use approved variants at or above minimum size, with the specified clear space, uncropped and unrecoloured.",
+          "applies_to": "both",
+          "method": "judged",
+          "scoring": "binary",
+          "measure": "Pass only if every mark on the target satisfies variant, minimum size, clear space and color rules.",
+          "blocker": true,
+          "fix": "Misuse of a government mark is an identity violation. Use the approved asset at approved size with its clear space intact."
+        }
+      ]
+    },
+
+    {
+      "id": "rtl",
+      "label": "RTL & bilingual",
+      "weight": 8,
+      "checks": [
+        {
+          "id": "R1",
+          "weight": 3,
+          "title": "Direction and mirroring",
+          "description": "Arabic renders with dir=rtl and the layout mirrors — not just the text.",
+          "applies_to": "both",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Correct dir/lang on the document and on mixed-script runs, plus evidence that layout order, alignment and navigation actually mirror in the RTL capture.",
+          "blocker": false,
+          "fix": "Set dir on the document and let logical properties carry the mirroring, rather than a per-component RTL override sheet."
+        },
+        {
+          "id": "R2",
+          "weight": 3,
+          "title": "Logical properties",
+          "description": "Layout uses inline/block logical properties instead of left/right physical ones.",
+          "applies_to": "site",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Share of directional declarations (margin, padding, inset, border, text-align, float) written logically rather than physically, from authored stylesheet rules.",
+          "blocker": false,
+          "fix": "margin-inline-start over margin-left. Physical properties are why an RTL layout needs a second stylesheet and then diverges from the first."
+        },
+        {
+          "id": "R3",
+          "weight": 2,
+          "title": "Arabic typography and numerals",
+          "description": "Arabic runs use the Arabic face, directional icons mirror, and the numeral system is consistent throughout.",
+          "applies_to": "both",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Arabic-range text resolving to the Arabic face; chevrons and arrows mirrored in RTL; one numeral system (Arabic-Indic or Western) used consistently.",
+          "blocker": false,
+          "fix": "Mixed numeral systems inside one interface is the most common bilingual defect and the easiest to fix."
+        }
+      ]
+    },
+
+    {
+      "id": "a11y",
+      "label": "Accessibility",
+      "weight": 10,
+      "checks": [
+        {
+          "id": "A1",
+          "weight": 4,
+          "title": "Text contrast (WCAG AA)",
+          "description": "Every text run meets 4.5:1, or 3:1 where it qualifies as large text.",
+          "applies_to": "both",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Occurrence-weighted share of text runs meeting their applicable threshold against their effective background.",
+          "blocker": true,
+          "fix": "Government services carry a statutory accessibility obligation. Darken the text token or lighten the surface — the finding gives the measured ratio and the needed delta."
+        },
+        {
+          "id": "A2",
+          "weight": 2,
+          "title": "Non-text contrast",
+          "description": "UI boundaries, icons and graphical affordances meet 3:1 against their surroundings.",
+          "applies_to": "both",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Share of borders, icon fills and control boundaries meeting 3:1.",
+          "blocker": true,
+          "fix": "An input whose border disappears against its background is not usable at low vision or in sunlight."
+        },
+        {
+          "id": "A3",
+          "weight": 2,
+          "title": "Visible focus",
+          "description": "Every interactive element shows a visible focus indicator on keyboard focus.",
+          "applies_to": "site",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Share of focusable elements whose computed style changes visibly on :focus-visible, with an indicator meeting 3:1.",
+          "blocker": false,
+          "fix": "Never remove the outline without replacing it. Keyboard-only users navigate the whole service through this one affordance."
+        },
+        {
+          "id": "A4",
+          "weight": 2,
+          "title": "Target size",
+          "description": "Interactive targets are at least 24x24 CSS px (WCAG 2.2 AA), spacing exceptions allowed.",
+          "applies_to": "both",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Share of interactive elements whose hit box meets the minimum, counting the spacing exception where neighbours are far enough apart.",
+          "blocker": false,
+          "fix": "Grow the control or its padding. Icon-only buttons are the usual offenders."
+        }
+      ]
+    },
+
+    {
+      "id": "motion",
+      "label": "Motion",
+      "weight": 4,
+      "checks": [
+        {
+          "id": "M1",
+          "weight": 2,
+          "title": "Motion tokens",
+          "description": "Transition durations and easing curves come from the DGA motion tokens.",
+          "applies_to": "both",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Share of transition/animation declarations whose duration and timing function match motion tokens.",
+          "blocker": false,
+          "fix": "Use the named duration and curve so motion feels the same across services."
+        },
+        {
+          "id": "M2",
+          "weight": 2,
+          "title": "Reduced motion",
+          "description": "prefers-reduced-motion is honoured.",
+          "applies_to": "site",
+          "method": "auto",
+          "scoring": "binary",
+          "measure": "Pass if the stylesheet carries a prefers-reduced-motion rule and animation is actually suppressed under the emulated preference.",
+          "blocker": false,
+          "fix": "Add a reduced-motion block that skips the motion rather than shortening it."
+        }
+      ]
+    }
+  ]
+}

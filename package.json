@@ -1,0 +1,28 @@
+{
+  "name": "dga-design-auditor",
+  "version": "0.1.0",
+  "description": "Score any website or Figma design against the DGA Platforms Code design system, out of 100, with a per-check breakdown. Runs entirely in the page.",
+  "type": "module",
+  "license": "MIT",
+  "main": "src/score.js",
+  "exports": {
+    ".": "./src/score.js",
+    "./probe": "./src/probe.js",
+    "./render": "./src/render.js",
+    "./bundle": "./dist/dga-rate.js",
+    "./data/*": "./data/*"
+  },
+  "files": ["src", "dist", "data", "docs", "AGENTS.md", "README.md"],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node test/selftest.mjs && node test/parity.mjs && node test/probe.test.mjs",
+    "test:score": "node test/selftest.mjs",
+    "test:parity": "node test/parity.mjs",
+    "test:probe": "node test/probe.test.mjs"
+  },
+  "keywords": [
+    "dga", "sdga", "platforms-code", "design-system", "compliance",
+    "accessibility", "wcag", "rtl", "arabic", "saudi", "design-tokens", "audit"
+  ],
+  "engines": { "node": ">=18" }
+}

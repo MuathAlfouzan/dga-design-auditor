@@ -1,0 +1,283 @@
+{
+  "$comment": "Every file SDGA publishes at figma.com/@sdga, classified by what it contributes to the ledger. /dga-sync reads this to know what is still missing and what each file would close. The MCP reads one focused file at a time, so a full sync is several passes — this manifest is what makes that resumable instead of a thing you have to remember.",
+  "captured": "2026-08-17",
+  "profile": "https://www.figma.com/@sdga",
+  "publisher": "DGA / SDGA — هيئة الحكومة الرقمية, Kingdom of Saudi Arabia",
+  "$tiers": {
+    "system": "The design system itself. The ledger is wrong or incomplete without these.",
+    "template": "Reference page implementations. Not token sources — they define page-level patterns, and are what P1–P3 compare a real page against.",
+    "campaign": "Seasonal and identity artwork. Not standards. Deliberately excluded — syncing these would pollute the palette with campaign colours."
+  },
+  "sources": [
+    {
+      "id": "1392267405633663431",
+      "name": "Foundations - Platforms Code",
+      "url": "https://www.figma.com/community/file/1392267405633663431/foundations-platforms-code",
+      "tier": "system",
+      "priority": 1,
+      "synced": "2026-08-17",
+      "contributes": [
+        "color",
+        "typography",
+        "spacing",
+        "radius",
+        "elevation",
+        "breakpoints",
+        "motion"
+      ],
+      "closes": [
+        "S2",
+        "E2",
+        "E3",
+        "M1",
+        "C4"
+      ],
+      "why": "The actual foundations file. The Components Library has no foundations page — its tokens are only what happens to be bound to components — so this is the authoritative source and should have been synced first. Expected to supply the breakpoint grid, border widths, the full elevation set, motion tokens, the missing spacing-sm, the Display lg/md ramp steps, and a dark mode set if one exists.",
+      "pagesRecorded": [
+        "FOUNDATIONS 2:2",
+        "Colors 2:3",
+        "Typography 2:4",
+        "Effect styles 2:5",
+        "Spacing, radius & grids 2:6"
+      ]
+    },
+    {
+      "id": "1392264328585493958",
+      "name": "Components Library - Platforms Code",
+      "url": "https://www.figma.com/community/file/1392264328585493958/components-library-platforms-code",
+      "tier": "system",
+      "priority": 2,
+      "synced": "2026-08-17",
+      "contributes": [
+        "color",
+        "typography",
+        "spacing",
+        "radius",
+        "components"
+      ],
+      "closes": [
+        "C1",
+        "C2",
+        "C3",
+        "T1",
+        "T2",
+        "T3",
+        "T4",
+        "S1",
+        "E1",
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "why": "48 component pages. Synced: 147 colour tokens, 8 type steps, the spacing and radius scales, and anatomy for Button, Text input, Card and Inline alert. Only 4 of 48 component pages are recorded — extend as audits meet components not covered.",
+      "pagesRecorded": [
+        "Get Started 16026:49769",
+        "Buttons 1:1183",
+        "Inline Alert 1730:46041",
+        "Text input 954:19434",
+        "Card 8940:22264",
+        "UI Shell Nav Header 429:130167",
+        "Tags 12:539"
+      ]
+    },
+    {
+      "id": "1392269191144731080",
+      "name": "Icons - Platforms Code",
+      "url": "https://www.figma.com/community/file/1392269191144731080/icons-platforms-code",
+      "tier": "system",
+      "priority": 3,
+      "synced": null,
+      "contributes": [
+        "icons"
+      ],
+      "closes": [
+        "I1"
+      ],
+      "why": "The official icon set. Supplies the size scale, stroke weight, and the icon inventory itself — without it I1 degrades to 'does this look like one family', which is the weakest check in the rubric.",
+      "deferred": true,
+      "deferredReason": "Skipped on request, 17 Aug 2026. While deferred, I1 (icon set) is scored n/a rather than judged — a check whose baseline was deliberately not loaded should leave the denominator, not be guessed at. Sync this file to bring I1 back."
+    },
+    {
+      "id": "1392271796654597578",
+      "name": "Mobile Components - Platforms Code",
+      "url": "https://www.figma.com/community/file/1392271796654597578/mobile-components-platforms-code",
+      "tier": "system",
+      "priority": 4,
+      "synced": null,
+      "contributes": [
+        "components",
+        "breakpoints"
+      ],
+      "closes": [
+        "P1",
+        "P2",
+        "P3",
+        "A4"
+      ],
+      "why": "Mobile component anatomy. Every site audit captures at a 375px viewport, and right now those captures are scored against desktop component specs — so mobile target sizes and padding are being judged by the wrong ruler."
+    },
+    {
+      "id": "1412792257811427893",
+      "name": "Home Page Template - Platforms Code",
+      "url": "https://www.figma.com/community/file/1412792257811427893/home-page-template-platforms-code",
+      "tier": "template",
+      "priority": 5,
+      "synced": null,
+      "contributes": [
+        "page-patterns"
+      ],
+      "why": "The most-used template on the profile (4.8k). Defines the section order and hero/nav/footer composition a government home page is expected to follow."
+    },
+    {
+      "id": "1412793544739851831",
+      "name": "Service Page Template - Platforms Code",
+      "url": "https://www.figma.com/community/file/1412793544739851831/service-page-template-platforms-code",
+      "tier": "template",
+      "priority": 6,
+      "synced": null,
+      "contributes": [
+        "page-patterns"
+      ],
+      "why": "The page type a government platform has most of. Service detail, eligibility, steps, apply."
+    },
+    {
+      "id": "1428726490797221102",
+      "name": "Form Template - Platforms Code",
+      "url": "https://www.figma.com/community/file/1428726490797221102/form-template-platforms-code",
+      "tier": "template",
+      "priority": 7,
+      "synced": null,
+      "contributes": [
+        "page-patterns"
+      ],
+      "why": "Forms carry the heaviest accessibility burden on any gov service — label placement, error summary, required marking, fieldset grouping."
+    },
+    {
+      "id": "1412795710472267322",
+      "name": "Contact Us Template - Platforms Code",
+      "url": "https://www.figma.com/community/file/1412795710472267322/contact-us-template-platforms-code",
+      "tier": "template",
+      "priority": 8,
+      "synced": null
+    },
+    {
+      "id": "1443857671228229093",
+      "name": "FAQ Template - Platforms Code",
+      "url": "https://www.figma.com/community/file/1443857671228229093/faq-template-platforms-code",
+      "tier": "template",
+      "priority": 9,
+      "synced": null
+    },
+    {
+      "id": "1428035317043263261",
+      "name": "Help & Support Template - Platforms Code",
+      "url": "https://www.figma.com/community/file/1428035317043263261/help-support-template-platforms-code",
+      "tier": "template",
+      "priority": 10,
+      "synced": null
+    },
+    {
+      "id": "1443910261055730190",
+      "name": "Search Page Template - Platforms Code",
+      "url": "https://www.figma.com/community/file/1443910261055730190/search-page-template-platforms-code",
+      "tier": "template",
+      "priority": 11,
+      "synced": null
+    },
+    {
+      "id": "1453389424314572164",
+      "name": "Content Page Template - Platforms Code",
+      "url": "https://www.figma.com/community/file/1453389424314572164/content-page-template-platforms-code",
+      "tier": "template",
+      "priority": 12,
+      "synced": null
+    },
+    {
+      "id": "1428016821922850563",
+      "name": "Feedback Section Template - Platforms Code",
+      "url": "https://www.figma.com/community/file/1428016821922850563/feedback-section-template-platforms-code",
+      "tier": "template",
+      "priority": 13,
+      "synced": null
+    },
+    {
+      "id": "1453379241503982973",
+      "name": "Rating Section Template - Platforms Code",
+      "url": "https://www.figma.com/community/file/1453379241503982973/rating-section-template-platforms-code",
+      "tier": "template",
+      "priority": 14,
+      "synced": null
+    },
+    {
+      "id": "1443865223035754985",
+      "name": "Site Map Template - Platforms Code",
+      "url": "https://www.figma.com/community/file/1443865223035754985/site-map-template-platforms-code",
+      "tier": "template",
+      "priority": 15,
+      "synced": null
+    },
+    {
+      "id": "1443886439735242237",
+      "name": "Page Not Found Template - Platforms Code",
+      "url": "https://www.figma.com/community/file/1443886439735242237/page-not-found-template-platforms-code",
+      "tier": "template",
+      "priority": 16,
+      "synced": null
+    },
+    {
+      "id": "1453391031411510661",
+      "name": "Chatbot Template - Platforms Code",
+      "url": "https://www.figma.com/community/file/1453391031411510661/chatbot-template-platforms-code",
+      "tier": "template",
+      "priority": 17,
+      "synced": null
+    },
+    {
+      "id": "1453394435591095691",
+      "name": "e-Participation Template - Platforms Code",
+      "url": "https://www.figma.com/community/file/1453394435591095691/e-participation-template-platofrms-code",
+      "tier": "template",
+      "priority": 18,
+      "synced": null,
+      "$note": "The profile lists this with 'Platofrms' misspelled; the URL slug carries the typo too."
+    },
+    {
+      "id": "1453737209879858684",
+      "name": "Cookies Banner Template - Platforms Code",
+      "url": "https://www.figma.com/community/file/1453737209879858684/cookies-banner-template-platforms-code",
+      "tier": "template",
+      "priority": 19,
+      "synced": null
+    },
+    {
+      "id": "1455192065722446987",
+      "name": "About The Entity Template",
+      "url": "https://www.figma.com/community/file/1455192065722446987/about-the-entity-template",
+      "tier": "campaign",
+      "synced": null,
+      "$note": "Not branded Platforms Code. Excluded from sync."
+    },
+    {
+      "id": "1542530337501214682",
+      "name": "Saudi National Day 95 Template",
+      "url": "https://www.figma.com/community/file/1542530337501214682/saudi-national-day-95-template",
+      "tier": "campaign",
+      "synced": null
+    },
+    {
+      "id": "1603323803149315509",
+      "name": "Saudi Founding Day",
+      "url": "https://www.figma.com/community/file/1603323803149315509/saudi-founding-day",
+      "tier": "campaign",
+      "synced": null
+    },
+    {
+      "id": "1628059783869122655",
+      "name": "Hajj Template",
+      "url": "https://www.figma.com/community/file/1628059783869122655/hajj-template",
+      "tier": "campaign",
+      "synced": null
+    }
+  ],
+  "$deferred": "A source marked deferred:true is a deliberate skip, not an outstanding gap. Report it separately from pending sources so the two are never confused."
+}
