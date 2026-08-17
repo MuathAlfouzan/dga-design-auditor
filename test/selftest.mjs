@@ -2,7 +2,7 @@
 /*
  * selftest.mjs — proves the scoring engine does what the rubric says.
  *
- *   node ~/.claude/dga/fixtures/selftest.mjs
+ *   node test/selftest.mjs
  *
  * Builds synthetic captures against a known ledger and asserts the five
  * behaviours the score depends on: a clean target scores 100, a blocker caps the
