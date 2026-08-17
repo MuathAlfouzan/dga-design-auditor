@@ -103,7 +103,7 @@
       "url": "https://www.figma.com/community/file/1392271796654597578/mobile-components-platforms-code",
       "tier": "system",
       "priority": 4,
-      "synced": null,
+      "synced": "2026-08-18",
       "contributes": [
         "components",
         "breakpoints"
@@ -114,7 +114,15 @@
         "P3",
         "A4"
       ],
-      "why": "Mobile component anatomy. Every site audit captures at a 375px viewport, and right now those captures are scored against desktop component specs — so mobile target sizes and padding are being judged by the wrong ruler."
+      "why": "Mobile component anatomy. Every site audit captures at a 375px viewport, and right now those captures are scored against desktop component specs — so mobile target sizes and padding are being judged by the wrong ruler.",
+      "pagesRecorded": [
+        "Buttons 1:1183",
+        "Text input 954:19434",
+        "Card 11367:20133",
+        "UI Shell - Tab Bar 8332:23832",
+        "Checkbox 954:11220 (cross-check)"
+      ],
+      "finding": "Component anatomy is identical to desktop; only the shell differs (Tab Bar / Navigation Bar / Splash Screen)."
     },
     {
       "id": "1412792257811427893",

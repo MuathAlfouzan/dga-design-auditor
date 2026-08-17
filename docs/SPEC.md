@@ -1,16 +1,15 @@
 # DGA Platforms Code — what the auditor enforces
 
-Synced **17 August 2026** from two SDGA Figma Community files:
+Synced **18 August 2026** from three SDGA Figma Community files:
 [Foundations](https://www.figma.com/community/file/1392267405633663431/foundations-platforms-code)
-and [Components Library](https://www.figma.com/community/file/1392264328585493958/components-library-platforms-code).
+[Components Library](https://www.figma.com/community/file/1392264328585493958/components-library-platforms-code) and [Mobile Components](https://www.figma.com/community/file/1392271796654597578/mobile-components-platforms-code).
 Precedence is **Foundations → Components Library → templates**; conflicts are listed
 at the bottom rather than averaged away.
 
 This is a readable view of `tokens.json` and `components.json`. Those are what
 `score.mjs` reads; this is for people. If they disagree, the JSON wins.
 
-**Ledger state: 2 of 4 system files synced.** Icons and Mobile Components are still
-outstanding — see `sources.json` for the full manifest of all 23 published files.
+**Ledger state: 3 of 4 system files synced.** Icons is deferred by choice — see `sources.json` for the full manifest of all 23 published files.
 
 ---
 
@@ -125,6 +124,21 @@ paragraph max-width **720**. Width scale xxs 320 → 6xl 1920.
 
 ## Components
 
+**Mobile uses the same component spec as desktop.** Button padding (lg 16 / md 12 /
+sm 8, gap 4, radius 4), Card (gap 24, radius 16, `shadow-md`) and Text input
+(padding-end 16, radius 4, border `#9da4ae`) were re-extracted from the Mobile
+Components file and match value for value. Platforms Code does not respecify
+components per viewport — it varies the **shell**:
+
+| Desktop shell | Mobile shell |
+| --- | --- |
+| Nav Header · Second Level Nav Header · Table of Contents · Footer | Tab Bar · Navigation Bar · Splash Screen · Nav Drawer |
+
+The mobile **Tab Bar** is 84 tall across a 375 viewport, with items 46×70 — **54 wide
+in RTL**, so the item widens rather than the label truncating. No minimum target-size
+token is published anywhere in the system, so A4 scores against the WCAG 2.2 AA floor
+of 24px at every viewport; that number is WCAG's, not DGA's.
+
 | Component | Key measurements |
 | --- | --- |
 | **Button** | Inline padding lg 16 / md 12 / sm 8. Icon gap **4 at every size**. Radius 4 throughout. Seven variants — primary, neutral, black, oncolor, transparent, danger-primary, danger-secondary — each with default, hovered, pressed, selected, focused, disabled. |
@@ -143,7 +157,7 @@ not look like a failure.
 | Missing | Effect | Fixed by |
 | --- | --- | --- |
 | Icon size scale, stroke weight | `I1` degrades to visual judgement | syncing **Icons** |
-| Mobile component anatomy | `P1–P3`, `A4` judged by desktop specs at 375px | syncing **Mobile Components** |
+| Checkbox / radio / switch geometry | `P3` for controls | measuring them — the Controls/ tokens are in, the sizes are not |
 | Dark mode variable set | `C4` n/a | not present in either file |
 | Motion durations and easings | `M1` n/a | Platforms Code appears not to define these |
 | Numeral policy | `R3` checks consistency only, not a specific system | — |
