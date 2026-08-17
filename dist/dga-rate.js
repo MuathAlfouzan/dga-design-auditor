@@ -1319,11 +1319,32 @@ function inlineReport(v, { maxFindings = 3 } = {}) {
     const graded = c.checks.filter((k) => k.status === 'pass' || k.status === 'fail');
     L.push(`| ${c.label} | ${graded.length ? `${c.earned}/${c.available}` : 'n/a'} |`);
   }
-  const top = v.findings.filter((f) => f.severity !== 'minor').slice(0, maxFindings);
+  // One row per failing check, not per finding. A page with 40 invisible borders
+  // produces 40 near-identical A2 findings, and listing the same sentence three
+  // times is noise — the count is the useful part, and the fix is one fix.
+  const byCheck = new Map();
+  for (const f of v.findings) {
+    if (f.severity === 'minor') continue;
+    const e = byCheck.get(f.checkId);
+    if (e) { e.n++; continue; }
+    byCheck.set(f.checkId, { ...f, n: 1 });
+  }
+  // Rank by what would actually move the score: points still on the table.
+  const lost = new Map();
+  for (const c of v.categories) for (const k of c.checks) {
+    if (k.status === 'fail') lost.set(k.id, (k.available ?? k.weight) - (k.earned ?? 0));
+  }
+  const top = [...byCheck.values()]
+    .sort((a, b) => (lost.get(b.checkId) ?? 0) - (lost.get(a.checkId) ?? 0))
+    .slice(0, maxFindings);
   if (top.length) {
     L.push('');
     L.push(`**Top ${top.length} to fix**`);
-    top.forEach((f, i) => L.push(`${i + 1}. \`${f.checkId}\` ${f.summary} — ${f.fix}`));
+    top.forEach((f, i) => {
+      const pts = lost.get(f.checkId);
+      const worth = pts ? ` _(+${Math.round(pts * 10) / 10} pts)_` : '';
+      L.push(`${i + 1}. \`${f.checkId}\`${f.n > 1 ? ` ×${f.n}` : ''} ${f.summary}${worth} — ${f.fix}`);
+    });
   }
   const na = v.categories.flatMap((c) => c.checks).filter((k) => k.status === 'n/a');
   if (na.length) L.push('', `_Not applicable: ${na.map((k) => k.id).join(', ')} — these leave the denominator rather than counting as failures._`);
