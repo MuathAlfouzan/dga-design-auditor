@@ -109,6 +109,35 @@ ok('split report leads with the overall', /Overall .*\/100/.test(both));
 ok('…shows parts per viewport', /\| Part \| Web \| Mobile \| Overall \|/.test(both));
 ok('…and states the overall is not an average', /only as compliant as its weakest/.test(both));
 
+/* ---- a declared family name is not the typeface ---------------------------
+   Found on dga.gov.sa, which serves IBMPlexSansArabic-*.ttf under the local
+   names regularFont / boldFont / mediumFont / semiBoldFont. Matching the ledger
+   on the declared name scored the exactly-correct typeface as 0 of 108 runs and
+   cost the full 5 points of T1 plus half of R3. The check has to follow the
+   @font-face src to the file that actually loads. */
+const baseCap = R(F + 'observed-desktop-light.json');
+const withFamily = (family, faceMap) => {
+  const c = JSON.parse(JSON.stringify(baseCap));
+  c.tallies.fontFamily = { total: 100, values: [{ value: family, count: 100, samples: ['p'] }] };
+  c.fontFaceMap = faceMap;
+  return c;
+};
+const t1Of = (cap) => score({ rubric, tokens, captures: [cap], judged,
+  options: { targetType: 'site', targetName: 'x', na: ['C3', 'I1', 'I2'], allowUnassessed: true } })
+  .categories.flatMap((c) => c.checks).find((k) => k.id === 'T1');
+
+const aliasRight = t1Of(withFamily('regularFont', { regularFont: 'IBMPlexSansArabic' }));
+eq('an alias resolving to the DGA face passes T1', [aliasRight.status, aliasRight.ratio], ['pass', 1]);
+
+const aliasWrong = t1Of(withFamily('brandFont', { brandFont: 'Diodrum' }));
+eq('an alias resolving to another face still fails', [aliasWrong.status, aliasWrong.ratio], ['fail', 0]);
+
+const noMap = t1Of(withFamily('IBM Plex Sans Arabic', {}));
+eq('a directly-declared correct family still passes without a map', noMap.status, 'pass');
+
+const unmapped = t1Of(withFamily('Comic Sans MS', {}));
+eq('an unmapped wrong family still fails', unmapped.status, 'fail');
+
 console.log('\n  ' + '─'.repeat(52));
 console.log(bad ? `\x1b[31m  ${bad} failing\x1b[0m\n` : '\x1b[32m  all passing\x1b[0m\n');
 process.exit(bad ? 1 : 0);

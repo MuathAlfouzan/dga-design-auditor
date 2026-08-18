@@ -244,6 +244,37 @@ function probe(OPTS_IN = {}) {
   let rtlElements = 0;
   let ltrElements = 0;
 
+  // Declared family name -> the file it actually loads. Built before the walk
+  // because both T1 and R3 need to resolve an alias before judging it: a site
+  // serving IBMPlexSansArabic-Regular.ttf under the name `regularFont` is using
+  // the specified typeface, and the name alone would say the opposite.
+  const FACE_SRC = (() => {
+    const map = {};
+    const fromSrc = (src) => {
+      const m = String(src || '').match(/url\(\s*["']?([^"')]+)/i);
+      if (!m) return null;
+      const file = m[1].split('/').pop().split('?')[0];
+      return file.replace(/\.(woff2?|ttf|otf|eot)$/i, '').replace(/[-_](regular|bold|semibold|medium|light|thin|black|italic|\d{3})$/i, '');
+    };
+    try {
+      for (const sheet of document.styleSheets) {
+        let rules;
+        try { rules = sheet.cssRules; } catch (e) { continue; }
+        const walk = (list) => {
+          for (const r of list) {
+            if (r.cssRules && r.cssRules.length) walk(r.cssRules);
+            if (!r.style || !r.style.src) continue;
+            const fam = (r.style.fontFamily || '').replace(/["']/g, '').trim();
+            const resolved = fromSrc(r.style.src);
+            if (fam && resolved && Object.keys(map).length < 60) map[fam] = resolved;
+          }
+        };
+        walk(rules);
+      }
+    } catch (e) {}
+    return map;
+  })();
+
   const all = document.querySelectorAll('*');
   const elements = all.length > MAX_ELEMENTS ? [...all].slice(0, MAX_ELEMENTS) : [...all];
   let examined = 0;
@@ -305,8 +336,14 @@ function probe(OPTS_IN = {}) {
       /* R3 — script and numerals */
       if (ARABIC.test(text)) {
         arabicRuns++;
-        const fam = cs.fontFamily.toLowerCase();
-        if (/arab|kufi|naskh|cairo|tajawal|almarai|ibm plex sans arabic|readex|noto/.test(fam)) arabicRunsInArabicFace++;
+        // Test the FILE the family loads, not just the declared name. A site
+        // serving IBMPlexSansArabic-Regular.ttf as `regularFont` is using an
+        // Arabic face; the declared name alone says otherwise.
+        const declared = cs.fontFamily.toLowerCase();
+        const resolved = (declared.split(',')[0].replace(/["']/g, '').trim());
+        const viaFace = FACE_SRC[resolved] || FACE_SRC[Object.keys(FACE_SRC).find((k) => k.toLowerCase() === resolved) || ''] || '';
+        const hay = (declared + ' ' + viaFace).toLowerCase();
+        if (/arab|kufi|naskh|cairo|tajawal|almarai|ibmplexsansarabic|ibm plex sans arabic|readex|noto/.test(hay)) arabicRunsInArabicFace++;
       }
       if (ARABIC_INDIC.test(text)) arabicIndicSeen++;
       if (WESTERN_DIGIT.test(text)) westernDigitSeen++;
@@ -584,6 +621,13 @@ function probe(OPTS_IN = {}) {
       } catch (e) {}
       return [...s].slice(0, 40);
     })(),
+    // A declared family name says nothing about which typeface actually renders.
+    // A site can serve the exactly-right face under a local alias — dga.gov.sa
+    // ships IBM Plex Sans Arabic as `regularFont`, `boldFont` and so on — and
+    // matching the ledger on the declared name alone scores that as a total
+    // failure. Map each @font-face family to the file it actually loads, so the
+    // scorer can resolve the alias before judging it.
+    fontFaceMap: FACE_SRC,
     tallies: Object.fromEntries(Object.entries(T).map(([k, v]) => [k, { total: v.total(), values: v.dump() }])),
     layout: {
       container: Math.round(mainRect.width),
@@ -902,9 +946,21 @@ function score({ rubric, tokens, captures = [], judged = {}, options = {} }) {
 
   /* typography */
   {
-    const fams = mergedTally('fontFamily');
+    // Resolve local aliases before judging. A site may serve exactly the right
+    // typeface under its own family name — @font-face { font-family: regularFont;
+    // src: url(IBMPlexSansArabic-Regular.ttf) } — and matching the declared name
+    // against the ledger would score the correct face as a total failure. The
+    // probe records which file each declared family loads; this follows it.
+    const faceMap = {};
+    for (const c of captures) Object.assign(faceMap, c.fontFaceMap || {});
+    const norm = (x) => String(x).toLowerCase().replace(/["']/g, '').replace(/[^a-z0-9]/g, '').trim();
+    const resolveFamily = (declared) => {
+      const hit = Object.keys(faceMap).find((k) => norm(k) === norm(declared));
+      return hit ? faceMap[hit] : declared;
+    };
+    const fams = mergedTally('fontFamily').map((r) => ({ ...r, declared: r.value, value: resolveFamily(r.value) }));
     const allowed = [...(tokens.typography?.families?.latin || []), ...(tokens.typography?.families?.arabic || [])];
-    auto.T1 = setCoverage(fams, allowed, 'T1', 'Font family', (x) => String(x).toLowerCase().replace(/["']/g, '').trim());
+    auto.T1 = setCoverage(fams, allowed, 'T1', 'Font family', norm);
 
     const ramp = tokens.typography?.ramp || [];
     auto.T2 = scaleCoverage(mergedTally('fontSize'), ramp.map((r) => r.size), 'T2', 'Font size');

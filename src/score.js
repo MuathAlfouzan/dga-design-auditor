@@ -286,9 +286,21 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
 
   /* typography */
   {
-    const fams = mergedTally('fontFamily');
+    // Resolve local aliases before judging. A site may serve exactly the right
+    // typeface under its own family name — @font-face { font-family: regularFont;
+    // src: url(IBMPlexSansArabic-Regular.ttf) } — and matching the declared name
+    // against the ledger would score the correct face as a total failure. The
+    // probe records which file each declared family loads; this follows it.
+    const faceMap = {};
+    for (const c of captures) Object.assign(faceMap, c.fontFaceMap || {});
+    const norm = (x) => String(x).toLowerCase().replace(/["']/g, '').replace(/[^a-z0-9]/g, '').trim();
+    const resolveFamily = (declared) => {
+      const hit = Object.keys(faceMap).find((k) => norm(k) === norm(declared));
+      return hit ? faceMap[hit] : declared;
+    };
+    const fams = mergedTally('fontFamily').map((r) => ({ ...r, declared: r.value, value: resolveFamily(r.value) }));
     const allowed = [...(tokens.typography?.families?.latin || []), ...(tokens.typography?.families?.arabic || [])];
-    auto.T1 = setCoverage(fams, allowed, 'T1', 'Font family', (x) => String(x).toLowerCase().replace(/["']/g, '').trim());
+    auto.T1 = setCoverage(fams, allowed, 'T1', 'Font family', norm);
 
     const ramp = tokens.typography?.ramp || [];
     auto.T2 = scaleCoverage(mergedTally('fontSize'), ramp.map((r) => r.size), 'T2', 'Font size');
