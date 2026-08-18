@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><title>every check, satisfied</title>
+<style>
+  /* EVERY value on this page is copied from data/tokens.json. Any check that cannot
+     score 1.0 here is broken, because there is nothing left for a site to do right.
+     Values are written literally rather than through variables so a reader can
+     diff them against the ledger by eye. */
+
+  /* colour: ledger tokens only (C1, C2) */
+  /* type: family and (size, leading, tracking) triples straight off the ramp (T1-T4) */
+  /* spacing: 0 2 4 6 8 12 16 20 24 32 40 48 64 80 (S1), rhythm 24+ between sections (S3) */
+  /* radius: 0 2 4 6 8 16 24 (E1) · border widths 1 2 (E2) · shadows verbatim (E3) */
+  /* motion: durations and easing are absent from the ledger, so M1 is n/a by design;
+     M2 needs only that a reduced-motion block exists */
+
+  :root { color-scheme: light; }
+  body {
+    margin: 0; padding: 0;
+    background: #ffffff;
+    color: #161616;
+    font-family: "IBM Plex Sans Arabic";
+    font-size: 16px; line-height: 24px; letter-spacing: 0; font-weight: 400;
+  }
+
+  /* --- typography: exact ramp steps -------------------------------------- */
+  .display-xl { font-size: 60px; line-height: 72px; letter-spacing: -2px; font-weight: 600; }
+  .display-sm { font-size: 30px; line-height: 38px; letter-spacing: 0;    font-weight: 700; }
+  .text-xl    { font-size: 20px; line-height: 30px; letter-spacing: 0;    font-weight: 600; }
+  .text-md    { font-size: 16px; line-height: 24px; letter-spacing: 0;    font-weight: 400; }
+  .text-sm    { font-size: 14px; line-height: 20px; letter-spacing: 0;    font-weight: 400; }
+
+  /* --- layout: logical properties only (R2), scale spacing (S1) ----------- */
+  .page      { max-width: 1280px; margin-inline: auto; padding-inline: 32px; }
+  .section   { margin-block-end: 48px; padding-block: 24px; }
+  .stack     { display: flex; flex-direction: column; gap: 16px; }
+  .row       { display: flex; gap: 8px; align-items: center; }
+
+  /* --- shape and elevation: verbatim from the ledger ---------------------- */
+  .card {
+    background: #ffffff;
+    border: 1px solid #d2d6db;      /* border width 1, Border/border-neutral-primary */
+    border-radius: 16px;             /* radius scale */
+    padding: 24px;
+    box-shadow: 0 1px 2px 0 #1018280d;   /* Shadows/shadow-xs, copied exactly */
+  }
+  .raised { box-shadow: 0 2px 4px -2px #1018280f, 0 4px 8px -2px #1018281a; } /* shadow-md */
+
+  /* --- controls: contrast, target size, visible focus (A1-A4) ------------- */
+  .btn {
+    display: inline-flex; align-items: center; gap: 4px;
+    min-height: 40px; padding-inline: 16px;
+    border-radius: 4px; border: 0;
+    background: #1b8354; color: #ffffff;     /* 4.63:1 — above AA */
+    font-family: "IBM Plex Sans Arabic"; font-size: 16px; line-height: 24px; font-weight: 400;
+  }
+  .btn:focus-visible { outline: 2px solid #161616; outline-offset: 2px; }
+  .field {
+    min-height: 40px; padding-inline: 16px;
+    /* Border/border-black — a border-role token in the ledger (E2) and 16.8:1
+       against white, comfortably over the 3:1 non-text bar (A2). It has to be both:
+       E2 asks whether the colour is a border token, A2 whether it is visible. */
+    border: 1px solid #161616;
+    border-radius: 4px; background: #ffffff; color: #161616;
+    font-family: "IBM Plex Sans Arabic"; font-size: 16px; line-height: 24px;
+  }
+  .field:focus-visible { outline: 2px solid #161616; outline-offset: 2px; }
+
+  /* --- motion: M2 only needs the block to exist --------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <section class="section stack">
+      <!-- Arabic in the Arabic face, document dir=rtl, one numeral system (R1, R3) -->
+      <h1 class="display-xl">هيئة الحكومة الرقمية</h1>
+      <p class="text-md">نص عربي يستخدم خط النظام المعتمد، باتجاه من اليمين إلى اليسار.</p>
+      <p class="text-md">Latin text in the same family, so T1 sees one typeface for both scripts.</p>
+      <p class="text-sm">Western numerals only: 2026, 1280, 24. No mixed numeral systems.</p>
+    </section>
+
+    <section class="section stack">
+      <h2 class="display-sm">Components</h2>
+      <div class="card stack">
+        <h3 class="text-xl">A card at radius 16 with shadow-xs</h3>
+        <p class="text-md">Body copy at the Text md step: 16 over 24, tracking 0.</p>
+        <div class="row">
+          <button type="button" class="btn">إجراء أساسي</button>
+          <button type="button" class="btn">Secondary action</button>
+        </div>
+      </div>
+
+      <div class="card raised stack">
+        <label class="text-sm" for="q">حقل البحث</label>
+        <input class="field" id="q" type="text" placeholder="اكتب هنا">
+      </div>
+    </section>
+
+    <section class="section stack">
+      <p class="text-md">
+        Prose with an <a href="#" style="color:#1b8354">inline link</a> inside a sentence,
+        which WCAG 2.2 exempts from the target minimum, and which the auditor must exempt too.
+      </p>
+    </section>
+  </div>
+</body>
+</html>

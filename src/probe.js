@@ -492,17 +492,18 @@ export function probe(OPTS_IN = {}) {
     // and rgba() as four. E3 was structurally unpassable until this.
     if (cs.boxShadow && cs.boxShadow !== 'none') T.shadow.add(normaliseShadow(cs.boxShadow), el, { raw: cs.boxShadow.slice(0, 120) });
 
-    /* spacing */
-    for (const p of ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft']) {
-      const v = px(cs[p]);
-      if (v && v > 0) T.spacing.add(v, el);
-    }
-    // Margins only when the AUTHORED value is a length. getComputedStyle resolves
-    // `auto` and percentages to pixels, so a centring margin arrived as a decision
-    // nobody made — that is where "1231.47px is off the DGA scale" came from.
-    for (const p of ['margin-top', 'margin-right', 'margin-bottom', 'margin-left']) {
+    // Spacing counts only what the AUTHOR wrote. Computed style cannot tell a design
+    // decision from a browser default or a resolved layout value, and both were being
+    // scored as off-scale choices: `margin: auto` arrived as 1231.47px, and Chrome's
+    // own `button { padding: 1px 6px }` arrived as a 1px spacing token nobody chose.
+    // Logical longhands are read too — a site that uses margin-block-end (which R2
+    // rewards) must not become invisible to S1.
+    for (const p of ['padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+                     'padding-block-start', 'padding-block-end', 'padding-inline-start', 'padding-inline-end',
+                     'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+                     'margin-block-start', 'margin-block-end', 'margin-inline-start', 'margin-inline-end']) {
       const authored = authoredValue(el, p);
-      if (authored === null || /auto|%|calc/i.test(authored)) continue;
+      if (authored === null || /auto|%|calc|var\(/i.test(authored)) continue;
       const v = px(authored);
       if (v && v > 0) T.spacing.add(v, el);
     }
@@ -611,6 +612,25 @@ export function probe(OPTS_IN = {}) {
     vendorSheets: 0,
     firstPartySheets: 0,
   };
+  /**
+   * Was this directional longhand written by the author, or produced by expanding a
+   * shorthand? If the covering shorthand is present in the same rule, the CSSOM
+   * generated the longhand and it carries no directional intent.
+   */
+  function fromShorthand(style, prop) {
+    const covers = {
+      "margin-left": ["margin"], "margin-right": ["margin"],
+      "padding-left": ["padding"], "padding-right": ["padding"],
+      left: ["inset"], right: ["inset"],
+      "border-left-width": ["border", "border-width"], "border-right-width": ["border", "border-width"],
+      "border-left-style": ["border", "border-style"], "border-right-style": ["border", "border-style"],
+      "border-left-color": ["border", "border-color"], "border-right-color": ["border", "border-color"],
+      "border-left": ["border"], "border-right": ["border"],
+    }[prop];
+    if (!covers) return false;
+    return covers.some((sh) => (style.getPropertyValue(sh) || "").trim() !== "");
+  }
+
   const LOGICAL = /^(margin|padding|inset|border)-(inline|block)(-(start|end))?$|^(inset|margin|padding)-(inline|block)$|^border-(inline|block)-(start|end)-(width|color|style)$/;
   const PHYSICAL = /^(margin|padding)-(left|right)$|^(left|right)$|^border-(left|right)-(width|color|style)$|^border-(left|right)$|^float$|^clear$/;
 
@@ -644,6 +664,13 @@ export function probe(OPTS_IN = {}) {
         const p = st[i];
         if (LOGICAL.test(p)) cssStats.logicalDecls++;
         else if (PHYSICAL.test(p)) {
+          // A longhand the CSSOM produced by expanding a shorthand is not a
+          // directional choice. `margin: 0` sets all four sides and lists
+          // margin-left among them; `border: 1px solid` lists border-right-width.
+          // Neither has a "more logical" form the author declined to use, and
+          // counting them made a page written entirely in logical properties read
+          // as 24 physical declarations.
+          if (fromShorthand(st, p)) continue;
           cssStats.physicalDecls++;
           if (cssStats.physicalSamples.length < 25) cssStats.physicalSamples.push({ selector: sel.slice(0, 100), property: p });
         }
