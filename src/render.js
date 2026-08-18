@@ -135,6 +135,32 @@ const shotsHtml = shots.length
 </section>`
   : '';
 
+/* ------------------------------------------------------- DGA readiness */
+
+// The headline is DGA own question. DGA publishes no passing score — it publishes a
+// checklist and confirms conformance by formal review — so the page leads with whether
+// the mandatory tier is met, and treats the percentage as adoption, which is all it is.
+const rd = S.readiness;
+const critRows = (S.criteria && S.criteria.criteria) || [];
+const STATUS = { met: ["pass", "Met"], open: ["fail", "Open"], unknown: ["warn", "Cannot confirm"],
+                 "no-check": ["warn", "Not applicable"], manual: ["warn", "Human review"] };
+const readinessHtml = rd
+  ? `<section class="block">
+  <h2>DGA assessment criteria</h2>
+  <p class="lede">DGA publishes a checklist, not a passing score: <em>«تضمن المراجعة الرسمية أن مشروعك يفي بجميع المعايير»</em>. Readiness below is the state of the <strong>mandatory tier</strong> — it is not a threshold on the adoption percentage.</p>
+  <p class="cap"><span class="stamp ${rd.state === "ready" ? "" : rd.state === "unconfirmed" ? "warn" : "fail"}">${rd.label}</span><strong>${rd.met} of ${rd.total} mandatory criteria met.</strong>${rd.open.length ? ` Open: ${rd.open.map((o) => `<b>${esc(o.ar)}</b> (${o.blocking.map(esc).join(", ")})`).join(" · ")}.` : ""}${rd.unknown.length ? ` Cannot confirm: ${rd.unknown.map((o) => `<b>${esc(o.ar)}</b>`).join(" · ")}.` : ""}</p>
+  <div class="scroll-x"><table>
+    <thead><tr><th>Tier</th><th>Criterion</th><th>Status</th><th>Evidence</th></tr></thead>
+    <tbody>${critRows.map((c) => `<tr>
+      <td>${c.tier === "mandatory" ? "<b>إلزامي</b>" : "موصى بها"}</td>
+      <td dir="auto"><strong>${esc(c.ar || c.id)}</strong><br><span style="font-size:.78rem">${esc(c.en || "")}</span></td>
+      <td style="color:var(--${(STATUS[c.status] || ["slate"])[0]})"><b>${(STATUS[c.status] || ["", c.status])[1]}</b></td>
+      <td>${c.checks.length ? c.checks.map((x) => `<code>${esc(x)}</code>`).join(" ") : `<span style="font-size:.78rem">${esc(c.note || "no automated check")}</span>`}</td>
+    </tr>`).join("")}</tbody>
+  </table></div>
+  ${S.criteria && S.criteria.automatedCoverage ? `<p class="lede">Automates <strong>${S.criteria.automatedCoverage.automated} of ${S.criteria.automatedCoverage.published}</strong> published criteria. ${esc(S.criteria.automatedCoverage.note)}</p>` : ""}
+</section>`
+  : '';
 /* --------------------------------------------------- where the points went */
 
 // The section the report was missing. "P1 lost 4.84" names a check; this names a place.
@@ -403,6 +429,8 @@ const html = `<title>${esc(S.target?.name || 'Design')} Compliance Audit</title>
     <p class="lede">Nine categories, ${S.checksTotal} checks. Each category shows points earned against points available for this target — a check that cannot apply leaves the denominator rather than counting as a failure. Open a row for the individual checks.</p>
     <div class="scroll-x">${categoryRows}</div>
   </section>
+
+  ${readinessHtml}
 
   ${regionHtml}
 

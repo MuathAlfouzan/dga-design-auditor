@@ -85,8 +85,8 @@ check('dropping the six worst checks still raises the raw number',
   `${base.score} -> ${thin.score} — if this ever stops being true the attack changed shape`);
 check('…but the audit is marked provisional',
   thin.provisional === true, `provisional=${thin.provisional}`);
-check('…and cannot band above Partial however high the number goes',
-  thin.band.id === 'partial' || thin.score < 75,
+check('…and cannot claim a high adoption level however high the number goes',
+  thin.band.id === 'moderate' || thin.score < 75,
   `score ${thin.score} banded ${thin.band.id}`);
 check('…and says coverage is why',
   (thin.capReasons || []).some((r) => /measured/.test(r)),

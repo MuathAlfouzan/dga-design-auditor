@@ -119,6 +119,32 @@ By default the engine **refuses to score** when a judged check is neither assess
 marked `na`, because silently dropping the component checks is how a rebuild scores as
 compliant.
 
+### The verdict is DGA's question, not a threshold of ours
+
+**DGA publishes no passing score.** Its assessment criteria are a checklist — mark
+*حالة الامتثال* per item, submit it with the project, and *«تضمن المراجعة الرسمية أن
+مشروعك يفي بجميع المعايير»*: formal review confirms the project meets **all** of them.
+Criteria live in `data/dga-criteria.json` with their source and capture date.
+
+So lead every report with readiness, never a bare percentage:
+
+    ✗ Not yet · DGA mandatory criteria 3 of 5 met
+    Open: معايير الخطوط و الألوان (C1, T1) · إمكانية الوصول (A2)
+    Adoption 71.8% · High adoption
+
+- **Readiness** gates on the mandatory tier (الامتثال الإلزامي). Three states, because two
+  would lie: `ready`, `not-yet`, and `unconfirmed` when nothing failed but something could
+  not be looked at. An unmeasured check can never count as met.
+- **Adoption** is the percentage. It measures how much of the interface is built from the
+  DGA system. It is not a compliance verdict and must never be labelled as one — that is
+  why the bands read *Full / High / Moderate / Limited adoption*.
+- **Absence is not a gap.** "This target ships no dark theme" hides nothing and does not
+  block a criterion. "The browser could not observe focus" hides everything it would have
+  measured, and does.
+- Always state how much of DGA's framework is automated. Task completion, load times, error
+  messaging, help resources and feedback mechanisms cannot be read off a rendered page.
+  **DGA's own formal review is the authority; this tool is preparation for it.**
+
 ### Where the points went — never report a check without a place
 
 `__dga.regions()` groups every finding by the part of the page it sits in — header,

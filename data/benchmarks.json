@@ -80,5 +80,14 @@
         "Captured by resize without an intervening reload, so load-time responsive gates did not re-run at 375px"
       ]
     }
-  ]
+  ],
+  "baseline": {
+    "web": 71.8,
+    "mobile": 70.7,
+    "setOn": "2026-08-18",
+    "from": "dga.gov.sa",
+    "reason": "first two-viewport capture at real widths (1280 and 375) through a browser that renders the full desktop layout",
+    "note": "PINNED. Moving this is a deliberate act, recorded here with a reason. Re-auditing dga.gov.sa does NOT move it — a verdict that changes because someone else was re-measured is not reproducible.",
+    "basis": "context for reading a score, never a pass threshold. DGA publishes no passing score; readiness is decided on its mandatory tier."
+  }
 }

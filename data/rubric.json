@@ -9,28 +9,27 @@
   },
   "bands": [
     {
-      "id": "compliant",
-      "label": "Compliant",
+      "id": "full",
+      "label": "Full adoption",
       "min": 90
     },
     {
-      "id": "substantial",
-      "label": "Substantially compliant",
+      "id": "high",
+      "label": "High adoption",
       "min": 75
     },
     {
-      "id": "partial",
-      "label": "Partial",
+      "id": "moderate",
+      "label": "Moderate adoption",
       "min": 60
     },
     {
-      "id": "non-compliant",
-      "label": "Non-compliant",
+      "id": "limited",
+      "label": "Limited adoption",
       "min": 0
     }
   ],
-  "$gate": "Government gate: any failed check with blocker:true caps the band at 'partial' regardless of the numeric score. The number is never altered — the band carries the gate, and the report names the blocker that capped it.",
-  "blockerCapBand": "partial",
+  "$gate": "Government gate: the mandatory tier of DGA's own assessment criteria decides readiness, reported as verdict.mandatory and verdict.readiness. Blocker checks still exist and still require 100%, but they now feed the criterion they belong to instead of capping a band.",
   "$passThreshold": "How much compliance counts as a check being 'met' for the X-of-N headline. Ordinary checks pass at 90% — a couple of stray values on a large page is drift, not a failure. Blocker checks pass only at 100%, because WCAG conformance and mark usage are not proportional: one text run below 4.5:1 means the page does not conform, however good the other ninety-nine are.",
   "passThreshold": {
     "default": 0.9,
@@ -70,7 +69,10 @@
           "fix": "Replace the literal color with the named DGA token. The finding names the nearest token for each offender.",
           "provenance": "ledger",
           "authority": "Foundations / Colours — the published token palette",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "type-colour",
+          "dgaCategory": "consistency",
+          "dgaTier": "mandatory"
         },
         {
           "id": "C2",
@@ -85,7 +87,10 @@
           "fix": "An unrecognisable brand color is an identity violation, not a styling preference. Move it onto the DGA palette or get the addition approved into the library.",
           "provenance": "ledger",
           "authority": "Foundations / Colours / Brand",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "type-colour",
+          "dgaCategory": "consistency",
+          "dgaTier": "mandatory"
         },
         {
           "id": "C3",
@@ -100,7 +105,10 @@
           "fix": "Error text in the brand green, or a success toast in red, breaks the one convention users carry between government platforms.",
           "provenance": "ledger",
           "authority": "Foundations / Colours — success · warning · error · info roles",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "type-colour",
+          "dgaCategory": "consistency",
+          "dgaTier": "mandatory"
         },
         {
           "id": "C4",
@@ -116,7 +124,10 @@
           "fix": "Point the dark theme at the DGA dark tokens. Inverting or dimming light tokens drifts within one release.",
           "provenance": "ledger",
           "authority": "Foundations / Colours — dark set",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "type-colour",
+          "dgaCategory": "consistency",
+          "dgaTier": "mandatory"
         }
       ],
       "part": "foundations"
@@ -139,7 +150,10 @@
           "fix": "A substituted face is the single most visible compliance failure — it reads as a different government at a glance.",
           "provenance": "ledger",
           "authority": "Foundations / Typography — IBM Plex Sans Arabic",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "type-colour",
+          "dgaCategory": "consistency",
+          "dgaTier": "mandatory"
         },
         {
           "id": "T2",
@@ -154,7 +168,10 @@
           "fix": "Snap to the nearest ramp step; the finding names it.",
           "provenance": "ledger",
           "authority": "Foundations / Typography — the type ramp",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "type-colour",
+          "dgaCategory": "consistency",
+          "dgaTier": "mandatory"
         },
         {
           "id": "T3",
@@ -169,7 +186,10 @@
           "fix": "Synthetic or off-scale weights render inconsistently across platforms, especially in Arabic.",
           "provenance": "ledger",
           "authority": "Foundations / Typography — weights 400 · 500 · 600 · 700",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "type-colour",
+          "dgaCategory": "consistency",
+          "dgaTier": "mandatory"
         },
         {
           "id": "T4",
@@ -184,7 +204,10 @@
           "fix": "Set the ramp's paired leading rather than a global multiplier — Arabic ascenders and descenders need the extra room.",
           "provenance": "ledger",
           "authority": "Foundations / Typography — the ramp step (size, leading, tracking) triples",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "type-colour",
+          "dgaCategory": "consistency",
+          "dgaTier": "mandatory"
         }
       ],
       "part": "foundations"
@@ -207,7 +230,10 @@
           "fix": "Off-grid spacing is what makes an otherwise on-token page feel unlike the rest of the platform.",
           "provenance": "ledger",
           "authority": "Foundations / Spacing — the spacing scale",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "layout-spacing",
+          "dgaCategory": "design",
+          "dgaTier": "mandatory"
         },
         {
           "id": "S2",
@@ -222,7 +248,10 @@
           "fix": "Match the DGA container at each breakpoint so content lines up across linked government services.",
           "provenance": "ledger",
           "authority": "Foundations / Grid — breakpoints, container widths and gutters",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "layout-spacing",
+          "dgaCategory": "design",
+          "dgaTier": "mandatory"
         },
         {
           "id": "S3",
@@ -237,7 +266,10 @@
           "fix": "Use the rhythm steps for section separation; the page reads as one document rather than stacked fragments.",
           "provenance": "ledger",
           "authority": "Foundations / Spacing — section rhythm steps",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "layout-spacing",
+          "dgaCategory": "design",
+          "dgaTier": "mandatory"
         }
       ],
       "part": "foundations"
@@ -260,7 +292,10 @@
           "fix": "Snap to the nearest radius step.",
           "provenance": "ledger",
           "authority": "Foundations / Radius — the radius scale",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "design-system",
+          "dgaCategory": "design",
+          "dgaTier": "mandatory"
         },
         {
           "id": "E2",
@@ -275,7 +310,10 @@
           "fix": "Use the border tokens; hairlines that vary by a fraction of a pixel show up as banding on scaled displays.",
           "provenance": "ledger",
           "authority": "Foundations / Borders — widths and border-role colours",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "design-system",
+          "dgaCategory": "design",
+          "dgaTier": "mandatory"
         },
         {
           "id": "E3",
@@ -290,7 +328,10 @@
           "fix": "Use the named elevation level. Hand-tuned shadows break the depth ordering the system defines.",
           "provenance": "ledger",
           "authority": "Foundations / Shadows — the elevation levels",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "design-system",
+          "dgaCategory": "design",
+          "dgaTier": "mandatory"
         }
       ],
       "part": "foundations"
@@ -313,7 +354,10 @@
           "fix": "Adopt the library component. A rebuild that looks right today is the thing that drifts at the next DGA release.",
           "provenance": "ledger",
           "authority": "Components Library — component anatomy",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "design-system",
+          "dgaCategory": "design",
+          "dgaTier": "mandatory"
         },
         {
           "id": "P2",
@@ -328,7 +372,10 @@
           "fix": "Missing disabled or focus treatments are the usual failure; both are specified, neither is optional.",
           "provenance": "ledger",
           "authority": "Components Library — variants, sizes and states",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "design-system",
+          "dgaCategory": "design",
+          "dgaTier": "mandatory"
         },
         {
           "id": "P3",
@@ -343,7 +390,10 @@
           "fix": "Restore the specified padding and min-height. Squeezed buttons are also the usual cause of an A4 target-size failure.",
           "provenance": "ledger",
           "authority": "Components Library — internal geometry",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "design-consistency",
+          "dgaCategory": "design",
+          "dgaTier": "recommended"
         }
       ],
       "part": "components"
@@ -366,7 +416,10 @@
           "fix": "Standardise on the DGA icon set. Two icon families on one screen is visible even to users who cannot name why.",
           "provenance": "ledger",
           "authority": "Icons Library — family, size scale and stroke weight",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "design-consistency",
+          "dgaCategory": "design",
+          "dgaTier": "recommended"
         },
         {
           "id": "I2",
@@ -381,7 +434,10 @@
           "fix": "Misuse of a government mark is an identity violation. Use the approved asset at approved size with its clear space intact.",
           "provenance": "ledger",
           "authority": "Brand / identity — approved marks, minimum size, clear space",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "design-consistency",
+          "dgaCategory": "design",
+          "dgaTier": "recommended"
         }
       ],
       "part": "components"
@@ -404,7 +460,10 @@
           "fix": "Set dir on the document and let logical properties carry the mirroring, rather than a per-component RTL override sheet.",
           "provenance": "standard",
           "authority": "HTML dir attribute · W3C i18n — an Arabic interface must be mirrored",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "content-strategy",
+          "dgaCategory": "usability",
+          "dgaTier": "recommended"
         },
         {
           "id": "R2",
@@ -419,7 +478,9 @@
           "fix": "margin-inline-start over margin-left. Physical properties are why an RTL layout needs a second stylesheet and then diverges from the first.",
           "provenance": "practice",
           "authority": null,
-          "scope": "extended"
+          "scope": "extended",
+          "dgaCriterion": null,
+          "dgaCategory": null
         },
         {
           "id": "R3",
@@ -434,7 +495,10 @@
           "fix": "Mixed numeral systems inside one interface is the most common bilingual defect and the easiest to fix.",
           "provenance": "standard",
           "authority": "W3C i18n — one numeral system, Arabic set in an Arabic face",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "content-strategy",
+          "dgaCategory": "usability",
+          "dgaTier": "recommended"
         }
       ],
       "part": "standards"
@@ -457,7 +521,10 @@
           "fix": "Government services carry a statutory accessibility obligation. Darken the text token or lighten the surface — the finding gives the measured ratio and the needed delta.",
           "provenance": "wcag",
           "authority": "WCAG 2.2 SC 1.4.3 Contrast (Minimum), AA",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "accessibility-wcag",
+          "dgaCategory": "accessibility",
+          "dgaTier": "mandatory"
         },
         {
           "id": "A2",
@@ -472,7 +539,10 @@
           "fix": "An input whose border disappears against its background is not usable at low vision or in sunlight.",
           "provenance": "wcag",
           "authority": "WCAG 2.2 SC 1.4.11 Non-text Contrast, AA",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "accessibility-wcag",
+          "dgaCategory": "accessibility",
+          "dgaTier": "mandatory"
         },
         {
           "id": "A3",
@@ -487,7 +557,10 @@
           "fix": "Never remove the outline without replacing it. Keyboard-only users navigate the whole service through this one affordance.",
           "provenance": "wcag",
           "authority": "WCAG 2.2 SC 2.4.7 Focus Visible, AA",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "accessibility-wcag",
+          "dgaCategory": "accessibility",
+          "dgaTier": "mandatory"
         },
         {
           "id": "A4",
@@ -502,7 +575,10 @@
           "fix": "Grow the control or its padding. Icon-only buttons are the usual offenders.",
           "provenance": "wcag",
           "authority": "WCAG 2.2 SC 2.5.8 Target Size (Minimum), AA",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "mobile-usability",
+          "dgaCategory": "usability",
+          "dgaTier": "mandatory"
         }
       ],
       "part": "standards"
@@ -525,7 +601,10 @@
           "fix": "Use the named duration and curve so motion feels the same across services.",
           "provenance": "ledger",
           "authority": "Foundations / Motion — duration and easing tokens",
-          "scope": "core"
+          "scope": "core",
+          "dgaCriterion": "design-system",
+          "dgaCategory": "design",
+          "dgaTier": "mandatory"
         },
         {
           "id": "M2",
@@ -540,7 +619,9 @@
           "fix": "Add a reduced-motion block that skips the motion rather than shortening it.",
           "provenance": "practice",
           "authority": null,
-          "scope": "extended"
+          "scope": "extended",
+          "dgaCriterion": null,
+          "dgaCategory": null
         }
       ],
       "part": "foundations"
@@ -574,5 +655,8 @@
     "coreWeight": 95,
     "extendedWeight": 5,
     "note": "The score out of 100 is earned/available over CORE checks only — every core point traces to a DGA Figma token, a WCAG success criterion, or a W3C i18n requirement, named in each check's `authority`. `extended` checks measure practices nobody published; they are scored and reported separately and never fold into the headline or cap a band."
-  }
+  },
+  "$bands": "Adoption levels, not compliance verdicts. The score measures how much of the interface is built from the DGA system; it does not decide compliance. DGA gates on its mandatory tier and confirms conformance by formal review — see data/dga-criteria.json. The gate lives in verdict.mandatory, never in the band.",
+  "provisionalCapBand": "moderate",
+  "$provisionalCapBand": "A thin audit cannot claim a high adoption level: when coverage falls below the floor the band is held here. This is about evidence, not compliance — the compliance gate is DGA mandatory tier."
 }

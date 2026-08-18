@@ -163,6 +163,7 @@ const failing = w(
 // and keeping them meant none of the 13 assertions had to change when scoring
 // moved out of Node and into the page.
 const rubric = JSON.parse(readFileSync(resolve(HERE, '../data/rubric.json'), 'utf8'));
+const criteria = JSON.parse(readFileSync(resolve(HERE, '../data/dga-criteria.json'), 'utf8'));
 const CODES = { NO_CAPTURES: 2, LEDGER_UNSYNCED: 3, UNASSESSED_JUDGED: 4, SILENT_COVERAGE_LOSS: 5 };
 
 function run(extra, expectCode = 0, tokensFile = tokensPath) {
@@ -179,6 +180,7 @@ function run(extra, expectCode = 0, tokensFile = tokensPath) {
     const json = score({
       rubric,
       tokens: JSON.parse(readFileSync(tokensFile, 'utf8')),
+      criteria,
       captures, judged,
       options: { targetType: 'site', targetName: 'Fixture', na, allowLowCoverage },
     });
@@ -201,7 +203,12 @@ console.log('\n  DGA scoring engine — self test\n  ' + '─'.repeat(50));
 /* 1 — a clean target scores 100 */
 const clean = run(['--observed', desktop, '--observed', mobile, '--judged', judgedPath]);
 check('clean target scores exactly 100', clean.json?.score === 100, `got ${clean.json?.score} (${clean.stderr || ''})`);
-check('clean target bands as Compliant', clean.json?.band?.id === 'compliant', `got ${clean.json?.band?.id}`);
+check('clean target reads Full adoption', clean.json?.band?.id === 'full', `got ${clean.json?.band?.id}`);
+check('clean target is ready to submit', clean.json?.readiness?.state === 'ready',
+  `got ${clean.json?.readiness?.state} — ${JSON.stringify(clean.json?.readiness?.open)}`);
+check('…with every mandatory DGA criterion met',
+  clean.json?.readiness?.met === clean.json?.readiness?.total,
+  `${clean.json?.readiness?.met} of ${clean.json?.readiness?.total}`);
 check('clean target has no findings', (clean.json?.findings?.length ?? -1) === 0, `got ${clean.json?.findings?.length} — ${JSON.stringify(clean.json?.findings?.slice(0, 2))}`);
 check(
   'inapplicable checks leave the denominator',
@@ -209,11 +216,18 @@ check(
   `available ${clean.json?.available} (expected 87: core 95 less C4 dark 3, R1 3, R3 2), counted ${clean.json?.checksCounted} of ${clean.json?.checksTotal} (expected 23 core checks; R2 and M2 score in the extended block)`
 );
 
-/* 2 — the government gate: a blocker caps the band without touching the number */
+/* 2 — the government gate. It used to cap the BAND; it now decides READINESS against
+      DGA's own mandatory tier, because DGA publishes no passing score to cap against.
+      The number is still never touched, which was always the point. */
 const gated = run(['--observed', failing, '--observed', mobile, '--judged', judgedPath]);
 check('contrast failure still scores in the 90s', gated.json?.score > 90 && gated.json?.score < 100, `got ${gated.json?.score}`);
-check('…but the band is capped at Partial', gated.json?.band?.id === 'partial', `got ${gated.json?.band?.id}`);
-check('…and the cap records what it dropped from', gated.json?.cappedFrom === 'Compliant', `got ${gated.json?.cappedFrom}`);
+check('…but it is NOT ready to submit', gated.json?.readiness?.state === 'not-yet', `got ${gated.json?.readiness?.state}`);
+check('…because the accessibility criterion is open',
+  gated.json?.readiness?.open?.some((o) => o.id === 'accessibility-wcag'),
+  JSON.stringify(gated.json?.readiness?.open));
+check('…and the adoption level is left alone — the number already priced the failure',
+  gated.json?.band?.id === 'full' && gated.json?.cappedFrom === null,
+  `band ${gated.json?.band?.id}, cappedFrom ${gated.json?.cappedFrom}`);
 check('…naming A1 as the blocker', gated.json?.failedBlockers?.some((b) => b.id === 'A1'), JSON.stringify(gated.json?.failedBlockers));
 check('…and the finding carries blocker severity', gated.json?.findings?.some((f) => f.checkId === 'A1' && f.severity === 'blocker'), 'no blocker-severity A1 finding');
 

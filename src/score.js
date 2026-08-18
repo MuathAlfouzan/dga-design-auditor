@@ -67,7 +67,7 @@ function nearestToken(hexValue, palette) {
 
 /* ------------------------------------------------------------------ main */
 
-export function score({ rubric, tokens, benchmarks = null, captures = [], judged = {}, options = {} }) {
+export function score({ rubric, tokens, criteria = null, benchmarks = null, captures = [], judged = {}, options = {} }) {
   const {
     targetType = 'site',
     targetName = '(unnamed target)',
@@ -331,7 +331,9 @@ export function score({ rubric, tokens, benchmarks = null, captures = [], judged
       ];
       auto.C4 = colorCoverage(drows, darkPalette, 'C4', 'Dark-theme colour');
     } else {
-      auto.C4 = { ratio: null, na: true, reason: darkCaptures.length ? 'ledger has no dark token set' : 'target ships no dark theme' };
+      auto.C4 = darkCaptures.length
+        ? { ratio: null, na: true, reason: 'ledger has no dark token set' }             // we cannot look
+        : { ratio: null, na: true, absent: true, reason: 'target ships no dark theme' }; // nothing to look at
     }
   }
 
@@ -452,7 +454,9 @@ export function score({ rubric, tokens, benchmarks = null, captures = [], judged
       }
       auto.S2 = { ratio: checked ? hit / checked : null, matched: hit, total: checked };
     } else {
-      auto.S2 = { ratio: null, na: true, reason: targetType !== 'site' ? 'not measurable on a Figma frame' : 'ledger has no breakpoints' };
+      auto.S2 = targetType !== 'site'
+        ? { ratio: null, na: true, absent: true, reason: 'not measurable on a Figma frame' }
+        : { ratio: null, na: true, reason: 'ledger has no breakpoints' };
     }
 
     const rhythm = tokens.spacing?.rhythm || [];
@@ -499,8 +503,8 @@ export function score({ rubric, tokens, benchmarks = null, captures = [], judged
     const anyArabic = r.arabicRuns > 0;
     const docDirs = captures.map((c) => c.document?.dir);
     if (!anyArabic) {
-      auto.R1 = { ratio: null, na: true, reason: 'no Arabic content in the captures' };
-      auto.R3 = { ratio: null, na: true, reason: 'no Arabic content in the captures' };
+      auto.R1 = { ratio: null, na: true, absent: true, reason: 'no Arabic content in the captures' };
+      auto.R3 = { ratio: null, na: true, absent: true, reason: 'no Arabic content in the captures' };
     } else {
       const dirOk = docDirs.some((d) => d === 'rtl');
       const mirrored = r.rtlElements > r.ltrElements;
@@ -575,7 +579,7 @@ export function score({ rubric, tokens, benchmarks = null, captures = [], judged
         });
       }
     } else {
-      auto.R2 = { ratio: null, na: true, reason: 'authored CSS does not exist on a Figma frame' };
+      auto.R2 = { ratio: null, na: true, absent: true, reason: 'authored CSS does not exist on a Figma frame' };
     }
   }
 
@@ -657,7 +661,7 @@ export function score({ rubric, tokens, benchmarks = null, captures = [], judged
         });
       }
     } else {
-      auto.A3 = { ratio: null, na: true, reason: 'focus state does not exist on a static frame' };
+      auto.A3 = { ratio: null, na: true, absent: true, reason: 'focus state does not exist on a static frame' };
     }
 
     // A4 is viewport-aware: the probe already measured against the threshold its own
@@ -703,14 +707,20 @@ export function score({ rubric, tokens, benchmarks = null, captures = [], judged
         });
       }
     } else {
-      auto.M2 = { ratio: null, na: true, reason: 'runtime preference does not apply to a static frame' };
+      auto.M2 = { ratio: null, na: true, absent: true, reason: 'runtime preference does not apply to a static frame' };
     }
   }
 
   /* ------------------------------------------------------------ assemble */
 
   function meta(chk) {
-    return { id: chk.id, title: chk.title, description: chk.description, weight: chk.weight, blocker: !!chk.blocker, method: chk.method, fix: chk.fix };
+    // dgaCriterion travels with the row because assessCriteria reads it off the
+    // VERDICT, not off the rubric — omitting it here made every criterion report
+    // "no-check" while the mapping sat correctly in rubric.json, unused.
+    return { id: chk.id, title: chk.title, description: chk.description, weight: chk.weight,
+             blocker: !!chk.blocker, method: chk.method, fix: chk.fix,
+             dgaCriterion: chk.dgaCriterion ?? null, dgaCategory: chk.dgaCategory ?? null,
+             dgaTier: chk.dgaTier ?? null, authority: chk.authority ?? null, scope: chk.scope ?? "core" };
   }
 
   // A check is "met" for the X-of-N headline at this much compliance. Blockers are
@@ -740,15 +750,16 @@ export function score({ rubric, tokens, benchmarks = null, captures = [], judged
     // A check that does not apply to this KIND of target was never in scope, so it is
     // not a coverage gap — a Figma frame has no runtime motion preference.
     if (!applies) {
-      return { row: { ...meta(chk), status: 'n/a', reason: `only applies to ${chk.applies_to} targets` } };
+      return { row: { ...meta(chk), status: 'n/a', naKind: 'absent', reason: `only applies to ${chk.applies_to} targets` } };
     }
     // Everything past this point could have been measured. Whether it was is the
     // coverage question, and every miss is recorded with its weight and its reason.
     if (countCoverage) applicableTotal += chk.weight;
 
-    const miss = (kind, reason) => {
+    const miss = (kind, reason, absent = false) => {
       if (countCoverage) dropped.push({ id: chk.id, weight: chk.weight, kind, reason });
-      return { row: { ...meta(chk), status: kind === 'unassessed' ? 'unassessed' : 'n/a', reason } };
+      return { row: { ...meta(chk), status: kind === 'unassessed' ? 'unassessed' : 'n/a',
+                      naKind: absent ? 'absent' : 'gap', reason } };
     };
 
     if (forcedNa) return miss('forced', 'marked N/A for this audit');
@@ -757,7 +768,11 @@ export function score({ rubric, tokens, benchmarks = null, captures = [], judged
       return miss('unassessed', 'judged check was never assessed');
     }
     if (!result || result.na || result.ratio == null) {
-      return miss('unmeasurable', result?.reason || 'nothing of this kind present to measure');
+      // No result at all means the probe found none of this kind on the page — an
+      // absence. A result that declares itself absent says so explicitly. Everything
+      // else is a gap: we could not look.
+      return miss('unmeasurable', result?.reason || 'nothing of this kind present to measure',
+                  !result || result.absent === true);
     }
 
     // A judgement without a count is unfalsifiable: nobody can check 0.51 against
@@ -931,22 +946,30 @@ export function score({ rubric, tokens, benchmarks = null, captures = [], judged
 
   const finalScore = availableTotal > 0 ? round2((earnedTotal / availableTotal) * 100) : 0;
 
+  // The band is an ADOPTION level, not a compliance verdict. DGA publishes no passing
+  // score — it publishes a checklist and confirms conformance by formal review — so a
+  // tool printing "Compliant" would claim an authority it does not have. Readiness is
+  // decided by DGA mandatory tier, below, and never by this number.
   let band = rubric.bands.find((b) => finalScore >= b.min) || rubric.bands[rubric.bands.length - 1];
-  const capIndex = rubric.bands.findIndex((b) => b.id === rubric.blockerCapBand);
+  const capIndex = rubric.bands.findIndex((b) => b.id === rubric.provisionalCapBand);
   let cappedFrom = null;
   const capReasons = [];
   const capTo = (why) => {
     const at = rubric.bands.findIndex((b) => b.id === band.id);
     capReasons.push(why);
-    if (at < capIndex) { cappedFrom = cappedFrom ?? band.label; band = rubric.bands[capIndex]; }
+    if (capIndex >= 0 && at < capIndex) { cappedFrom = cappedFrom ?? band.label; band = rubric.bands[capIndex]; }
   };
-  if (failedBlockers.length) capTo(`${failedBlockers.length} blocker check(s) failed`);
+  // Only EVIDENCE caps the adoption level now. Failing checks are already priced into
+  // the number; capping for them too would charge twice for the same fault.
   // Thin evidence caps the band too. Either gate counts: coverage below the floor, or
   // a silent loss that was forced through. A verdict standing on 60% of the rubric
   // cannot claim a band the other 40% never had a chance to disprove.
   if (coveragePct < minCoverage) capTo(`only ${coverage.pct}% of the rubric was measured`);
   if (silentWeight > maxSilent) capTo(`${round2(silentWeight)} points could not be measured at all`);
   const provisional = coveragePct < minCoverage || silentWeight > maxSilent;
+
+  // DGA own gate, decided on its published mandatory tier rather than on the number.
+  const assessed = criteria ? assessCriteria(criteria, categories) : null;
 
   // R2 and M2 still produce real observations, but they are not compliance failures.
   // Stamping the scope onto each finding is what stops a renderer presenting an
@@ -976,6 +999,9 @@ export function score({ rubric, tokens, benchmarks = null, captures = [], judged
     checksCounted,
     checksTotal: rubric.categories.reduce((a, c) => a + c.checks.length, 0),
     band: { id: band.id, label: band.label },
+    adoption: { score: finalScore, level: band.label, basis: 'share of the interface built from the DGA system, occurrence-weighted' },
+    criteria: assessed,
+    readiness: assessed ? assessed.readiness : null,
     cappedFrom,
     capReasons,
     coverage,
@@ -1052,6 +1078,85 @@ export function rollUpParts(rubric, categories, findings, round2 = (n) => Math.r
       failedBlockers: failed.filter((k) => k.blocker).map((k) => k.id),
     };
   });
+}
+
+/* -------------------------------------------------------------- criteria */
+
+/**
+ * Roll the checks up into DGA OWN published assessment criteria, and decide readiness
+ * the way DGA decides it.
+ *
+ * This exists because the tool spent its life answering a question DGA never asked. DGA
+ * publishes no passing score: it publishes a checklist with a compliance status per
+ * criterion, split into الامتثال الإلزامي (mandatory) and الموصى بها (recommended), and
+ * states that formal review confirms a project meets ALL of them. So "is 72 a pass?" has
+ * no official answer, while "are the mandatory criteria met?" has a precise one.
+ *
+ * A criterion is met only when every check under it passes at its own threshold, blockers
+ * at 100%. A check that could not be measured makes the criterion "unknown", never "met":
+ * the same rule the coverage gate applies to the denominator, for the same reason.
+ */
+export function assessCriteria(criteria, categories) {
+  const checks = categories.flatMap((c) => c.checks);
+  const rows = (criteria.criteria || []).map((def) => {
+    const mine = checks.filter((k) => k.dgaCriterion === def.id);
+    const failing = mine.filter((k) => k.status === "fail");
+    // An absence is not a gap. "This target ships no dark theme" hides nothing, so it
+    // must not stop a criterion being met; "the browser could not observe focus" hides
+    // everything it would have measured, so it must.
+    const unknown = mine.filter((k) => (k.status === "n/a" && k.naKind !== "absent") || k.status === "unassessed");
+    const absent = mine.filter((k) => k.status === "n/a" && k.naKind === "absent");
+    const passing = mine.filter((k) => k.status === "pass");
+    let status;
+    if (!mine.length || mine.length === absent.length) status = def.automatable === false ? "manual" : "no-check";
+    else if (failing.length) status = "open";
+    else if (unknown.length) status = "unknown";
+    else status = "met";
+    return {
+      id: def.id, ar: def.ar, en: def.en, tier: def.tier, category: def.category,
+      status,
+      checks: mine.map((k) => k.id),
+      failing: failing.map((k) => ({ id: k.id, title: k.title, ratio: k.ratio ?? null })),
+      unknown: unknown.map((k) => ({ id: k.id, title: k.title, reason: k.reason ?? null })),
+      passing: passing.map((k) => k.id),
+      notApplicable: absent.map((k) => ({ id: k.id, reason: k.reason ?? null })),
+      note: status === "manual"
+        ? "Not measurable from a rendered page — assess against the DGA downloadable checklist."
+        : null,
+    };
+  });
+
+  const mandatory = rows.filter((r) => r.tier === "mandatory");
+  const open = mandatory.filter((r) => r.status === "open");
+  const unsure = mandatory.filter((r) => r.status === "unknown" || r.status === "no-check");
+  const met = mandatory.filter((r) => r.status === "met");
+
+  // Three states, not two. "Cannot confirm" is the honest verdict when nothing has failed
+  // but something could not be looked at — collapsing that into ready would repeat the
+  // mistake of counting an unmeasured check as a pass.
+  const readiness = {
+    state: open.length ? "not-yet" : unsure.length ? "unconfirmed" : "ready",
+    label: open.length ? "Not yet" : unsure.length ? "Cannot confirm" : "Ready to submit",
+    met: met.length,
+    total: mandatory.length,
+    open: open.map((r) => ({ id: r.id, ar: r.ar, blocking: r.failing.map((x) => x.id) })),
+    unknown: unsure.map((r) => ({ id: r.id, ar: r.ar, why: r.unknown.map((u) => u.id) })),
+    basis: "DGA gates on its mandatory tier and confirms conformance by formal review — this is not a score threshold",
+    submitTo: criteria.submitTo || null,
+  };
+
+  const manual = rows.filter((r) => r.status === "manual" || r.status === "no-check");
+  return {
+    source: criteria.source, capturedAt: criteria.capturedAt,
+    readiness,
+    criteria: rows,
+    automatedCoverage: {
+      automated: rows.filter((r) => r.checks.length).length,
+      published: rows.length,
+      needsHumanReview: manual.map((r) => r.id),
+      note: "Task completion, load times, error messaging, help resources and feedback mechanisms cannot be read off a rendered page. This tool covers part of the DGA framework, not all of it.",
+    },
+  };
 }
 
 /* ---------------------------------------------------------------- region */
@@ -1266,7 +1371,7 @@ export function explain(verdict, { part = null, check = null, maxFindings = 6 } 
  * groups and calls it twice, so every existing guarantee, including the
  * regression fixture, holds unchanged.
  */
-export function scoreByViewport({ rubric, tokens, benchmarks = null, captures = [], judged = {}, options = {} }) {
+export function scoreByViewport({ rubric, tokens, criteria = null, benchmarks = null, captures = [], judged = {}, options = {} }) {
   // The split point is the ledger's own desktop breakpoint, not a number picked
   // here — if DGA moves it, this moves with it.
   const bps = (tokens.breakpoints && tokens.breakpoints.list) || [];
@@ -1304,7 +1409,7 @@ export function scoreByViewport({ rubric, tokens, benchmarks = null, captures = 
       captures: caps.map((c) => ({ label: c.label, width: c.viewport?.width ?? null })),
       // benchmarkViewport is the group's own id, so a mobile reading is never compared
       // against a desktop reference.
-      verdict: score({ rubric, tokens, benchmarks, captures: caps, judged, options: { ...options, benchmarkViewport: g.id } }),
+      verdict: score({ rubric, tokens, criteria, benchmarks, captures: caps, judged, options: { ...options, benchmarkViewport: g.id } }),
     };
   });
 
@@ -1363,7 +1468,20 @@ export function inlineReport(v, { maxFindings = 3 } = {}) {
   // A split carries no score of its own; report each viewport in turn.
   if (v && v.schema === 'dga-score-split/1') return inlineSplitReport(v, { maxFindings });
   const L = [];
-  L.push(`**${v.target.name} — ${v.score}/100 · ${v.checksPassed} of ${v.checksCounted} checks met · ${v.band.label}**`);
+  // DGA publishes no passing score, so the headline is its question, not a number
+  // dressed as a verdict: are the mandatory criteria met?
+  const rd = v.readiness;
+  if (rd) {
+    const mark = rd.state === "ready" ? "✓" : rd.state === "unconfirmed" ? "?" : "✗";
+    L.push(`**${v.target.name} — ${mark} ${rd.label}** · DGA mandatory criteria ${rd.met} of ${rd.total} met`);
+    if (rd.open.length) L.push(`> Open: ${rd.open.map((o) => `**${o.ar}** (${o.blocking.join(", ")})`).join(" · ")}`);
+    if (rd.unknown.length) L.push(`> Cannot confirm: ${rd.unknown.map((o) => `**${o.ar}** (${o.why.join(", ")} not measurable here)`).join(" · ")}`);
+    L.push(`> _${rd.basis}._`);
+    L.push("");
+    L.push(`**Adoption ${v.score}%** · ${v.band.label} · ${v.checksPassed} of ${v.checksCounted} checks met`);
+  } else {
+    L.push(`**${v.target.name} — adoption ${v.score}% · ${v.checksPassed} of ${v.checksCounted} checks met · ${v.band.label}**`);
+  }
   if (v.cappedFrom) {
     L.push(`> Capped from **${v.cappedFrom}** by ${(v.capReasons || []).join('; ') || v.failedBlockers.map((b) => `\`${b.id}\` ${b.title}`).join(', ')}. ` +
       `A service cannot be reported as compliant while failing these.`);
@@ -1381,6 +1499,10 @@ export function inlineReport(v, { maxFindings = 3 } = {}) {
     const failed = v.extended.checks.filter((k) => k.status === 'fail').map((k) => `\`${k.id}\` ${k.title}`);
     L.push(`> Extended practice, **outside the 100**: ${v.extended.score}/100` +
       `${failed.length ? ` — ${failed.join(', ')}` : ' — all clear'}. DGA publishes none of this, so it carries no compliance weight.`);
+  }
+  if (v.criteria && v.criteria.automatedCoverage) {
+    const ac = v.criteria.automatedCoverage;
+    L.push(`> Automates **${ac.automated} of ${ac.published}** published DGA criteria. ${ac.needsHumanReview.length ? `Needs human review against DGA\u2019s checklist: ${ac.needsHumanReview.join(", ")}.` : ""}`);
   }
   if (v.coverage && v.coverage.pct < 100) {
     const worst3 = v.coverage.dropped.slice(0, 3).map((d) => `\`${d.id}\` ${d.reason}`).join(', ');

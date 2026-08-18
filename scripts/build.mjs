@@ -32,6 +32,7 @@ const rubric = strip(JSON.parse(read('data/rubric.json')));
 const tokens = strip(JSON.parse(read('data/tokens.json')));
 const components = strip(JSON.parse(read('data/components.json')));
 const benchmarks = strip(JSON.parse(read('data/benchmarks.json')));
+const criteria = JSON.parse(read('data/dga-criteria.json'));
 
 // Modules are authored as ESM for Node and the tests; the bundle runs as a
 // classic script, so the export keywords come off. Nothing else changes.
@@ -66,6 +67,7 @@ const bundle = `/*!
   var TOKENS = ${JSON.stringify(tokens)};
   var COMPONENTS = ${JSON.stringify(components)};
   var BENCHMARKS = ${JSON.stringify(benchmarks)};
+  var CRITERIA = ${JSON.stringify(criteria)};
 
 ${probe}
 
@@ -96,6 +98,7 @@ ${render}
     tokens: TOKENS,
     components: COMPONENTS,
     benchmarks: BENCHMARKS,
+    criteria: CRITERIA,
 
     /** Probe this viewport, add it to the set, and score everything captured so far. */
     audit: function (opts) {
@@ -104,7 +107,7 @@ ${render}
       var capture = probe({ label: label, minTargetPx: minTargetFor(window.innerWidth) });
       api.captures.push(capture);
       var args = {
-        rubric: RUBRIC, tokens: TOKENS, benchmarks: BENCHMARKS, captures: api.captures,
+        rubric: RUBRIC, tokens: TOKENS, criteria: CRITERIA, benchmarks: BENCHMARKS, captures: api.captures,
         judged: opts.judged || {},
         options: {
           targetType: 'site',
