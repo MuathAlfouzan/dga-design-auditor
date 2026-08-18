@@ -1,0 +1,383 @@
+<title>DGA Auditor Handbook</title>
+<style>
+  /* Same token set as the scorecard — this is a sibling document, not a new
+     visual world. Light is the base; dark redefines only tokens, twice, so the
+     toggle wins in both directions and the un-stamped system state resolves. */
+  :root {
+    --paper:#f6f7f9; --surface:#ffffff; --sunken:#eef0f5;
+    --ink:#161a22; --slate:#5c6478; --faint:#8a91a3;
+    --rule:#dfe3ec; --rule-strong:#c6ccdb;
+    --accent:#2d3f6b;
+    --pass:#2e7d55; --warn:#94620f; --fail:#b23a30;
+    --pass-bg:#e7f3ec; --warn-bg:#f8f0dd; --fail-bg:#fbeae8;
+    --shadow:0 1px 2px rgba(22,26,34,.05), 0 8px 24px -12px rgba(22,26,34,.16);
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans Arabic",sans-serif;
+    --mono:ui-monospace,SFMono-Regular,"SF Mono","Cascadia Mono","Roboto Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#0f1219; --surface:#171b24; --sunken:#1d222d;
+      --ink:#e7eaf2; --slate:#a3abbd; --faint:#727a8d;
+      --rule:#282e3a; --rule-strong:#3a4252;
+      --accent:#8ea6dd;
+      --pass:#5cbb87; --warn:#d9a441; --fail:#e8756a;
+      --pass-bg:#172a20; --warn-bg:#2b2415; --fail-bg:#2d1a19;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#0f1219; --surface:#171b24; --sunken:#1d222d;
+    --ink:#e7eaf2; --slate:#a3abbd; --faint:#727a8d;
+    --rule:#282e3a; --rule-strong:#3a4252;
+    --accent:#8ea6dd;
+    --pass:#5cbb87; --warn:#d9a441; --fail:#e8756a;
+    --pass-bg:#172a20; --warn-bg:#2b2415; --fail-bg:#2d1a19;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--sans); font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased; }
+  .page { max-width:78rem; margin:0 auto; padding:clamp(1.25rem,4vw,3rem) clamp(1rem,4vw,2rem) 5rem;
+    display:grid; grid-template-columns:1fr; gap:2.5rem; }
+  @media (min-width:64rem) { .page { grid-template-columns:13rem 1fr; gap:3.5rem; } }
+  main { min-width:0; max-width:56rem; }
+
+  code, kbd, .mono { font-family:var(--mono); font-variant-numeric:tabular-nums; }
+  h1,h2,h3 { text-wrap:balance; margin:0; }
+  a { color:var(--accent); }
+  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:2px; }
+
+  /* ---- contents: this is scanned, not read front to back ---- */
+  nav.toc { font-size:.85rem; align-self:start; }
+  @media (min-width:64rem) { nav.toc { position:sticky; top:2rem; } }
+  nav.toc p { font-family:var(--mono); font-size:.65rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--faint); margin:0 0 .75rem; }
+  nav.toc ol { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.4rem; }
+  nav.toc a { color:var(--slate); text-decoration:none; display:block; padding:.1rem 0; border-left:2px solid var(--rule); padding-left:.7rem; }
+  nav.toc a:hover { color:var(--accent); border-left-color:var(--accent); }
+
+  /* ---- masthead ---- */
+  .eyebrow { font-family:var(--mono); font-size:.7rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--faint); margin:0 0 .75rem; }
+  header.top { border-bottom:2px solid var(--ink); padding-bottom:1.25rem; margin-bottom:2.5rem; }
+  header.top h1 { font-size:clamp(1.7rem,4.5vw,2.5rem); line-height:1.12; letter-spacing:-.022em; font-weight:650; }
+  header.top .sub { color:var(--slate); margin:.7rem 0 0; max-width:56ch; }
+  .facts { display:flex; flex-wrap:wrap; gap:.4rem 1.5rem; margin-top:1.1rem;
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); }
+  .facts b { color:var(--slate); font-weight:500; }
+
+  section { margin-top:3rem; scroll-margin-top:1.5rem; }
+  section > h2 { font-size:1.2rem; letter-spacing:-.01em; padding-bottom:.5rem;
+    border-bottom:1px solid var(--rule-strong); margin-bottom:1.1rem; }
+  h3 { font-size:1rem; margin:1.75rem 0 .5rem; }
+  p { margin:0 0 1rem; max-width:66ch; }
+  ul { margin:0 0 1rem; padding-left:1.15rem; max-width:66ch; }
+  li { margin-bottom:.35rem; }
+  .lede { color:var(--slate); }
+
+  pre { background:var(--sunken); border:1px solid var(--rule); border-radius:5px;
+    padding:.85rem 1rem; overflow-x:auto; margin:0 0 1rem; }
+  pre code { font-size:.83rem; color:var(--ink); }
+  p code, li code, td code, th code { font-size:.85em; background:var(--sunken); padding:.1rem .35rem;
+    border-radius:3px; color:var(--accent); }
+
+  .scroll-x { overflow-x:auto; margin-bottom:1.25rem; }
+  table { width:100%; border-collapse:collapse; font-size:.88rem; }
+  th, td { text-align:start; padding:.55rem .7rem; border-top:1px solid var(--rule); vertical-align:top; }
+  thead th { font-family:var(--mono); font-size:.65rem; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--faint); border-top:0; border-bottom:1px solid var(--rule-strong); font-weight:500; }
+  td.num, th.num { text-align:end; white-space:nowrap; font-family:var(--mono); font-variant-numeric:tabular-nums; }
+  tbody th { font-weight:550; }
+
+  /* ---- the four ways to run it: a ladder by what you must install ---- */
+  .ways { display:flex; flex-direction:column; gap:1rem; margin-bottom:1.25rem; }
+  .way { background:var(--surface); border:1px solid var(--rule); border-radius:6px;
+    border-left:3px solid var(--accent); padding:1rem 1.15rem; box-shadow:var(--shadow); }
+  .way h3 { margin:0 0 .15rem; font-size:1.02rem; }
+  .way .needs { font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--faint); margin:0 0 .7rem; }
+  .way p { margin-bottom:.7rem; font-size:.92rem; }
+  .way pre { margin-bottom:.5rem; }
+  .way :last-child { margin-bottom:0; }
+
+  .pill { display:inline-block; font-family:var(--mono); font-size:.65rem; letter-spacing:.08em;
+    text-transform:uppercase; padding:.15rem .45rem; border-radius:3px; white-space:nowrap; }
+  .pill.pass { background:var(--pass-bg); color:var(--pass); }
+  .pill.warn { background:var(--warn-bg); color:var(--warn); }
+  .pill.fail { background:var(--fail-bg); color:var(--fail); }
+  .pill.mute { background:var(--sunken); color:var(--faint); }
+
+  .note { background:var(--sunken); border-inline-start:3px solid var(--accent);
+    border-radius:0 4px 4px 0; padding:.8rem 1rem; margin:0 0 1.25rem; font-size:.9rem; max-width:66ch; }
+  .note.warn { border-inline-start-color:var(--warn); }
+  .note strong { color:var(--ink); }
+
+  footer { margin-top:3.5rem; padding-top:1.25rem; border-top:1px solid var(--rule-strong);
+    font-size:.83rem; color:var(--slate); }
+</style>
+
+<div class="page">
+
+  <nav class="toc">
+    <p>Contents</p>
+    <ol>
+      <li><a href="#what">What it does</a></li>
+      <li><a href="#run">Four ways to run it</a></li>
+      <li><a href="#score">How the score works</a></li>
+      <li><a href="#ask">Asking why, and how to fix</a></li>
+      <li><a href="#ledger">Keeping it current</a></li>
+      <li><a href="#refuse">What it refuses to do</a></li>
+      <li><a href="#gaps">Known gaps</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="top">
+      <p class="eyebrow">DGA Platforms Code · compliance auditor</p>
+      <h1>DGA Auditor Handbook</h1>
+      <p class="sub">Score any website or Figma design against Saudi Arabia's national design
+      system, out of 100, with a per-check breakdown you can act on. The engine runs inside the
+      page and writes nothing to disk.</p>
+      <div class="facts">
+        <span>Checks <b>28</b></span>
+        <span>Ledger <b>2026-08-18</b></span>
+        <span>DGA release <b>1.0.3</b></span>
+        <span>Colour tokens <b>218</b></span>
+        <span>Assertions <b>110</b></span>
+      </div>
+    </header>
+
+    <section id="what">
+      <h2>What it does</h2>
+      <p>It measures a real page against the real standard. Every colour, typeface, size, spacing
+      value, radius, shadow and contrast ratio that actually reached the screen is compared against
+      tokens extracted from SDGA's own Figma files — then scored against a fixed rubric of 28
+      checks.</p>
+      <p>The same target scores the same twice. That is the whole premise: 22 of the 28 checks are
+      computed from measured data with no judgement involved, and the six that need eyes are
+      recorded with a stated count rather than an impression.</p>
+      <div class="scroll-x">
+        <table>
+          <thead><tr><th>It can</th><th>How</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Score a live website</th><td>Any URL, including sites behind a WAF when run from your own browser</td></tr>
+            <tr><th scope="row">Score a Figma design</th><td>By node id, with the candidate file open in Figma desktop</td></tr>
+            <tr><th scope="row">Score web and mobile apart</th><td>Two verdicts, never blended into one</td></tr>
+            <tr><th scope="row">Score each part of the system</th><td>Foundations, Components and Standards, each out of 100</td></tr>
+            <tr><th scope="row">Explain a score</th><td>What was lost, why, and what recovers it — ranked by points</td></tr>
+            <tr><th scope="row">Check its own currency</th><td>Against DGA's changelog and each Figma file's update log</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="run">
+      <h2>Four ways to run it</h2>
+      <p class="lede">Ordered by how much you need installed. The first needs nothing at all.</p>
+
+      <div class="ways">
+        <article class="way">
+          <h3>In any browser</h3>
+          <p class="needs">Needs nothing — no install, no account</p>
+          <p>Open the page you want to score, open the console with <kbd>⌥⌘J</kbd>, and paste:</p>
+<pre><code>const src = await (await fetch('https://cdn.jsdelivr.net/gh/MuathAlfouzan/dga-design-auditor@main/dist/dga-rate.js')).text();
+(0, eval)(src);
+__dga.audit({ label: 'desktop' });
+__dga.overlay();</code></pre>
+          <p>The scorecard renders over the page. Resize to phone width and call <code>audit</code>
+          again to add the mobile half. This is the one to hand a colleague, and the one that gets
+          past WAFs — it is just your browser making an ordinary request.</p>
+        </article>
+
+        <article class="way">
+          <h3>In Claude Code</h3>
+          <p class="needs">Needs the repo cloned and symlinked into <code>~/.claude</code></p>
+          <p>Three commands, typed into the chat:</p>
+          <div class="scroll-x">
+            <table>
+              <tbody>
+                <tr><th scope="row"><code>/dga-audit &lt;url&gt;</code></th><td>Score a site or a Figma frame</td></tr>
+                <tr><th scope="row"><code>/dga-sync</code></th><td>Re-extract the tokens from Figma</td></tr>
+                <tr><th scope="row"><code>/dga-check-updates</code></th><td>Is the ledger still current?</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Plain language works too — <em>"audit the home page of example.gov.sa and give me the
+          table inline"</em>, or <em>"why did foundations drop on mobile?"</em></p>
+        </article>
+
+        <article class="way">
+          <h3>In any other AI assistant</h3>
+          <p class="needs">Needs an assistant that can fetch a URL and drive a browser</p>
+<pre><code>Read https://raw.githubusercontent.com/MuathAlfouzan/dga-design-auditor/main/AGENTS.md
+and audit https://example.gov.sa against it.</code></pre>
+          <p><code>AGENTS.md</code> <em>is</em> the agent — the probe/score/report loop, the judged
+          checks and the reporting rules. Everything else is packaging. No MCP server required.</p>
+        </article>
+
+        <article class="way">
+          <h3>As a library</h3>
+          <p class="needs">Needs Node 18+ and the repo</p>
+<pre><code>import { score, scoreByViewport, explain, inlineReport } from './src/score.js';
+import { renderScorecard, renderSplitScorecard } from './src/render.js';</code></pre>
+          <p>The core is pure — no filesystem, no network, no DOM. It takes captures and a ledger
+          and returns a verdict, which is why it runs identically in Node and in a browser.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="score">
+      <h2>How the score works</h2>
+
+      <h3>Three parts, 28 checks, 100 points</h3>
+      <div class="scroll-x">
+        <table>
+          <thead><tr><th>Part</th><th class="num">Points</th><th>Covers</th><th>Backed by</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Foundations</th><td class="num">58</td><td>Colour tokens, type ramp, spacing and radius scales, elevation, motion</td><td>the Foundations file</td></tr>
+            <tr><th scope="row">Components</th><td class="num">24</td><td>Component anatomy, variants, states, icon set, official marks</td><td>Components Library + Icons</td></tr>
+            <tr><th scope="row">Standards</th><td class="num">18</td><td>RTL and bilingual behaviour, WCAG accessibility</td><td>DGA guidance, not a library</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Each part is normalised to 100 within its own weight, so <code>Foundations 66</code> and
+      <code>Components 57</code> are directly comparable — <code>40/58</code> and <code>12/24</code>
+      are not. Standards is its own part because folding accessibility into Components would
+      misattribute a contrast failure to a button.</p>
+
+      <h3>Web and mobile are scored separately</h3>
+      <p>Target sizes and container widths belong to a <em>viewport</em>, not to a site. A page can
+      pass at 1440 and fail at 390, and averaging the two produces a figure describing neither.
+      There is no blended score.</p>
+      <p>The site-level overall takes the <strong>worst</strong> viewport, per part as well as in
+      total. An average would let a strong desktop hide a failing phone.</p>
+
+      <h3>Bands, and the government gate</h3>
+      <div class="scroll-x">
+        <table>
+          <thead><tr><th>Band</th><th class="num">Score</th></tr></thead>
+          <tbody>
+            <tr><th scope="row"><span class="pill pass">Compliant</span></th><td class="num">90–100</td></tr>
+            <tr><th scope="row"><span class="pill pass">Substantially compliant</span></th><td class="num">75–89</td></tr>
+            <tr><th scope="row"><span class="pill warn">Partial</span></th><td class="num">60–74</td></tr>
+            <tr><th scope="row"><span class="pill fail">Non-compliant</span></th><td class="num">under 60</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note warn">
+        <strong>Four checks are blockers</strong> — <code>C2</code> off-palette brand colour,
+        <code>I2</code> mark misuse, <code>A1</code> text contrast, <code>A2</code> non-text
+        contrast. They must be <em>fully</em> met, not 90% met: one text run below 4.5:1 means the
+        page does not conform. A failed blocker holds the band at <strong>Partial</strong> however
+        high the number climbs. The number itself is never adjusted — the band carries the gate, and
+        the report names what capped it.
+      </div>
+
+      <h3>A check that cannot apply leaves the denominator</h3>
+      <p>It is never counted as a failure. A Figma frame has no focus rings; a page with no dark
+      theme has no dark tokens to check. Those checks report <code>n/a</code> and the score is out
+      of what remained. Every report states how many of the 28 were graded.</p>
+    </section>
+
+    <section id="ask">
+      <h2>Asking why, and how to fix</h2>
+      <p>Every answer has the same shape — <strong>what was lost, why, and what recovers it</strong>
+      — sorted by points recoverable, because "fix this and gain 5" is actionable where "this
+      failed" is not.</p>
+<pre><code>__dga.explain()                       // every part, worst first
+__dga.explain({ part: 'components' }) // points lost, and what recovers them
+__dga.explain({ check: 'T1' })        // what was found vs expected, and the fix</code></pre>
+      <p>In conversation, ask it in words: <em>"why did the components score drop?"</em>,
+      <em>"what's the cheapest way to gain 10 points?"</em>, <em>"what's failing on mobile that
+      passes on desktop?"</em></p>
+      <p>On a split, answers come back per viewport — the same question can have different answers
+      at 1440 and 390, which is the point of scoring them apart.</p>
+    </section>
+
+    <section id="ledger">
+      <h2>Keeping it current</h2>
+      <p>A score is only as good as the baseline behind it, so every report states
+      <code>ledger.synced</code> and the DGA release it was extracted against. No network call is
+      needed for that.</p>
+      <p>Whether something <em>newer</em> exists is a separate check, against two sources that do
+      different jobs: DGA's changelog gives the system version, and each Figma file's
+      <code>---- Updates ----</code> block says what changed in that file. Neither can be read
+      without a browser — the changelog is a client-rendered app and Figma returns 403 to anything
+      that is not a browser.</p>
+      <div class="scroll-x">
+        <table>
+          <thead><tr><th>Figma file</th><th>Status</th><th>Last published</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Foundations</th><td><span class="pill pass">synced</span></td><td class="num">2025-07-02</td></tr>
+            <tr><th scope="row">Components Library</th><td><span class="pill pass">synced</span></td><td class="num">2025-11-03</td></tr>
+            <tr><th scope="row">Mobile Components</th><td><span class="pill pass">synced</span></td><td class="num">never amended</td></tr>
+            <tr><th scope="row">Icons</th><td><span class="pill mute">deferred</span></td><td class="num">2026-01-11</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Icons is deferred deliberately. Its own update log carries a DGA notice dated 11 January
+      2026 saying the icon library is being rewritten and icons may be temporarily unavailable —
+      syncing it now would capture a library in flux. While it is deferred, the icon check scores
+      <code>n/a</code> rather than being guessed at.</p>
+    </section>
+
+    <section id="refuse">
+      <h2>What it refuses to do</h2>
+      <p class="lede">These are deliberate. A compliance tool that produces a confident wrong number
+      is worse than one that stops.</p>
+      <ul>
+        <li><strong>Score against an unsynced ledger.</strong> A made-up baseline produces a made-up
+        number, so it errors instead.</li>
+        <li><strong>Judge a check with no baseline.</strong> With Icons unsynced there is no size
+        scale to measure against, so the icon check reports <code>n/a</code> rather than an
+        impression. Same for mark usage, which has no identity baseline.</li>
+        <li><strong>Score a blocked page.</strong> A WAF rejection page will score perfectly happily
+        — Times New Roman on white, one blue link — and that number describes a page nobody
+        designed.</li>
+        <li><strong>Blend two viewports.</strong> Covered above, and it is enforced in the data:
+        a split carries no combined score field at all.</li>
+        <li><strong>Invent a token.</strong> Where the Figma files are silent, the gap is recorded
+        and the affected check drops out. The ledger lists what is missing.</li>
+        <li><strong>Silently drop the judged checks.</strong> Scoring refuses if a judged check was
+        never assessed, because quietly omitting the component checks is how a rebuild scores as
+        compliant.</li>
+      </ul>
+    </section>
+
+    <section id="gaps">
+      <h2>Known gaps</h2>
+      <p>Recorded in the ledger rather than papered over, because a gap you can see is worth more
+      than one you cannot.</p>
+      <ul>
+        <li>No <strong>dark-mode token set</strong> exists in any DGA file, so the dark-theme check
+        is always <code>n/a</code>.</li>
+        <li>No <strong>motion tokens</strong> are published, so the motion-token check is
+        <code>n/a</code>.</li>
+        <li>No <strong>minimum target size</strong> is published anywhere in the system. The
+        accessibility check uses the WCAG 2.2 floor of 24px, labelled in the ledger as WCAG's
+        number and not DGA's.</li>
+        <li>The <strong>Display md</strong> ramp step is missing — the ramp runs 60, 48, ?, 30, 24.
+        No file emitted it, so it was not invented.</li>
+        <li><strong>Page templates</strong> are not yet synced, so component checks compare against
+        component specs without a page-level reference.</li>
+      </ul>
+      <div class="note">
+        <strong>Two traps caught during extraction, and excluded.</strong> Shopify Polaris variables
+        left in a documentation page — including one carrying Polaris's own misspelling — and the
+        green and red "do and avoid" annotation swatches from the guidance frames. Admitting either
+        would have taught the auditor that an off-brand grey, or the colour used to mean
+        <em>correct</em> in a diagram, is compliant.
+      </div>
+    </section>
+
+    <footer>
+      <p><a href="https://github.com/MuathAlfouzan/dga-design-auditor">github.com/MuathAlfouzan/dga-design-auditor</a>
+      — MIT licensed, and the licence covers this tooling, not the design standard.</p>
+      <p>A derived work, not an official DGA product. The design system is authored and published by
+      the Digital Government Authority, Kingdom of Saudi Arabia. Everything in the ledger is an
+      extract of their public Figma Community files; treat those as the truth if they ever disagree
+      with this copy.</p>
+    </footer>
+  </main>
+</div>

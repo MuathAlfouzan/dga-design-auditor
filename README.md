@@ -1,5 +1,7 @@
 # dga-design-auditor
 
+**[Handbook](docs/guide.html)** — what it does, the four ways to run it, how the score is built, and what it refuses to do.
+
 Score any website against the **DGA Platforms Code** — Saudi Arabia's national design
 system for government platforms — out of 100, from 28 concrete checks, with a
 per-check breakdown and a shareable scorecard.
