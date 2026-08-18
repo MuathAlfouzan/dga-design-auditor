@@ -194,6 +194,25 @@ function probe(OPTS_IN = {}) {
     return last ? (textOf(last, 60) || null) : null;
   }
 
+  /**
+   * A NAME, not a transcript. textContent on a container concatenates every descendant,
+   * which produced report rows reading «PersonalizedThe services are created acc» — the
+   * card heading welded to its body copy. A label a person recognises comes from the
+   * element itself: its accessible name, then its own direct text, then the heading
+   * inside it. Only fall back to the flattened subtree when nothing else exists.
+   */
+  function nameOf(el) {
+    const aria = el.getAttribute && (el.getAttribute('aria-label') || el.getAttribute('alt') || el.getAttribute('title'));
+    if (aria && aria.trim()) return aria.replace(/\s+/g, ' ').trim().slice(0, 40);
+    let own = '';
+    for (const n of el.childNodes || []) if (n.nodeType === 3) own += n.nodeValue;
+    own = own.replace(/\s+/g, ' ').trim();
+    if (own) return own.slice(0, 40);
+    const h = el.querySelector && el.querySelector('h1,h2,h3,h4,h5,h6,legend,figcaption');
+    if (h) { const t = textOf(h, 40); if (t) return t; }
+    return textOf(el, 40);
+  }
+
   const LOC_CACHE = new WeakMap();
   function locate(el) {
     if (LOC_CACHE.has(el)) return LOC_CACHE.get(el);
@@ -204,7 +223,7 @@ function probe(OPTS_IN = {}) {
         sel: selectorFor(el),
         region: regionOf(el),
         section: sectionOf(el),
-        name: textOf(el, 40) || null,
+        name: nameOf(el) || null,
         at: { x: Math.round(r.left + window.scrollX), y: Math.round(r.top + window.scrollY),
               w: Math.round(r.width), h: Math.round(r.height) },
       };
