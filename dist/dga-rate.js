@@ -965,8 +965,14 @@ function probe(OPTS_IN = {}) {
       // the safe direction for a gate, and it is stated in the check's notes.
       const hasRing = (os && os !== 'none' && parseFloat(ow || '0') > 0)
         || (shadow && shadow !== 'none');
+      // Only a RING counts toward the predicted ratio. The live path credits a colour-only
+      // change because SC 2.4.7 accepts one, but predicting a colour swap from CSS is much
+      // weaker evidence than predicting an outline, and counting it read 1.0 on dga.gov.sa
+      // — 0 rings and 40 colour-only rules — against 4 rings actually observed. A flat 1.0
+      // would have marked accessibility MET on a site whose keyboard users see next to
+      // nothing. colourOnly is still reported, just not scored.
       if (hasRing) { out.visible++; out.ring++; }
-      else if (colour) { out.visible++; out.colourOnly++; }
+      else if (colour) { out.colourOnly++; }
       else if (out.missing.length < 20) {
         out.missing.push({ selector: selectorFor(el), loc: locate(el),
           label: (el.getAttribute('aria-label') || el.textContent || '').trim().slice(0, 40) });
