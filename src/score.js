@@ -654,9 +654,10 @@ export function score({ rubric, tokens, criteria = null, benchmarks = null, capt
       //   neither           — a capture predating both, which can tell a removed
       //                       indicator from an unmatched pseudo-class not at all
       if (predicted) {
-        auto.A3.notes = `${f.visible} of ${f.probed} controls would receive a focus indicator, ` +
-          'predicted from the CSS cascade rather than observed — this browser would not enter ' +
-          ':focus-visible. Blind to focus styling applied by script or drawn on a pseudo-element.';
+        auto.A3.notes = f.visible + ' of ' + f.probed + ' controls are given a focus indicator by an explicit '
+          + 'CSS rule. Predicted from the cascade, not observed \u2014 this browser would not enter :focus-visible. '
+          + 'Under-reports a page that relies on the browser default ring, and is blind to focus styling applied '
+          + 'by script or drawn on a pseudo-element.';
         auto.A3.measuredBy = 'cascade-analysis';
       } else if (f.probed && !f.seeded) {
         auto.A3 = { ratio: null, na: true, reason: 'browser would not enter :focus-visible, so focus styling could not be observed' };

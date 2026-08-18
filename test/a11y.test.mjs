@@ -133,6 +133,22 @@ check('a cascade reading is scored, not written off as unmeasurable',
   P_cas.A3.status === 'pass' && P_cas.A3.ratio !== null,
   `status=${P_cas.A3.status} ratio=${P_cas.A3.ratio}`);
 
+/* The divergence that must NOT be "fixed" back. regions.html carries no :focus CSS at
+   all, so the browser's own default ring is the only indicator. Observation sees it;
+   the cascade cannot, because outline removal frequently lives outside :focus rules and
+   this pass never reads those. An earlier cut assumed the default survived and reported
+   40 of 40 on dga.gov.sa where observation found 4 — over-reporting, in the one direction
+   a gate must never fail. Under-reporting here is the deliberate, safe choice. */
+const R_obs = run('regions.html');
+const R_cas = run('regions.html', { forceCascade: true });
+check('the cascade never claims an indicator it cannot actually see',
+  R_cas.A3.ratio <= R_obs.A3.ratio,
+  `predicted ${R_cas.A3.ratio} vs observed ${R_obs.A3.ratio} — the fallback may under-report, never over-report`);
+
+check('…and on a page with no focus CSS it reports none rather than assuming the UA ring',
+  R_cas.A3.ratio === 0,
+  `got ${R_cas.A3.ratio} — regions.html declares no :focus rules whatsoever`);
+
 /* ------------------------------------------------- the point of the whole thing */
 
 check('accessibility can be MET without observing focus',

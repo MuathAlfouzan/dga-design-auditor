@@ -931,11 +931,17 @@ export function probe(OPTS_IN = {}) {
             r.style.getPropertyValue('border-color') || r.style.getPropertyValue('text-decoration') ||
             r.style.getPropertyValue('text-decoration-line')) colour = true;
       }
-      // Nothing in the author CSS touched the outline, so the UA default ring still
-      // draws. Missing this counted well-behaved controls as bare.
-      const uaDefault = os === null && shadow === null;
-      const hasRing = uaDefault
-        || (os && os !== 'none' && parseFloat(ow || '0') > 0)
+      // NO UA-default assumption. The first cut assumed that if no :focus rule touched
+      // the outline the browser default must still draw, and that read 40 of 40 on
+      // dga.gov.sa where live observation found 4 — over-reporting, in the one direction
+      // a gate must never fail. The reason is structural: outline removal frequently
+      // lives OUTSIDE a :focus rule (dga.gov.sa carries 21 such rules, `.modal{outline:0}`
+      // and friends), and this pass only reads :focus rules, so it cannot know whether the
+      // default survived. Claiming an indicator it cannot see is worse than missing one.
+      //
+      // A page relying purely on the browser default therefore under-reports here. That is
+      // the safe direction for a gate, and it is stated in the check's notes.
+      const hasRing = (os && os !== 'none' && parseFloat(ow || '0') > 0)
         || (shadow && shadow !== 'none');
       if (hasRing) { out.visible++; out.ring++; }
       else if (colour) { out.visible++; out.colourOnly++; }
