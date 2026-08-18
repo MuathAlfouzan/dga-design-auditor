@@ -1104,8 +1104,11 @@ export function byRegion(verdict, { maxRowsPerSection = 8 } = {}) {
     const locs = (f.where || []).map(asLocator).filter(Boolean);
     const head = locs[0] || {};
     const occ = f.occurrences || 1;
-    const region = head.region || 'unplaced';
+    // Three states, not two. "unplaced" is only honest when NOTHING resolved; an
+    // element that sits outside every landmark but under a heading is on the page and
+    // findable, and filing it as unplaced throws away the section that was found.
     const section = head.section || null;
+    const region = head.region || (section ? 'page' : 'unplaced');
     const key = region + '\u0000' + (section || '');
     if (!groups.has(key)) groups.set(key, { region, section, points: 0, rows: [] });
     const g = groups.get(key);
@@ -1120,7 +1123,7 @@ export function byRegion(verdict, { maxRowsPerSection = 8 } = {}) {
     });
   }
 
-  const ORDER = ['header', 'navigation', 'search', 'main', 'form', 'aside', 'footer', 'unplaced'];
+  const ORDER = ['header', 'navigation', 'search', 'main', 'form', 'aside', 'footer', 'page', 'unplaced'];
   return [...groups.values()]
     .map((g) => ({ ...g, rows: g.rows.sort((a, b) => b.pointsApprox - a.pointsApprox).slice(0, maxRowsPerSection) }))
     .sort((a, b) => {
