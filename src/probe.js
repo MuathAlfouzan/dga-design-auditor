@@ -10,7 +10,7 @@ export function probe(OPTS_IN = {}) {
   const OPTS = OPTS_IN || {};
   const LABEL = OPTS.label || 'default';
   const MAX_ENTRIES = OPTS.maxEntries || 200; // per tally, by frequency
-  const MAX_SAMPLES = 3;
+  const MAX_SAMPLES = 6;
   const MAX_ELEMENTS = OPTS.maxElements || 6000;
   const MAX_FOCUS_PROBES = OPTS.maxFocusProbes || 40;
   // WCAG 2.2 AA floor unless the ledger raises it for this viewport — DGA mobile
@@ -109,6 +109,91 @@ export function probe(OPTS_IN = {}) {
     return parts.join(' > ').slice(0, 160);
   }
 
+  /* -------------------------------------------------------------- locators */
+
+  /**
+   * Where on the page is this, in words a person can act on?
+   *
+   * selectorFor gives a CSS path, which tells a developer how to SELECT an element and
+   * tells nobody where it IS. "div.row > a.btn" cannot be found by eye; "header ·
+   * navigation · «تسجيل الدخول»" can. Region and section are read off the page's own
+   * landmarks and headings, so the words in the report are the words on the screen.
+   */
+  const REGION_SEL = 'header,nav,main,footer,aside,form,' +
+    '[role=banner],[role=navigation],[role=main],[role=contentinfo],[role=complementary],[role=search],[role=form]';
+  const REGION_NAME = {
+    header: 'header', banner: 'header',
+    nav: 'navigation', navigation: 'navigation',
+    main: 'main',
+    footer: 'footer', contentinfo: 'footer',
+    aside: 'aside', complementary: 'aside',
+    form: 'form', search: 'search',
+  };
+
+  function textOf(el, max) {
+    const t = (el.getAttribute && (el.getAttribute('aria-label') || el.getAttribute('alt') || el.getAttribute('title')))
+      || el.textContent || '';
+    return String(t).replace(/\s+/g, ' ').trim().slice(0, max);
+  }
+
+  function labelledBy(el) {
+    const ids = el.getAttribute('aria-labelledby');
+    if (!ids) return '';
+    return ids.split(/\s+/).map((i) => document.getElementById(i)).filter(Boolean)
+      .map((n) => textOf(n, 60)).join(' ').trim();
+  }
+
+  function regionOf(el) {
+    const host = el.closest(REGION_SEL);
+    if (!host) return null;
+    const key = String(host.getAttribute('role') || host.tagName).toLowerCase();
+    return REGION_NAME[key] || key;
+  }
+
+  // Collected once. sectionOf runs for every sample on the page, and re-walking the
+  // document per call turned a 20ms probe into a visible stall.
+  let HEADINGS = null;
+  const headings = () => (HEADINGS || (HEADINGS = [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')]));
+
+  function sectionOf(el) {
+    const box = el.closest('section,article,[role=region],[aria-label],[aria-labelledby]');
+    if (box && box !== document.body) {
+      const named = box.getAttribute('aria-label') || labelledBy(box);
+      if (named) return named.replace(/\s+/g, ' ').trim().slice(0, 60);
+      const h = box.querySelector('h1,h2,h3,h4,h5,h6');
+      if (h) { const t = textOf(h, 60); if (t) return t; }
+    }
+    // The fallback that makes this work at all: the nearest heading BEFORE this element
+    // in document order. Most pages carry no section landmarks; nearly all carry headings.
+    let last = null;
+    for (const h of headings()) {
+      if (h.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) last = h;
+      else break;
+    }
+    return last ? (textOf(last, 60) || null) : null;
+  }
+
+  const LOC_CACHE = new WeakMap();
+  function locate(el) {
+    if (LOC_CACHE.has(el)) return LOC_CACHE.get(el);
+    let out;
+    try {
+      const r = el.getBoundingClientRect();
+      out = {
+        sel: selectorFor(el),
+        region: regionOf(el),
+        section: sectionOf(el),
+        name: textOf(el, 40) || null,
+        at: { x: Math.round(r.left + window.scrollX), y: Math.round(r.top + window.scrollY),
+              w: Math.round(r.width), h: Math.round(r.height) },
+      };
+    } catch (e) {
+      out = { sel: selectorFor(el), region: null, section: null, name: null, at: null };
+    }
+    LOC_CACHE.set(el, out);
+    return out;
+  }
+
   /* ----------------------------------------------------------------- tally */
 
   function tally() {
@@ -124,7 +209,7 @@ export function probe(OPTS_IN = {}) {
           map.set(k, e);
         }
         e.count++;
-        if (el && e.samples.length < MAX_SAMPLES) e.samples.push(selectorFor(el));
+        if (el && e.samples.length < MAX_SAMPLES) e.samples.push(locate(el));
       },
       dump() {
         return [...map.values()].sort((a, b) => b.count - a.count).slice(0, MAX_ENTRIES);
@@ -414,6 +499,7 @@ export function probe(OPTS_IN = {}) {
         else if (contrastFindings.length < 60) {
           contrastFindings.push({
             selector: selectorFor(el),
+            loc: locate(el),
             text: text.slice(0, 60),
             fg: hex(eff),
             bg: hex(bg),
@@ -465,7 +551,7 @@ export function probe(OPTS_IN = {}) {
               const r = Math.round(contrast(eff, behind) * 100) / 100;
               if (r >= 3.0) nonTextPassing++;
               else if (nonTextFindings.length < 40) {
-                nonTextFindings.push({ selector: selectorFor(el), border: hex(eff), against: hex(behind), ratio: r, required: 3.0 });
+                nonTextFindings.push({ selector: selectorFor(el), loc: locate(el), border: hex(eff), against: hex(behind), ratio: r, required: 3.0 });
               }
             }
           } else {
@@ -581,6 +667,7 @@ export function probe(OPTS_IN = {}) {
       else if (targetFindings.length < 40) {
         targetFindings.push({
           selector: selectorFor(el),
+          loc: locate(el),
           width: Math.round(w * 10) / 10,
           height: Math.round(h * 10) / 10,
           required: MIN_TARGET,
@@ -775,7 +862,7 @@ export function probe(OPTS_IN = {}) {
         focusProbe.visible++;
         focusProbe.colourOnly++;
       } else if (focusProbe.missing.length < 20) {
-        focusProbe.missing.push({ selector: selectorFor(el), label: (el.getAttribute('aria-label') || el.textContent || '').trim().slice(0, 40) });
+        focusProbe.missing.push({ selector: selectorFor(el), loc: locate(el), label: (el.getAttribute('aria-label') || el.textContent || '').trim().slice(0, 40) });
       }
       el.blur();
       if (seed) seed.focus({ preventScroll: true });   // re-arm focus-visible for the next probe

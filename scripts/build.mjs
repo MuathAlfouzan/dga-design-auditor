@@ -31,6 +31,7 @@ function strip(o) {
 const rubric = strip(JSON.parse(read('data/rubric.json')));
 const tokens = strip(JSON.parse(read('data/tokens.json')));
 const components = strip(JSON.parse(read('data/components.json')));
+const benchmarks = strip(JSON.parse(read('data/benchmarks.json')));
 
 // Modules are authored as ESM for Node and the tests; the bundle runs as a
 // classic script, so the export keywords come off. Nothing else changes.
@@ -64,6 +65,7 @@ const bundle = `/*!
   var RUBRIC = ${JSON.stringify(rubric)};
   var TOKENS = ${JSON.stringify(tokens)};
   var COMPONENTS = ${JSON.stringify(components)};
+  var BENCHMARKS = ${JSON.stringify(benchmarks)};
 
 ${probe}
 
@@ -93,6 +95,7 @@ ${render}
     rubric: RUBRIC,
     tokens: TOKENS,
     components: COMPONENTS,
+    benchmarks: BENCHMARKS,
 
     /** Probe this viewport, add it to the set, and score everything captured so far. */
     audit: function (opts) {
@@ -101,7 +104,7 @@ ${render}
       var capture = probe({ label: label, minTargetPx: minTargetFor(window.innerWidth) });
       api.captures.push(capture);
       var args = {
-        rubric: RUBRIC, tokens: TOKENS, captures: api.captures,
+        rubric: RUBRIC, tokens: TOKENS, benchmarks: BENCHMARKS, captures: api.captures,
         judged: opts.judged || {},
         options: {
           targetType: 'site',
@@ -130,6 +133,21 @@ ${render}
      *   __dga.explain({ check: "T1" })       -> what was found, and the fix
      */
     explain: function (q) { return explain(api.verdict, q || {}); },
+
+    /**
+     * Where did the points go, by place on the page?
+     *   __dga.regions()            -> header / nav / main / footer, worst first
+     * Points are apportioned across a check's findings by occurrence, so they are
+     * approximate per row and exact per check.
+     */
+    regions: function (v) {
+      var x = v || api.verdict;
+      if (x && x.schema === 'dga-score-split/1') {
+        return (x.viewports || []).filter(function (y) { return y.captured; })
+          .map(function (y) { return { viewport: y.id, regions: byRegion(y.verdict) }; });
+      }
+      return byRegion(x);
+    },
 
     /** Compact markdown for a chat reply. Handles a split or a single verdict. */
     inline: function (v) { return inlineReport(v || api.verdict); },

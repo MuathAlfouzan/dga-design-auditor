@@ -205,8 +205,8 @@ check('clean target bands as Compliant', clean.json?.band?.id === 'compliant', `
 check('clean target has no findings', (clean.json?.findings?.length ?? -1) === 0, `got ${clean.json?.findings?.length} — ${JSON.stringify(clean.json?.findings?.slice(0, 2))}`);
 check(
   'inapplicable checks leave the denominator',
-  clean.json?.available === 92 && clean.json?.checksCounted === 25,
-  `available ${clean.json?.available} (expected 92: 100 less C4 dark 3, R1 3, R3 2), counted ${clean.json?.checksCounted} of ${clean.json?.checksTotal} (expected 25 of 28)`
+  clean.json?.available === 87 && clean.json?.checksCounted === 23,
+  `available ${clean.json?.available} (expected 87: core 95 less C4 dark 3, R1 3, R3 2), counted ${clean.json?.checksCounted} of ${clean.json?.checksTotal} (expected 23 core checks; R2 and M2 score in the extended block)`
 );
 
 /* 2 — the government gate: a blocker caps the band without touching the number */

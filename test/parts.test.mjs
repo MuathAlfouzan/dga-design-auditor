@@ -37,7 +37,17 @@ console.log('\n  Parts and explain\n  ' + '─'.repeat(52));
 
 /* ---- the rubric itself --------------------------------------------------- */
 eq('three parts declared', rubric.parts.map((p) => p.id), ['foundations', 'components', 'standards']);
-eq('part weights sum to 100', rubric.parts.reduce((a, p) => a + p.weight, 0), 100);
+// The parts carry the CORE weight only. Extended checks (R2 logical properties, M2
+// reduced motion) measure practices DGA never published, so they sit outside the 100 —
+// but the two halves must still account for every point, or weight has gone missing.
+eq('part weights sum to the declared core weight', rubric.parts.reduce((a, p) => a + p.weight, 0), rubric.scoring.coreWeight);
+eq('core + extended = 100', rubric.scoring.coreWeight + rubric.scoring.extendedWeight, 100);
+eq('extended weight is exactly the extended checks',
+  rubric.categories.flatMap((c) => c.checks).filter((k) => k.scope === 'extended').reduce((a, k) => a + k.weight, 0),
+  rubric.scoring.extendedWeight);
+ok('every core check names the authority behind it',
+  rubric.categories.flatMap((c) => c.checks).filter((k) => k.scope !== 'extended').every((k) => typeof k.authority === 'string' && k.authority.length > 8),
+  rubric.categories.flatMap((c) => c.checks).filter((k) => k.scope !== 'extended' && !k.authority).map((k) => k.id).join(', '));
 ok('every category is mapped to a part', rubric.categories.every((c) => rubric.parts.some((p) => p.id === c.part)),
   rubric.categories.filter((c) => !c.part).map((c) => c.id).join(', '));
 for (const part of rubric.parts) {
@@ -47,7 +57,7 @@ for (const part of rubric.parts) {
 
 /* ---- the rollup must not move the number --------------------------------- */
 const v = score({ rubric, tokens, captures, judged, options });
-eq('overall is unchanged by the rollup', v.score, 64.89);
+eq('overall is unchanged by the rollup', v.score, 65.2);
 const partPoints = v.parts.reduce((a, p) => a + p.earned, 0);
 ok('part points reconcile with the verdict total', Math.abs(partPoints - v.earned) <= 0.02,
   `parts ${partPoints.toFixed(2)} vs earned ${v.earned} — each part is rounded once, so a cent of drift is expected and more is not`);

@@ -10,6 +10,8 @@
  * again inside the page. Downscale to ~900px JPEG before passing any.
  */
 
+import { byRegion, asLocator } from './score.js';
+
 export function renderScorecard(S, { shots = [] } = {}) {
 
 const esc = (s) =>
@@ -109,7 +111,10 @@ const findingsHtml = grouped
           <div><dt>Found</dt><dd><code>${esc(f.found ?? '—')}</code></dd></div>
           <div><dt>Expected</dt><dd><code>${esc(f.expected ?? '—')}</code></dd></div>
           ${f.sample ? `<div><dt>Content</dt><dd>${esc(f.sample)}</dd></div>` : ''}
-          ${f.where?.length ? `<div><dt>Where</dt><dd class="where">${f.where.slice(0, 6).map((w) => `<code>${esc(w)}</code>`).join('')}</dd></div>` : ''}
+          ${f.where?.length ? `<div><dt>Where</dt><dd class="where">${f.where.slice(0, 6).map(asLocator).filter(Boolean).map((w) => {
+            const place = [w.region, w.section].filter(Boolean).join(' · ');
+            return `<code>${esc(w.name ? `«${w.name}» ` : '')}${esc(w.sel || '')}${place ? ` — ${esc(place)}` : ''}</code>`;
+          }).join('')}</dd></div>` : ''}
           <div><dt>Fix</dt><dd>${esc(f.fix ?? '')}</dd></div>
         </dl>
       </li>`
@@ -128,6 +133,42 @@ const shotsHtml = shots.length
     ${shots.map((s) => `<figure><img src="${s.dataUri}" alt="${esc(s.label)} capture of ${esc(S.target?.name)}"><figcaption>${esc(s.label)}</figcaption></figure>`).join('')}
   </div>
 </section>`
+  : '';
+
+/* --------------------------------------------------- where the points went */
+
+// The section the report was missing. "P1 lost 4.84" names a check; this names a place.
+// Points are apportioned across a check's findings by occurrence — arithmetic on top of a
+// measurement, so every figure here carries a ~ and the lede says so outright.
+const regions = byRegion(S, { maxRowsPerSection: 6 });
+const regionHtml = regions.length
+  ? `<section class="block">
+  <h2>Where the points went</h2>
+  <p class="lede">Grouped by where it sits on the page. Points are <strong>≈apportioned</strong> across each check's findings by how often it occurs — they are not measured per element.</p>
+  ${regions.map((g) => `
+  <section class="region">
+    <h3>${esc(g.region)}${g.section ? ` <span class="sub">${esc(g.section)}</span>` : ''} <span class="count">≈${g.points} pts</span></h3>
+    <div class="scroll-x"><table class="rgn">
+      <thead><tr><th>Element</th><th>Check</th><th>Found</th><th>Expected</th><th class="n">×</th><th class="n">≈pts</th></tr></thead>
+      <tbody>${g.rows.map((r) => `<tr>
+        <td>${r.elements.map((e) => e.name ? `<strong>«${esc(e.name)}»</strong>` : `<code>${esc(e.sel || '—')}</code>`).slice(0, 2).join(' ')}</td>
+        <td><code>${esc(r.checkId)}</code> ${esc(r.summary)}</td>
+        <td><code>${esc(r.found ?? '—')}</code></td>
+        <td><code>${esc(r.expected ?? '—')}</code></td>
+        <td class="n">${r.occurrences}</td>
+        <td class="n">≈${r.pointsApprox}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>
+  </section>`).join('')}
+</section>`
+  : '';
+
+const refNote = S.reference && S.reference.score != null
+  ? `<p class="cap"><span class="stamp">Reference</span> <strong>${esc(S.reference.label)}</strong> scores <strong>${S.reference.score}</strong> on this same rubric (${esc(S.reference.viewport)}${S.reference.dgaVersion ? `, DGA ${esc(S.reference.dgaVersion)}` : ''}) — this target is <strong>${S.reference.delta >= 0 ? '+' : ''}${S.reference.delta}</strong> against it. ${esc(S.reference.basis)}.${S.reference.caveats?.length ? ` Reference caveats: ${S.reference.caveats.map(esc).join('; ')}.` : ''}</p>`
+  : '';
+
+const extNote = S.extended && S.extended.score != null
+  ? `<p class="cap"><span class="stamp warn">Outside the 100</span> <strong>Extended practice ${S.extended.score}/100</strong> — ${S.extended.checks.map((k) => `<code>${esc(k.id)}</code> ${esc(k.title)}${k.ratio != null ? ` (${k.ratio})` : ''}`).join(', ')}. DGA publishes none of this, so it carries no compliance weight and never caps a band.</p>`
   : '';
 
 const capNote = S.cappedFrom
@@ -283,6 +324,17 @@ const html = `<title>${esc(S.target?.name || 'Design')} Compliance Audit</title>
   .findings dt { font-family:var(--mono); font-size:.64rem; letter-spacing:.1em; text-transform:uppercase;
     color:var(--faint); padding-top:.22rem; }
   .findings dd { margin:0; color:var(--slate); min-width:0; overflow-wrap:anywhere; }
+  .region { border-top:1px solid var(--rule); padding-top:.9rem; margin-top:1.1rem; }
+  .region h3 { display:flex; align-items:baseline; gap:.5rem; flex-wrap:wrap; margin:0 0 .6rem;
+               font-size:.95rem; letter-spacing:.02em; text-transform:uppercase; color:var(--accent); }
+  .region h3 .sub { text-transform:none; letter-spacing:0; color:var(--ink); font-weight:600; }
+  .region h3 .count { margin-inline-start:auto; font-family:var(--mono); font-size:.78rem; color:var(--slate); text-transform:none; }
+  table.rgn { width:100%; border-collapse:collapse; font-size:.82rem; }
+  table.rgn th { text-align:start; font-weight:600; color:var(--faint); font-size:.72rem;
+                 text-transform:uppercase; letter-spacing:.04em; padding:.3rem .5rem; border-bottom:1px solid var(--rule); }
+  table.rgn td { padding:.4rem .5rem; border-bottom:1px solid var(--rule); vertical-align:top; color:var(--slate); }
+  table.rgn td strong { color:var(--ink); }
+  table.rgn .n { text-align:end; font-family:var(--mono); font-variant-numeric:tabular-nums; white-space:nowrap; }
   .findings dd code { font-size:.78rem; color:var(--ink); }
   .where code { display:block; color:var(--slate); font-size:.72rem; }
 
@@ -325,6 +377,8 @@ const html = `<title>${esc(S.target?.name || 'Design')} Compliance Audit</title>
       <p class="band tone-${bandTone}">${esc(S.band?.label || '—')}</p>
       <p class="tally">${S.checksPassed} of ${S.checksCounted} applicable checks met · ${S.earned} of ${S.available} points${S.checksTotal && S.checksCounted !== S.checksTotal ? ` · ${S.checksTotal - S.checksCounted} of ${S.checksTotal} not applicable to a ${esc(S.target?.type)} target` : ''}</p>
       ${capNote}
+      ${refNote}
+      ${extNote}
       ${unassessedNote}
     </div>
   </section>
@@ -349,6 +403,8 @@ const html = `<title>${esc(S.target?.name || 'Design')} Compliance Audit</title>
     <p class="lede">Nine categories, ${S.checksTotal} checks. Each category shows points earned against points available for this target — a check that cannot apply leaves the denominator rather than counting as a failure. Open a row for the individual checks.</p>
     <div class="scroll-x">${categoryRows}</div>
   </section>
+
+  ${regionHtml}
 
   ${
     findingsHtml

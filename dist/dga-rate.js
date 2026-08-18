@@ -14,9 +14,10 @@
 (function () {
   'use strict';
 
-  var RUBRIC = {"version":1,"standard":{"name":"DGA Platforms Code","arabicName":"كود المنصات","authority":"Digital Government Authority, Saudi Arabia","source":"https://www.figma.com/community/file/1392264328585493958/components-library-platforms-code"},"bands":[{"id":"compliant","label":"Compliant","min":90},{"id":"substantial","label":"Substantially compliant","min":75},{"id":"partial","label":"Partial","min":60},{"id":"non-compliant","label":"Non-compliant","min":0}],"blockerCapBand":"partial","passThreshold":{"default":0.9,"blocker":1},"thresholds":{"colorMatchDeltaE":2,"colorNearMissDeltaE":10,"contrastNormalText":4.5,"contrastLargeText":3,"contrastNonText":3,"largeTextPx":24,"largeBoldPx":18.66,"minTargetPx":24,"offPaletteMinOccurrences":3,"coverageIgnoreBelowOccurrences":1,"minCoverage":0.75,"maxSilentDropWeight":15},"categories":[{"id":"color","label":"Color & tokens","weight":18,"checks":[{"id":"C1","weight":8,"title":"Color token coverage","description":"Every text, background, border and fill color resolves to a DGA color token.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of color-bearing declarations within deltaE <= colorMatchDeltaE of some ledger color.","blocker":false,"fix":"Replace the literal color with the named DGA token. The finding names the nearest token for each offender."},{"id":"C2","weight":4,"title":"No off-palette brand color","description":"No color far from every DGA token (deltaE > colorNearMissDeltaE) is used repeatedly as a brand or accent surface.","applies_to":"both","method":"auto","scoring":"fraction","measure":"1 minus the occurrence-weighted share of far-off-palette colors used at least offPaletteMinOccurrences times. Near-misses are C1's problem, not this one.","blocker":true,"fix":"An unrecognisable brand color is an identity violation, not a styling preference. Move it onto the DGA palette or get the addition approved into the library."},{"id":"C3","weight":3,"title":"Semantic colors used semantically","description":"success / warning / error / info tokens appear only in their semantic roles, and those roles use no other color.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of semantic-token usages whose surrounding role matches the token's meaning, plus destructive/among-status affordances that use the correct token.","blocker":false,"fix":"Error text in the brand green, or a success toast in red, breaks the one convention users carry between government platforms."},{"id":"C4","weight":3,"title":"Dark theme from the DS dark set","description":"If the target ships a dark theme, its colors come from the DGA dark-mode tokens rather than ad-hoc darkening.","applies_to":"both","method":"auto","scoring":"fraction","na_when":"target has no dark theme","measure":"Same coverage calculation as C1, run against the dark-scheme capture and the ledger's dark set.","blocker":false,"fix":"Point the dark theme at the DGA dark tokens. Inverting or dimming light tokens drifts within one release."}],"part":"foundations"},{"id":"typography","label":"Typography","weight":16,"checks":[{"id":"T1","weight":5,"title":"Typeface stack","description":"Latin and Arabic text render in the DGA typefaces, each script in the face specified for it.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of rendered text whose resolved font family is in the ledger's font stack for that script.","blocker":false,"fix":"A substituted face is the single most visible compliance failure — it reads as a different government at a glance."},{"id":"T2","weight":5,"title":"Type scale","description":"Font sizes come from the DGA type ramp.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of computed font-size values matching a ramp step exactly (px, after rem resolution).","blocker":false,"fix":"Snap to the nearest ramp step; the finding names it."},{"id":"T3","weight":3,"title":"Font weights","description":"Only the weights the DGA system defines are used.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of computed font-weight values in the ledger's allowed weight set.","blocker":false,"fix":"Synthetic or off-scale weights render inconsistently across platforms, especially in Arabic."},{"id":"T4","weight":3,"title":"Line height and tracking","description":"Line-height and letter-spacing match the ramp step's paired values.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of text runs whose (size, line-height, letter-spacing) triple matches one ramp step. Matching leading alone lets a 14px body carry 72px display leading and pass, which is the mismatch this check exists to catch.","blocker":false,"fix":"Set the ramp's paired leading rather than a global multiplier — Arabic ascenders and descenders need the extra room."}],"part":"foundations"},{"id":"spacing","label":"Spacing & layout","weight":12,"checks":[{"id":"S1","weight":6,"title":"Spacing scale","description":"Padding, margin and gap values sit on the DGA spacing grid.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of non-zero spacing values matching a scale step.","blocker":false,"fix":"Off-grid spacing is what makes an otherwise on-token page feel unlike the rest of the platform."},{"id":"S2","weight":3,"title":"Container widths and gutters","description":"Page container max-widths, gutters and column behaviour follow the DGA breakpoints.","applies_to":"site","method":"auto","scoring":"fraction","measure":"Measured at desktop, tablet and mobile captures; each breakpoint whose container width and gutter match the ledger scores its third.","blocker":false,"fix":"Match the DGA container at each breakpoint so content lines up across linked government services."},{"id":"S3","weight":3,"title":"Vertical rhythm","description":"Section and block spacing uses the DGA rhythm steps rather than arbitrary gaps.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of between-section vertical gaps matching a rhythm step.","blocker":false,"fix":"Use the rhythm steps for section separation; the page reads as one document rather than stacked fragments."}],"part":"foundations"},{"id":"shape","label":"Shape & elevation","weight":8,"checks":[{"id":"E1","weight":3,"title":"Corner radii","description":"border-radius values come from the DGA radius scale.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of non-zero radii matching a scale step (fully-round pills excluded and checked against the pill token).","blocker":false,"fix":"Snap to the nearest radius step."},{"id":"E2","weight":2,"title":"Borders","description":"Border widths and colors come from the DGA border tokens.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of visible borders whose width is on the scale and whose color is a ledger border token.","blocker":false,"fix":"Use the border tokens; hairlines that vary by a fraction of a pixel show up as banding on scaled displays."},{"id":"E3","weight":3,"title":"Elevation","description":"box-shadow values come from the DGA elevation set.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of shadows matching an elevation token. Both sides are normalised to x/y/blur/spread plus rgba before comparison, because the ledger writes hex and the browser reports rgba() — comparing raw strings, or numbers scraped from them, can never match.","blocker":false,"fix":"Use the named elevation level. Hand-tuned shadows break the depth ordering the system defines."}],"part":"foundations"},{"id":"components","label":"Components","weight":18,"checks":[{"id":"P1","weight":8,"title":"DS components, not rebuilds","description":"Buttons, inputs, selects, cards, tabs, tables, navigation, modals and alerts correspond to DGA components rather than bespoke reimplementations.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of identified component instances matching a DGA component by anatomy. On Figma targets, whether the instance is a library instance rather than a detached or hand-drawn frame.","blocker":false,"fix":"Adopt the library component. A rebuild that looks right today is the thing that drifts at the next DGA release."},{"id":"P2","weight":5,"title":"Variants, sizes and states","description":"Component variants (primary / secondary / tertiary), sizes and interaction states are the ones the system defines.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of instances whose variant, size and hover/active/disabled/focus treatments match the spec.","blocker":false,"fix":"Missing disabled or focus treatments are the usual failure; both are specified, neither is optional."},{"id":"P3","weight":5,"title":"Component anatomy","description":"Internal padding, icon-and-label spacing and order, and minimum heights match the component spec.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of instances whose measured internal geometry matches the spec within 1px.","blocker":false,"fix":"Restore the specified padding and min-height. Squeezed buttons are also the usual cause of an A4 target-size failure."}],"part":"components"},{"id":"brand","label":"Iconography & brand","weight":6,"checks":[{"id":"I1","weight":3,"title":"Icon set","description":"Icons come from the DGA icon set, at scale sizes, with the specified stroke weight.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of icons identifiable as DGA set members at a scale size. Mixed icon libraries on one page fail proportionally.","blocker":false,"fix":"Standardise on the DGA icon set. Two icon families on one screen is visible even to users who cannot name why."},{"id":"I2","weight":3,"title":"Logo and lockup","description":"Official marks use approved variants at or above minimum size, with the specified clear space, uncropped and unrecoloured.","applies_to":"both","method":"judged","scoring":"binary","measure":"Pass only if every mark on the target satisfies variant, minimum size, clear space and color rules.","blocker":true,"fix":"Misuse of a government mark is an identity violation. Use the approved asset at approved size with its clear space intact."}],"part":"components"},{"id":"rtl","label":"RTL & bilingual","weight":8,"checks":[{"id":"R1","weight":3,"title":"Direction and mirroring","description":"Arabic renders with dir=rtl and the layout mirrors — not just the text.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Correct dir/lang on the document and on mixed-script runs, plus evidence that layout order, alignment and navigation actually mirror in the RTL capture.","blocker":false,"fix":"Set dir on the document and let logical properties carry the mirroring, rather than a per-component RTL override sheet."},{"id":"R2","weight":3,"title":"Logical properties","description":"Layout uses inline/block logical properties instead of left/right physical ones.","applies_to":"site","method":"auto","scoring":"fraction","measure":"Share of directional declarations written logically rather than physically, in FIRST-PARTY stylesheets only. Vendor bundles are counted separately and reported as context — scoring them measures the framework choice rather than the team's work.","blocker":false,"fix":"margin-inline-start over margin-left. Physical properties are why an RTL layout needs a second stylesheet and then diverges from the first."},{"id":"R3","weight":2,"title":"Arabic typography and numerals","description":"Arabic runs use the Arabic face, directional icons mirror, and the numeral system is consistent throughout.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Arabic-range text resolving to the Arabic face; chevrons and arrows mirrored in RTL; one numeral system (Arabic-Indic or Western) used consistently.","blocker":false,"fix":"Mixed numeral systems inside one interface is the most common bilingual defect and the easiest to fix."}],"part":"standards"},{"id":"a11y","label":"Accessibility","weight":10,"checks":[{"id":"A1","weight":4,"title":"Text contrast (WCAG AA)","description":"Every text run meets 4.5:1, or 3:1 where it qualifies as large text.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of text runs meeting their applicable threshold against their effective background.","blocker":true,"fix":"Government services carry a statutory accessibility obligation. Darken the text token or lighten the surface — the finding gives the measured ratio and the needed delta."},{"id":"A2","weight":2,"title":"Non-text contrast","description":"UI boundaries, icons and graphical affordances meet 3:1 against their surroundings.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of borders that identify a UI COMPONENT or its state meeting 3:1 against their surroundings. Decorative borders — dividers, card outlines — are outside SC 1.4.11 and are skipped rather than failed; the skipped count is reported.","blocker":true,"fix":"An input whose border disappears against its background is not usable at low vision or in sunlight."},{"id":"A3","weight":2,"title":"Visible focus","description":"Every interactive element shows a visible focus indicator on keyboard focus.","applies_to":"site","method":"auto","scoring":"fraction","measure":"Share of a sample of focusable elements whose computed style changes while genuinely in :focus-visible — seeded via a throwaway text input, because el.focus() alone does not match the pseudo-class. Ring and colour-only indicators are tallied separately. The contrast of the indicator itself is not measured.","blocker":false,"fix":"Never remove the outline without replacing it. Keyboard-only users navigate the whole service through this one affordance."},{"id":"A4","weight":2,"title":"Target size","description":"Interactive targets are at least 24x24 CSS px (WCAG 2.2 AA), spacing exceptions allowed.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of interactive elements meeting the minimum, with the WCAG 2.2 exceptions applied: a target inline in a sentence leaves the denominator, and an undersized target passes if a 24px circle centred on it intersects no other target. Both exemption counts are reported.","blocker":false,"fix":"Grow the control or its padding. Icon-only buttons are the usual offenders."}],"part":"standards"},{"id":"motion","label":"Motion","weight":4,"checks":[{"id":"M1","weight":2,"title":"Motion tokens","description":"Transition durations and easing curves come from the DGA motion tokens.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of transition/animation declarations whose duration and timing function match motion tokens.","blocker":false,"fix":"Use the named duration and curve so motion feels the same across services."},{"id":"M2","weight":2,"title":"Reduced motion","description":"prefers-reduced-motion is honoured.","applies_to":"site","method":"auto","scoring":"binary","measure":"Pass if the stylesheet carries a prefers-reduced-motion rule and animation is actually suppressed under the emulated preference.","blocker":false,"fix":"Add a reduced-motion block that skips the motion rather than shortening it."}],"part":"foundations"}],"parts":[{"id":"foundations","label":"Foundations","weight":58,"source":"Foundations - Platforms Code","covers":"Colour tokens, the type ramp, the spacing and radius scales, elevation and motion."},{"id":"components","label":"Components","weight":24,"source":"Components Library + Icons - Platforms Code","covers":"Component anatomy, variants and states, the icon set and official marks."},{"id":"standards","label":"Standards","weight":18,"source":"DGA guidance, not a Figma library","covers":"RTL and bilingual behaviour, and WCAG accessibility."}]};
+  var RUBRIC = {"version":1,"standard":{"name":"DGA Platforms Code","arabicName":"كود المنصات","authority":"Digital Government Authority, Saudi Arabia","source":"https://www.figma.com/community/file/1392264328585493958/components-library-platforms-code"},"bands":[{"id":"compliant","label":"Compliant","min":90},{"id":"substantial","label":"Substantially compliant","min":75},{"id":"partial","label":"Partial","min":60},{"id":"non-compliant","label":"Non-compliant","min":0}],"blockerCapBand":"partial","passThreshold":{"default":0.9,"blocker":1},"thresholds":{"colorMatchDeltaE":2,"colorNearMissDeltaE":10,"contrastNormalText":4.5,"contrastLargeText":3,"contrastNonText":3,"largeTextPx":24,"largeBoldPx":18.66,"minTargetPx":24,"offPaletteMinOccurrences":3,"coverageIgnoreBelowOccurrences":1,"minCoverage":0.75,"maxSilentDropWeight":15},"categories":[{"id":"color","label":"Color & tokens","weight":18,"checks":[{"id":"C1","weight":8,"title":"Color token coverage","description":"Every text, background, border and fill color resolves to a DGA color token.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of color-bearing declarations within deltaE <= colorMatchDeltaE of some ledger color.","blocker":false,"fix":"Replace the literal color with the named DGA token. The finding names the nearest token for each offender.","provenance":"ledger","authority":"Foundations / Colours — the published token palette","scope":"core"},{"id":"C2","weight":4,"title":"No off-palette brand color","description":"No color far from every DGA token (deltaE > colorNearMissDeltaE) is used repeatedly as a brand or accent surface.","applies_to":"both","method":"auto","scoring":"fraction","measure":"1 minus the occurrence-weighted share of far-off-palette colors used at least offPaletteMinOccurrences times. Near-misses are C1's problem, not this one.","blocker":true,"fix":"An unrecognisable brand color is an identity violation, not a styling preference. Move it onto the DGA palette or get the addition approved into the library.","provenance":"ledger","authority":"Foundations / Colours / Brand","scope":"core"},{"id":"C3","weight":3,"title":"Semantic colors used semantically","description":"success / warning / error / info tokens appear only in their semantic roles, and those roles use no other color.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of semantic-token usages whose surrounding role matches the token's meaning, plus destructive/among-status affordances that use the correct token.","blocker":false,"fix":"Error text in the brand green, or a success toast in red, breaks the one convention users carry between government platforms.","provenance":"ledger","authority":"Foundations / Colours — success · warning · error · info roles","scope":"core"},{"id":"C4","weight":3,"title":"Dark theme from the DS dark set","description":"If the target ships a dark theme, its colors come from the DGA dark-mode tokens rather than ad-hoc darkening.","applies_to":"both","method":"auto","scoring":"fraction","na_when":"target has no dark theme","measure":"Same coverage calculation as C1, run against the dark-scheme capture and the ledger's dark set.","blocker":false,"fix":"Point the dark theme at the DGA dark tokens. Inverting or dimming light tokens drifts within one release.","provenance":"ledger","authority":"Foundations / Colours — dark set","scope":"core"}],"part":"foundations"},{"id":"typography","label":"Typography","weight":16,"checks":[{"id":"T1","weight":5,"title":"Typeface stack","description":"Latin and Arabic text render in the DGA typefaces, each script in the face specified for it.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of rendered text whose resolved font family is in the ledger's font stack for that script.","blocker":false,"fix":"A substituted face is the single most visible compliance failure — it reads as a different government at a glance.","provenance":"ledger","authority":"Foundations / Typography — IBM Plex Sans Arabic","scope":"core"},{"id":"T2","weight":5,"title":"Type scale","description":"Font sizes come from the DGA type ramp.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of computed font-size values matching a ramp step exactly (px, after rem resolution).","blocker":false,"fix":"Snap to the nearest ramp step; the finding names it.","provenance":"ledger","authority":"Foundations / Typography — the type ramp","scope":"core"},{"id":"T3","weight":3,"title":"Font weights","description":"Only the weights the DGA system defines are used.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of computed font-weight values in the ledger's allowed weight set.","blocker":false,"fix":"Synthetic or off-scale weights render inconsistently across platforms, especially in Arabic.","provenance":"ledger","authority":"Foundations / Typography — weights 400 · 500 · 600 · 700","scope":"core"},{"id":"T4","weight":3,"title":"Line height and tracking","description":"Line-height and letter-spacing match the ramp step's paired values.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of text runs whose (size, line-height, letter-spacing) triple matches one ramp step. Matching leading alone lets a 14px body carry 72px display leading and pass, which is the mismatch this check exists to catch.","blocker":false,"fix":"Set the ramp's paired leading rather than a global multiplier — Arabic ascenders and descenders need the extra room.","provenance":"ledger","authority":"Foundations / Typography — the ramp step (size, leading, tracking) triples","scope":"core"}],"part":"foundations"},{"id":"spacing","label":"Spacing & layout","weight":12,"checks":[{"id":"S1","weight":6,"title":"Spacing scale","description":"Padding, margin and gap values sit on the DGA spacing grid.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of non-zero spacing values matching a scale step.","blocker":false,"fix":"Off-grid spacing is what makes an otherwise on-token page feel unlike the rest of the platform.","provenance":"ledger","authority":"Foundations / Spacing — the spacing scale","scope":"core"},{"id":"S2","weight":3,"title":"Container widths and gutters","description":"Page container max-widths, gutters and column behaviour follow the DGA breakpoints.","applies_to":"site","method":"auto","scoring":"fraction","measure":"Measured at desktop, tablet and mobile captures; each breakpoint whose container width and gutter match the ledger scores its third.","blocker":false,"fix":"Match the DGA container at each breakpoint so content lines up across linked government services.","provenance":"ledger","authority":"Foundations / Grid — breakpoints, container widths and gutters","scope":"core"},{"id":"S3","weight":3,"title":"Vertical rhythm","description":"Section and block spacing uses the DGA rhythm steps rather than arbitrary gaps.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of between-section vertical gaps matching a rhythm step.","blocker":false,"fix":"Use the rhythm steps for section separation; the page reads as one document rather than stacked fragments.","provenance":"ledger","authority":"Foundations / Spacing — section rhythm steps","scope":"core"}],"part":"foundations"},{"id":"shape","label":"Shape & elevation","weight":8,"checks":[{"id":"E1","weight":3,"title":"Corner radii","description":"border-radius values come from the DGA radius scale.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of non-zero radii matching a scale step (fully-round pills excluded and checked against the pill token).","blocker":false,"fix":"Snap to the nearest radius step.","provenance":"ledger","authority":"Foundations / Radius — the radius scale","scope":"core"},{"id":"E2","weight":2,"title":"Borders","description":"Border widths and colors come from the DGA border tokens.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of visible borders whose width is on the scale and whose color is a ledger border token.","blocker":false,"fix":"Use the border tokens; hairlines that vary by a fraction of a pixel show up as banding on scaled displays.","provenance":"ledger","authority":"Foundations / Borders — widths and border-role colours","scope":"core"},{"id":"E3","weight":3,"title":"Elevation","description":"box-shadow values come from the DGA elevation set.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of shadows matching an elevation token. Both sides are normalised to x/y/blur/spread plus rgba before comparison, because the ledger writes hex and the browser reports rgba() — comparing raw strings, or numbers scraped from them, can never match.","blocker":false,"fix":"Use the named elevation level. Hand-tuned shadows break the depth ordering the system defines.","provenance":"ledger","authority":"Foundations / Shadows — the elevation levels","scope":"core"}],"part":"foundations"},{"id":"components","label":"Components","weight":18,"checks":[{"id":"P1","weight":8,"title":"DS components, not rebuilds","description":"Buttons, inputs, selects, cards, tabs, tables, navigation, modals and alerts correspond to DGA components rather than bespoke reimplementations.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of identified component instances matching a DGA component by anatomy. On Figma targets, whether the instance is a library instance rather than a detached or hand-drawn frame.","blocker":false,"fix":"Adopt the library component. A rebuild that looks right today is the thing that drifts at the next DGA release.","provenance":"ledger","authority":"Components Library — component anatomy","scope":"core"},{"id":"P2","weight":5,"title":"Variants, sizes and states","description":"Component variants (primary / secondary / tertiary), sizes and interaction states are the ones the system defines.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of instances whose variant, size and hover/active/disabled/focus treatments match the spec.","blocker":false,"fix":"Missing disabled or focus treatments are the usual failure; both are specified, neither is optional.","provenance":"ledger","authority":"Components Library — variants, sizes and states","scope":"core"},{"id":"P3","weight":5,"title":"Component anatomy","description":"Internal padding, icon-and-label spacing and order, and minimum heights match the component spec.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of instances whose measured internal geometry matches the spec within 1px.","blocker":false,"fix":"Restore the specified padding and min-height. Squeezed buttons are also the usual cause of an A4 target-size failure.","provenance":"ledger","authority":"Components Library — internal geometry","scope":"core"}],"part":"components"},{"id":"brand","label":"Iconography & brand","weight":6,"checks":[{"id":"I1","weight":3,"title":"Icon set","description":"Icons come from the DGA icon set, at scale sizes, with the specified stroke weight.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of icons identifiable as DGA set members at a scale size. Mixed icon libraries on one page fail proportionally.","blocker":false,"fix":"Standardise on the DGA icon set. Two icon families on one screen is visible even to users who cannot name why.","provenance":"ledger","authority":"Icons Library — family, size scale and stroke weight","scope":"core"},{"id":"I2","weight":3,"title":"Logo and lockup","description":"Official marks use approved variants at or above minimum size, with the specified clear space, uncropped and unrecoloured.","applies_to":"both","method":"judged","scoring":"binary","measure":"Pass only if every mark on the target satisfies variant, minimum size, clear space and color rules.","blocker":true,"fix":"Misuse of a government mark is an identity violation. Use the approved asset at approved size with its clear space intact.","provenance":"ledger","authority":"Brand / identity — approved marks, minimum size, clear space","scope":"core"}],"part":"components"},{"id":"rtl","label":"RTL & bilingual","weight":5,"checks":[{"id":"R1","weight":3,"title":"Direction and mirroring","description":"Arabic renders with dir=rtl and the layout mirrors — not just the text.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Correct dir/lang on the document and on mixed-script runs, plus evidence that layout order, alignment and navigation actually mirror in the RTL capture.","blocker":false,"fix":"Set dir on the document and let logical properties carry the mirroring, rather than a per-component RTL override sheet.","provenance":"standard","authority":"HTML dir attribute · W3C i18n — an Arabic interface must be mirrored","scope":"core"},{"id":"R2","weight":3,"title":"Logical properties","description":"Layout uses inline/block logical properties instead of left/right physical ones.","applies_to":"site","method":"auto","scoring":"fraction","measure":"Share of directional declarations written logically rather than physically, in FIRST-PARTY stylesheets only. Vendor bundles are counted separately and reported as context — scoring them measures the framework choice rather than the team's work.","blocker":false,"fix":"margin-inline-start over margin-left. Physical properties are why an RTL layout needs a second stylesheet and then diverges from the first.","provenance":"practice","authority":null,"scope":"extended"},{"id":"R3","weight":2,"title":"Arabic typography and numerals","description":"Arabic runs use the Arabic face, directional icons mirror, and the numeral system is consistent throughout.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Arabic-range text resolving to the Arabic face; chevrons and arrows mirrored in RTL; one numeral system (Arabic-Indic or Western) used consistently.","blocker":false,"fix":"Mixed numeral systems inside one interface is the most common bilingual defect and the easiest to fix.","provenance":"standard","authority":"W3C i18n — one numeral system, Arabic set in an Arabic face","scope":"core"}],"part":"standards"},{"id":"a11y","label":"Accessibility","weight":10,"checks":[{"id":"A1","weight":4,"title":"Text contrast (WCAG AA)","description":"Every text run meets 4.5:1, or 3:1 where it qualifies as large text.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of text runs meeting their applicable threshold against their effective background.","blocker":true,"fix":"Government services carry a statutory accessibility obligation. Darken the text token or lighten the surface — the finding gives the measured ratio and the needed delta.","provenance":"wcag","authority":"WCAG 2.2 SC 1.4.3 Contrast (Minimum), AA","scope":"core"},{"id":"A2","weight":2,"title":"Non-text contrast","description":"UI boundaries, icons and graphical affordances meet 3:1 against their surroundings.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of borders that identify a UI COMPONENT or its state meeting 3:1 against their surroundings. Decorative borders — dividers, card outlines — are outside SC 1.4.11 and are skipped rather than failed; the skipped count is reported.","blocker":true,"fix":"An input whose border disappears against its background is not usable at low vision or in sunlight.","provenance":"wcag","authority":"WCAG 2.2 SC 1.4.11 Non-text Contrast, AA","scope":"core"},{"id":"A3","weight":2,"title":"Visible focus","description":"Every interactive element shows a visible focus indicator on keyboard focus.","applies_to":"site","method":"auto","scoring":"fraction","measure":"Share of a sample of focusable elements whose computed style changes while genuinely in :focus-visible — seeded via a throwaway text input, because el.focus() alone does not match the pseudo-class. Ring and colour-only indicators are tallied separately. The contrast of the indicator itself is not measured.","blocker":false,"fix":"Never remove the outline without replacing it. Keyboard-only users navigate the whole service through this one affordance.","provenance":"wcag","authority":"WCAG 2.2 SC 2.4.7 Focus Visible, AA","scope":"core"},{"id":"A4","weight":2,"title":"Target size","description":"Interactive targets are at least 24x24 CSS px (WCAG 2.2 AA), spacing exceptions allowed.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of interactive elements meeting the minimum, with the WCAG 2.2 exceptions applied: a target inline in a sentence leaves the denominator, and an undersized target passes if a 24px circle centred on it intersects no other target. Both exemption counts are reported.","blocker":false,"fix":"Grow the control or its padding. Icon-only buttons are the usual offenders.","provenance":"wcag","authority":"WCAG 2.2 SC 2.5.8 Target Size (Minimum), AA","scope":"core"}],"part":"standards"},{"id":"motion","label":"Motion","weight":2,"checks":[{"id":"M1","weight":2,"title":"Motion tokens","description":"Transition durations and easing curves come from the DGA motion tokens.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of transition/animation declarations whose duration and timing function match motion tokens.","blocker":false,"fix":"Use the named duration and curve so motion feels the same across services.","provenance":"ledger","authority":"Foundations / Motion — duration and easing tokens","scope":"core"},{"id":"M2","weight":2,"title":"Reduced motion","description":"prefers-reduced-motion is honoured.","applies_to":"site","method":"auto","scoring":"binary","measure":"Pass if the stylesheet carries a prefers-reduced-motion rule and animation is actually suppressed under the emulated preference.","blocker":false,"fix":"Add a reduced-motion block that skips the motion rather than shortening it.","provenance":"practice","authority":null,"scope":"extended"}],"part":"foundations"}],"parts":[{"id":"foundations","label":"Foundations","weight":56,"source":"Foundations - Platforms Code","covers":"Colour tokens, the type ramp, the spacing and radius scales, elevation and motion."},{"id":"components","label":"Components","weight":24,"source":"Components Library + Icons - Platforms Code","covers":"Component anatomy, variants and states, the icon set and official marks."},{"id":"standards","label":"Standards","weight":15,"source":"DGA guidance, not a Figma library","covers":"RTL and bilingual behaviour, and WCAG accessibility."}],"scoring":{"coreWeight":95,"extendedWeight":5,"note":"The score out of 100 is earned/available over CORE checks only — every core point traces to a DGA Figma token, a WCAG success criterion, or a W3C i18n requirement, named in each check's `authority`. `extended` checks measure practices nobody published; they are scored and reported separately and never fold into the headline or cap a band."}};
   var TOKENS = {"synced":"2026-08-18","source":{"standard":"DGA Platforms Code","publisher":"SDGA / Digital Government Authority, Saudi Arabia","profile":"https://www.figma.com/@sdga","manifest":"See sources.json — 23 published files, 4 of them the system itself.","syncedFiles":[{"name":"Foundations - Platforms Code","id":"1392267405633663431","synced":"2026-08-17","pages":["FOUNDATIONS 2:2","Colors 2:3","Typography 2:4","Effect styles 2:5","Spacing, radius & grids 2:6"]},{"name":"Components Library - Platforms Code","id":"1392264328585493958","synced":"2026-08-17","pages":["Get Started 16026:49769","Buttons 1:1183","Inline Alert 1730:46041","Text input 954:19434","Card 8940:22264","UI Shell Nav Header 429:130167","Tags 12:539"]},{"name":"Mobile Components - Platforms Code","id":"1392271796654597578","synced":"2026-08-18","pages":["Buttons 1:1183","Text input 954:19434","Card 11367:20133","UI Shell - Tab Bar 8332:23832","Checkbox 954:11220 (cross-check)"]}],"precedence":"Foundations > Components Library > templates. Conflicts are listed in $notes, never averaged."},"color":{"light":{"Button/button-background-primary-default":"#1b8354","Button/button-background-primary-hovered":"#166a45","Button/button-background-primary-pressed":"#104631","Button/button-background-primary-selected":"#14573a","Button/button-background-primary-focused":"#1b8354","Text/text-primary":"#0d121c","Background/background-primary-50":"#f3fcf6","Background/background-primary-400":"#54c08a","Background/background-SA-Flag":"#074d31","Icon/background-brand-light":"#f3fcf6","Link/link-primary-hovered":"#54c08a","Link/link-primary-pressed":"#88d8ad","Text/text-default":"#161616","Text/text-display":"#1f2a37","Text/text-primary-paragraph":"#384250","Text/text-secondary-paragraph":"#6c737f","Text/text-oncolor-primary":"#ffffff","Text/text-success":"#067647","Text/text-warning":"#b54708","Text/text-error":"#b42318","Text/text-info":"#175cd3","Global/text-default-disabled":"#9da4ae","Global/text-default-oncolor-disabled":"#ffffff66","Global/input-text-disabled":"#9da4ae","Background/background-white":"#ffffff","Background/background-card":"#ffffff","Background/background-menu":"#ffffff","Background/background-notification-white":"#ffffff","Background/background-neutral-25":"#fcfcfd","Background/background-neutral-50":"#f9fafb","Background/background-neutral-200":"#e5e7eb","Background/background-neutral-400":"#9da4ae","Background/background-neutral-800":"#1f2a37","Global/background-disabled":"#e5e7eb","Global/background-inverse-disabled":"#f3f4f6","Background/background-success":"#079455","Background/background-success-25":"#f6fef9","Background/background-warning":"#dc6803","Background/background-warning-25":"#fffcf5","Background/background-warning-50":"#fffaeb","Background/background-error":"#d92d20","Background/background-error-25":"#fffbfa","Background/background-info":"#1570ef","Background/background-info-25":"#f5faff","Border/border-neutral-primary":"#d2d6db","Border/border-neutral-secondary":"#e5e7eb","Border/border-black":"#161616","Border/border-white":"#ffffff","Border/border-white-40":"#ffffff66","Border/border-secondary":"#e5e7eb","Border/border-success-light":"#abefc6","Border/border-warning-light":"#fedf89","Border/border-error-light":"#fecdca","Border/border-info-light":"#b2ddff","Border/border-disabled":"#d2d6db","Global/border-disabled":"#9da4ae","Button/button-background-neutral-default":"#f9fafb","Button/button-background-neutral-hovered":"#f3f4f6","Button/button-background-neutral-pressed":"#e5e7eb","Button/button-background-neutral-selected":"#e5e7eb","Button/button-background-neutral-focused":"#f3f4f6","Button/button-background-black-default":"#0d121c","Button/button-background-black-hovered":"#1f2a37","Button/button-background-black-pressed":"#4d5761","Button/button-background-black-selected":"#384250","Button/button-background-black-focused":"#0d121c","Button/button-background-oncolor-default":"#ffffff","Button/button-background-oncolor-hovered":"#ffffffcc","Button/button-background-oncolor-pressed":"#ffffff99","Button/button-background-oncolor-selected":"#ffffffb2","Button/button-background-oncolor-focused":"#ffffff","Button/button-background-transparent-hovered":"#ffffff33","Button/button-background-transparent-pressed":"#ffffff66","Button/button-background-transparent-selected":"#ffffff4d","Button/button-background-disabled-on-color":"#ffffff33","Button/button-label-transparent-hovered-on-color":"#54c08a","Button/button-label-transparent-pressed-on-color":"#88d8ad","Button/button-label-transparent-selected-on-color":"#54c08a","Button/button-background-danger-primary-default":"#d92d20","Button/button-background-danger-primary-hovered":"#b42318","Button/button-background-danger-primary-pressed":"#7a271a","Button/button-background-danger-primary-selected":"#912018","Button/button-background-danger-primary-focused":"#d92d20","Button/button-background-danger-secondary-default":"#fef3f2","Button/button-background-danger-secondary-hovered":"#fee4e2","Button/button-background-danger-secondary-pressed":"#fecdca","Button/button-background-danger-secondary-focused":"#fef3f2","Button/button-label-danger-primary-default-oncolor":"#fecdca","Button/button-label-danger-primary-hovered-oncolor":"#fda29b","Button/button-label-danger-primary-pressed-oncolor":"#f97066","Form/field-background-default":"#ffffff","Form/field-background-darker":"#f3f4f6","Form/field-background-lighter":"#fcfcfd","Form/field-background-pressed":"#f3f4f6","Form/field-border-default":"#9da4ae","Form/field-border-hovered":"#384250","Form/field-border-pressed":"#0d121c","Form/field-border-error":"#b42318","Form/field-text-label":"#161616","Form/field-text-placeholder":"#6c737f","Form/field-text-filled":"#161616","Form/field-text-focused":"#384250","Form/field-text-hovered":"#161616","Form/field-text-pressed":"#384250","Form/field-text-readonly":"#161616","Icon/icon-default":"#161616","Icon/icon-oncolor":"#ffffff","Icon/icon-warning":"#b54708","Icon/background-success-light":"#ecfdf3","Icon/background-warning-light":"#fffaeb","Icon/background-error-light":"#fef3f2","Icon/background-info-light":"#eff8ff","Global/icon-default-oncolor-disabled":"#ffffff66","Tag/tag-text-neutral":"#1f2a37","Tag/tag-background-neutral":"#4d5761","Tag/tag-background-neutral-light":"#f9fafb","Tag/tag-border-neutral":"#4d5761","Tag/tag-text-success":"#085d3a","Tag/tag-background-success":"#067647","Tag/tag-background-success-light":"#ecfdf3","Tag/tag-border-success":"#067647","Tag/tag-border-success-light":"#abefc6","Tag/tag-icon-success":"#085d3a","Tag/tag-text-warning":"#93370d","Tag/tag-background-warning":"#b54708","Tag/tag-background-warning-light":"#fffaeb","Tag/tag-border-warning":"#b54708","Tag/tag-border-warning-light":"#fedf89","Tag/tag-icon-warning":"#93370d","Tag/tag-text-error":"#912018","Tag/tag-background-error":"#d92d20","Tag/tag-background-error-light":"#fef3f2","Tag/tag-border-error":"#b42318","Tag/tag-border-error-light":"#fecdca","Tag/tag-icon-error":"#912018","Tag/tag-text-info":"#1849a9","Tag/tag-background-info":"#1570ef","Tag/tag-background-info-light":"#eff8ff","Tag/tag-border-info":"#175cd3","Tag/tag-border-info-light":"#b2ddff","Tag/tag-icon-info":"#1849a9","Tag/tag-background-on-color":"#ffffff33","Tag/tag-border-on-color":"#ffffff99","Tag/tag-dot":"#ffffff99","Alpha/alpha-white-100":"#ffffff","Alpha/alpha-white-10":"#ffffff1a","Alpha/alpha-black-10":"#0000001a","Colors/Base/white":"#ffffff","Colors/Neutral/25":"#fcfcfd","Colors/Neutral/100":"#f3f4f6","Colors/Neutral/300":"#d2d6db","Colors/Neutral/400":"#9da4ae","Colors/Neutral/950":"#0d121c","Colors/SA-Flag/600":"#1b8354","Colors/Foreground/fg-brand-primary (600)":"#1b8354","Colors/Background/bg-primary":"#ffffff","Colors/Background/bg-secondary":"#f9fafb","Colors/Background/bg-quaternary":"#eaecf0","Colors/Background/bg-brand-primary_alt":"#f3fcf6","Component colors/Utility/Gray/utility-gray-50":"#f9fafb","Component colors/Utility/Gray/utility-gray-200":"#eaecf0","Component colors/Utility/Gray/utility-gray-700":"#344054","Component colors/Components/Buttons/Secondary/button-secondary-bg":"#ffffff","Component colors/Components/Buttons/Secondary/button-secondary-border":"#d0d5dd","Text/text-secondary":"#384250","Text/text-tertiary":"#4d5761","Text/text-white":"#ffffff","Text 2/text-primary_on-color":"#ffffff","Text 2/text-secondary_on-color":"#ffffffb2","Text 2/text-tertiary_on-color":"#ffffff99","Text 2/text-tertiary":"#4d5761","Text 2/text-brand-primary":"#14573a","Text 2/text-brand-secondary":"#1b8354","Text 2/text-brand-tertiary":"#25935f","Text 2/text-warning-primary":"#b54708","Text 2/text-success-primary":"#067647","Text 2/text-info-primary":"#175cd3","Border/border-primary":"#d2d6db","Border 2/border-primary":"#d2d6db","Background/background-body":"#f9fafb","Background/background-neutral-100":"#f3f4f6","Background/background-info-50":"#eff8ff","Icon/icon-primary":"#1b8354","Icon/icon-success":"#067647","Table/table-cell-border":"#d2d6db","Table/table-text-head":"#384250","Table/table-background-header":"#f3f4f6","Controls/control-border":"#6c737f","Controls/control-primary-checked":"#1b8354","Controls/control-neutral-checked":"#0d121c","Controls/control-ripple-effect":"#f3f4f6","Controls/control-pressed":"#d2d6db","Controls/control-primary-pressed":"#104631","Controls/control-neutral-pressed":"#6c737f","Controls/control-primary-focused":"#1b8354","Controls/control-neutral-focused":"#0d121c","Colors/Base/black":"#000000","Colors/SA-Flag/800":"#14573a","Colors/SA-Flag/900":"#104631","Colors/Gray neutral/400":"#9da4ae","Colors/Gray neutral/600":"#4d5761","Colors/Gray neutral/700":"#384250","Colors/Error/50":"#fef3f2","Colors/Error/200":"#fecdca","Colors/Error/400":"#f97066","Colors/Error/600":"#d92d20","Colors/Error/900":"#7a271a","Background/background-black":"#161616","Background/background-primary":"#1b8354","Border/border-background-white":"#f3f4f6","Text/text-placeholder":"#6c737f","Text/text-error-primary":"#b42318","Text/text-primary_on-color":"#ffffff","Icon/Bg-icon-brand-light":"#f3fcf6","Alpha/alpha-white-50":"#ffffff80","Alpha/alpha-white-70":"#ffffffb2","Button/button-background-transparent-default":"#ffffff00","Button/button-background-transparent-focused":"#ffffff00"},"dark":{},"roles":{"brand":["Button/button-background-primary-default","Button/button-background-primary-hovered","Button/button-background-primary-pressed","Button/button-background-primary-selected","Text/text-primary","Background/background-primary-50","Background/background-primary-400","Background/background-SA-Flag"],"border":["Border/border-neutral-primary","Border/border-neutral-secondary","Border/border-black","Border/border-white","Border/border-white-40","Border/border-secondary","Border/border-success-light","Border/border-warning-light","Border/border-error-light","Border/border-info-light","Border/border-disabled","Global/border-disabled","Form/field-border-default","Form/field-border-hovered","Form/field-border-pressed","Form/field-border-error"],"semantic":{"success":["Background/background-success","Background/background-success-25","Text/text-success","Border/border-success-light","Icon/background-success-light"],"warning":["Background/background-warning","Background/background-warning-25","Background/background-warning-50","Text/text-warning","Border/border-warning-light","Icon/icon-warning","Icon/background-warning-light"],"error":["Background/background-error","Background/background-error-25","Text/text-error","Border/border-error-light","Icon/background-error-light","Button/button-background-danger-primary-default","Form/field-border-error"],"info":["Background/background-info","Background/background-info-25","Text/text-info","Border/border-info-light","Icon/background-info-light","Tag/tag-text-info","Tag/tag-background-info","Tag/tag-background-info-light","Tag/tag-border-info","Tag/tag-border-info-light","Tag/tag-icon-info"]}}},"typography":{"families":{"latin":["IBM Plex Sans Arabic"],"arabic":["IBM Plex Sans Arabic"]},"weights":[400,500,600,700],"ramp":[{"name":"Display xl","size":60,"lineHeight":72,"letterSpacing":-2,"weight":600,"script":"both"},{"name":"Display lg","size":48,"lineHeight":60,"letterSpacing":-2,"weight":600,"script":"both"},{"name":"Display sm","size":30,"lineHeight":38,"letterSpacing":0,"weight":700,"script":"both"},{"name":"Display xs","size":24,"lineHeight":32,"letterSpacing":0,"weight":600,"script":"both"},{"name":"Text xl","size":20,"lineHeight":30,"letterSpacing":0,"weight":600,"script":"both"},{"name":"Text lg","size":18,"lineHeight":28,"letterSpacing":0,"weight":700,"script":"both"},{"name":"Text md","size":16,"lineHeight":24,"letterSpacing":0,"weight":400,"script":"both"},{"name":"Text sm","size":14,"lineHeight":20,"letterSpacing":0,"weight":400,"script":"both"},{"name":"Text xs","size":12,"lineHeight":18,"letterSpacing":0,"weight":500,"script":"both"},{"name":"Text 2xs","size":10,"lineHeight":14,"letterSpacing":0,"weight":600,"script":"both"}]},"spacing":{"base":2,"scale":[0,2,4,6,8,12,16,20,24,32,40,48,64,80,96,128,160,192,224,256,320,384,480,640,720,768,1024,1280,1440,1600,1920],"rhythm":[24,32,40,48,64,80,96,128]},"radius":{"scale":[0,2,4,6,8,16,24],"pill":9999},"border":{"widths":[1,2]},"elevation":{"levels":{"Shadows/shadow-xs":"0 1px 2px 0 #1018280d","Shadows/shadow-sm":"0 1px 2px 0 #1018280d, 0 1px 3px 0 #1018280d","Shadows/shadow-md":"0 2px 4px -2px #1018280f, 0 4px 8px -2px #1018281a","Shadows/shadow-lg":"0 4px 6px -2px #10182808, 0 12px 16px -4px #10182814","Shadows/shadow-xl":"0 8px 8px -4px #10182808, 0 20px 24px -4px #10182814","Shadows/shadow-2xl":"0 24px 48px -12px #1018282e","Shadows/shadow-3xl":"0 32px 64px -12px #10182824"},"backdropBlur":{"backdrop-blur-sm":8,"backdrop-blur-md":16,"backdrop-blur-lg":24,"backdrop-blur-xl":40}},"breakpoints":{"list":[{"name":"mobile","min":0,"container":null,"gutter":16},{"name":"desktop","min":768,"container":1280,"gutter":32}],"widths":{"xxs":320,"xs":384,"sm":480,"md":560,"lg":640,"xl":768,"2xl":1024,"3xl":1280,"4xl":1440,"5xl":1600,"6xl":1920,"paragraph-max-width":720}},"icons":{"set":"DGA Platforms Code icon set","sizes":[],"strokeWidth":null,"deferred":true},"motion":{"durations":[],"easings":[]},"numerals":null,"a11y":{"minTargetPx":{"desktop":24,"mobile":24}},"dgaVersion":"1.0.3"};
   var COMPONENTS = {"synced":"2026-08-18","source":{"standard":"DGA Platforms Code","publisher":"SDGA / Digital Government Authority, Saudi Arabia","profile":"https://www.figma.com/@sdga","manifest":"See sources.json"},"components":[{"name":"Button","figmaNodeId":"1:1183","variants":["primary","neutral","black","oncolor","transparent","danger-primary","danger-secondary"],"sizes":[{"name":"lg","height":null,"paddingInline":16,"iconGap":4,"fontSize":16,"radius":4},{"name":"md","height":null,"paddingInline":12,"iconGap":4,"fontSize":14,"radius":4},{"name":"sm","height":null,"paddingInline":8,"iconGap":4,"fontSize":12,"radius":4}],"states":["default","hovered","pressed","selected","focused","disabled"],"anatomy":"Optional leading icon, label, optional trailing icon. Gap is 4 at every size — only the inline padding and type step change. Corner is radius-sm (4) throughout, not the size-dependent radius some systems use.","identifiers":{"roles":["button"],"tags":["button","a"],"classHints":[]},"appliesTo":["desktop","mobile"]},{"name":"Text input","figmaNodeId":"954:19434","variants":["default","darker","lighter"],"sizes":[{"name":"default","height":null,"paddingInlineStart":8,"paddingInlineEnd":16,"iconGap":8,"labelGap":8,"fontSize":16,"radius":4}],"states":["default","hovered","pressed","focused","filled","readonly","error","disabled"],"anatomy":"Label above field with an 8 gap; field carries a 1px border (border colour changes per state), radius-sm (4). Placeholder uses text-secondary-paragraph, filled text uses text-default. Error state swaps the border to field-border-error.","identifiers":{"roles":["textbox"],"tags":["input","textarea"],"classHints":[]},"appliesTo":["desktop","mobile"]},{"name":"Card","figmaNodeId":"8940:22264","variants":["default"],"sizes":[{"name":"lg","height":null,"gap":24,"fontSize":18,"radius":16}],"states":["default","disabled"],"anatomy":"background-card on radius-lg (16), internal gap 24, title at Text lg/Bold (18/28). Elevation is Shadows/shadow-md when raised.","identifiers":{"roles":["article","group"],"tags":["article","section","div"],"classHints":["card"]},"appliesTo":["desktop","mobile"]},{"name":"Inline alert / Notification","figmaNodeId":"1730:46041","variants":["info","success","warning","error"],"sizes":[{"name":"default","height":null,"padding":16,"paddingInline":24,"gap":16,"radius":8}],"states":["default"],"anatomy":"Icon, then title at Text md/Semibold with body at Text sm/Regular separated by text-content-gap 8, then an optional button group with buttons-group-gap 8. Each variant pairs its background-<role>-25 surface with its border-<role>-light edge and text-<role> label — the three always move together.","identifiers":{"roles":["alert","status"],"tags":["div"],"classHints":["alert","notification","toast"]},"appliesTo":["desktop","mobile"]},{"name":"Table","figmaNodeId":"2:5 (Foundations/Effect styles)","variants":["default"],"sizes":[{"name":"default","height":null,"cellPaddingInline":16,"cellPaddingBlock":8,"cellGap":8,"fontSize":14,"radius":8}],"states":["default","header"],"anatomy":"Header row on table-background-header #f3f4f6 with table-text-head #384250; cells separated by table-cell-border #d2d6db. Cell padding is 16 inline / 8 block with an 8 gap between cell contents.","identifiers":{"roles":["table"],"tags":["table"],"classHints":["table"]},"appliesTo":["desktop","mobile"]},{"name":"UI Shell — Tab Bar","figmaNodeId":"8332:23832","appliesTo":["mobile"],"variants":["1-5 tabs","no selection","on-color","RTL"],"sizes":[{"name":"default","width":375,"height":84,"itemWidth":46,"itemWidthRtl":54,"itemHeight":70,"itemGap":4,"fontSize":12}],"states":["normal","pressed","selected"],"anatomy":"Bottom bar 84 tall across a 375 viewport. Each tab item is 46x70 (54 wide in RTL — the item widens rather than the label truncating), icon over a 12/18 label, tab-button-gap 4. Supports 1-5 tabs plus a no-selection state, each with an on-color variant. Badge indicators are 12x12 small, 16x16 large, 30x16 with max digits.","identifiers":{"roles":["tablist","navigation"],"tags":["nav"],"classHints":["tabbar","bottom-nav"]}},{"name":"UI Shell — Navigation Bar","figmaNodeId":"8335:15199","appliesTo":["mobile"],"variants":[],"sizes":[],"states":[],"anatomy":"Mobile top bar. Present in the library and recorded so an auditor knows it exists; measurements not yet extracted.","identifiers":{"roles":["banner","navigation"],"tags":["header","nav"],"classHints":["navbar","appbar"]},"incomplete":true}]};
+  var BENCHMARKS = {"schema":"dga-benchmarks/1","sites":[]};
 
 /*
  * probe.js — the deterministic half of a DGA audit. Pure: walks the rendered DOM
@@ -30,7 +31,7 @@ function probe(OPTS_IN = {}) {
   const OPTS = OPTS_IN || {};
   const LABEL = OPTS.label || 'default';
   const MAX_ENTRIES = OPTS.maxEntries || 200; // per tally, by frequency
-  const MAX_SAMPLES = 3;
+  const MAX_SAMPLES = 6;
   const MAX_ELEMENTS = OPTS.maxElements || 6000;
   const MAX_FOCUS_PROBES = OPTS.maxFocusProbes || 40;
   // WCAG 2.2 AA floor unless the ledger raises it for this viewport — DGA mobile
@@ -129,6 +130,91 @@ function probe(OPTS_IN = {}) {
     return parts.join(' > ').slice(0, 160);
   }
 
+  /* -------------------------------------------------------------- locators */
+
+  /**
+   * Where on the page is this, in words a person can act on?
+   *
+   * selectorFor gives a CSS path, which tells a developer how to SELECT an element and
+   * tells nobody where it IS. "div.row > a.btn" cannot be found by eye; "header ·
+   * navigation · «تسجيل الدخول»" can. Region and section are read off the page's own
+   * landmarks and headings, so the words in the report are the words on the screen.
+   */
+  const REGION_SEL = 'header,nav,main,footer,aside,form,' +
+    '[role=banner],[role=navigation],[role=main],[role=contentinfo],[role=complementary],[role=search],[role=form]';
+  const REGION_NAME = {
+    header: 'header', banner: 'header',
+    nav: 'navigation', navigation: 'navigation',
+    main: 'main',
+    footer: 'footer', contentinfo: 'footer',
+    aside: 'aside', complementary: 'aside',
+    form: 'form', search: 'search',
+  };
+
+  function textOf(el, max) {
+    const t = (el.getAttribute && (el.getAttribute('aria-label') || el.getAttribute('alt') || el.getAttribute('title')))
+      || el.textContent || '';
+    return String(t).replace(/\s+/g, ' ').trim().slice(0, max);
+  }
+
+  function labelledBy(el) {
+    const ids = el.getAttribute('aria-labelledby');
+    if (!ids) return '';
+    return ids.split(/\s+/).map((i) => document.getElementById(i)).filter(Boolean)
+      .map((n) => textOf(n, 60)).join(' ').trim();
+  }
+
+  function regionOf(el) {
+    const host = el.closest(REGION_SEL);
+    if (!host) return null;
+    const key = String(host.getAttribute('role') || host.tagName).toLowerCase();
+    return REGION_NAME[key] || key;
+  }
+
+  // Collected once. sectionOf runs for every sample on the page, and re-walking the
+  // document per call turned a 20ms probe into a visible stall.
+  let HEADINGS = null;
+  const headings = () => (HEADINGS || (HEADINGS = [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')]));
+
+  function sectionOf(el) {
+    const box = el.closest('section,article,[role=region],[aria-label],[aria-labelledby]');
+    if (box && box !== document.body) {
+      const named = box.getAttribute('aria-label') || labelledBy(box);
+      if (named) return named.replace(/\s+/g, ' ').trim().slice(0, 60);
+      const h = box.querySelector('h1,h2,h3,h4,h5,h6');
+      if (h) { const t = textOf(h, 60); if (t) return t; }
+    }
+    // The fallback that makes this work at all: the nearest heading BEFORE this element
+    // in document order. Most pages carry no section landmarks; nearly all carry headings.
+    let last = null;
+    for (const h of headings()) {
+      if (h.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) last = h;
+      else break;
+    }
+    return last ? (textOf(last, 60) || null) : null;
+  }
+
+  const LOC_CACHE = new WeakMap();
+  function locate(el) {
+    if (LOC_CACHE.has(el)) return LOC_CACHE.get(el);
+    let out;
+    try {
+      const r = el.getBoundingClientRect();
+      out = {
+        sel: selectorFor(el),
+        region: regionOf(el),
+        section: sectionOf(el),
+        name: textOf(el, 40) || null,
+        at: { x: Math.round(r.left + window.scrollX), y: Math.round(r.top + window.scrollY),
+              w: Math.round(r.width), h: Math.round(r.height) },
+      };
+    } catch (e) {
+      out = { sel: selectorFor(el), region: null, section: null, name: null, at: null };
+    }
+    LOC_CACHE.set(el, out);
+    return out;
+  }
+
   /* ----------------------------------------------------------------- tally */
 
   function tally() {
@@ -144,7 +230,7 @@ function probe(OPTS_IN = {}) {
           map.set(k, e);
         }
         e.count++;
-        if (el && e.samples.length < MAX_SAMPLES) e.samples.push(selectorFor(el));
+        if (el && e.samples.length < MAX_SAMPLES) e.samples.push(locate(el));
       },
       dump() {
         return [...map.values()].sort((a, b) => b.count - a.count).slice(0, MAX_ENTRIES);
@@ -434,6 +520,7 @@ function probe(OPTS_IN = {}) {
         else if (contrastFindings.length < 60) {
           contrastFindings.push({
             selector: selectorFor(el),
+            loc: locate(el),
             text: text.slice(0, 60),
             fg: hex(eff),
             bg: hex(bg),
@@ -485,7 +572,7 @@ function probe(OPTS_IN = {}) {
               const r = Math.round(contrast(eff, behind) * 100) / 100;
               if (r >= 3.0) nonTextPassing++;
               else if (nonTextFindings.length < 40) {
-                nonTextFindings.push({ selector: selectorFor(el), border: hex(eff), against: hex(behind), ratio: r, required: 3.0 });
+                nonTextFindings.push({ selector: selectorFor(el), loc: locate(el), border: hex(eff), against: hex(behind), ratio: r, required: 3.0 });
               }
             }
           } else {
@@ -601,6 +688,7 @@ function probe(OPTS_IN = {}) {
       else if (targetFindings.length < 40) {
         targetFindings.push({
           selector: selectorFor(el),
+          loc: locate(el),
           width: Math.round(w * 10) / 10,
           height: Math.round(h * 10) / 10,
           required: MIN_TARGET,
@@ -795,7 +883,7 @@ function probe(OPTS_IN = {}) {
         focusProbe.visible++;
         focusProbe.colourOnly++;
       } else if (focusProbe.missing.length < 20) {
-        focusProbe.missing.push({ selector: selectorFor(el), label: (el.getAttribute('aria-label') || el.textContent || '').trim().slice(0, 40) });
+        focusProbe.missing.push({ selector: selectorFor(el), loc: locate(el), label: (el.getAttribute('aria-label') || el.textContent || '').trim().slice(0, 40) });
       }
       el.blur();
       if (seed) seed.focus({ preventScroll: true });   // re-arm focus-visible for the next probe
@@ -992,12 +1080,14 @@ function nearestToken(hexValue, palette) {
 
 /* ------------------------------------------------------------------ main */
 
-function score({ rubric, tokens, captures = [], judged = {}, options = {} }) {
+function score({ rubric, tokens, benchmarks = null, captures = [], judged = {}, options = {} }) {
   const {
     targetType = 'site',
     targetName = '(unnamed target)',
     targetUrl = null,
     na: naList = [],
+    benchmarkViewport = 'web',
+    benchmarkId = null,
     allowUnassessed = false,
     allowUncountedJudged = false,
     allowLowCoverage = false,
@@ -1517,7 +1607,7 @@ function score({ rubric, tokens, captures = [], judged = {}, options = {} }) {
       finding('A1', 'blocker', `Text contrast ${f.ratio}:1 is below the required ${f.required}:1`, {
         found: `${f.fg} on ${f.bg} at ${f.fontSize}px/${f.fontWeight} → ${f.ratio}:1`,
         expected: `${f.required}:1`,
-        where: [f.selector],
+        where: [f.loc || f.selector],
         sample: f.text,
         fix: `Needs about ${round2(f.required - f.ratio)} more contrast. Government services carry a statutory accessibility obligation — darken the text token or lighten the surface.`,
       });
@@ -1541,7 +1631,7 @@ function score({ rubric, tokens, captures = [], judged = {}, options = {} }) {
       finding('A2', 'blocker', `Boundary contrast ${f.ratio}:1 is below 3:1`, {
         found: `${f.border} against ${f.against} → ${f.ratio}:1`,
         expected: '3:1',
-        where: [f.selector],
+        where: [f.loc || f.selector],
         fix: 'An input whose border disappears against its background is not usable at low vision or in sunlight.',
       });
     }
@@ -1575,7 +1665,7 @@ function score({ rubric, tokens, captures = [], judged = {}, options = {} }) {
         finding('A3', 'major', `${f.probed - f.visible} of ${f.probed} probed controls show no focus indicator`, {
           found: `${f.probed - f.visible} controls unchanged on focus`,
           expected: 'a visible indicator on every interactive element',
-          where: f.missing.slice(0, 8).map((m) => m.selector),
+          where: f.missing.slice(0, 8).map((m) => m.loc || m.selector),
           fix: 'Never remove the outline without replacing it. Keyboard-only users navigate the whole service through this one affordance.',
         });
       }
@@ -1598,7 +1688,7 @@ function score({ rubric, tokens, captures = [], judged = {}, options = {} }) {
       finding('A4', 'major', `Target ${f.width}×${f.height}px is below the ${f.required}×${f.required}px minimum`, {
         found: `${f.width}×${f.height}px`,
         expected: `${f.required}×${f.required}px`,
-        where: [f.selector],
+        where: [f.loc || f.selector],
         sample: f.label,
         viewport: f.viewport,
         fix: 'Grow the control or its padding. Icon-only buttons are the usual offenders.',
@@ -1648,88 +1738,86 @@ function score({ rubric, tokens, captures = [], judged = {}, options = {} }) {
   let earnedTotal = 0, availableTotal = 0, applicableTotal = 0, checksPassed = 0, checksCounted = 0;
   const failedBlockers = [];
 
-  for (const cat of rubric.categories) {
-    const outChecks = [];
-    let earned = 0, available = 0;
-    for (const chk of cat.checks) {
-      const applies = chk.applies_to === 'both' || chk.applies_to === targetType;
-      const forcedNa = naList.includes(chk.id);
-      const result = chk.method === 'auto' ? auto[chk.id] : judged[chk.id];
+  /**
+   * Evaluate one check. Extracted so CORE and EXTENDED checks go through identical
+   * arithmetic — the only difference between them is which total they land in, and
+   * that difference must not be able to hide a second implementation.
+   *
+   * Returns { row } always, plus { pts, weight } when the check was actually graded.
+   */
+  function evaluate(chk, { countCoverage }) {
+    const applies = chk.applies_to === 'both' || chk.applies_to === targetType;
+    const forcedNa = naList.includes(chk.id);
+    const result = chk.method === 'auto' ? auto[chk.id] : judged[chk.id];
 
-      // A check that does not apply to this KIND of target was never in scope, so it
-      // is not a coverage gap — a Figma frame has no runtime motion preference.
-      if (!applies) {
-        outChecks.push({ ...meta(chk), status: 'n/a', reason: `only applies to ${chk.applies_to} targets` });
-        continue;
-      }
-      // Everything past this point could have been measured. Whether it was is the
-      // coverage question, and every miss is recorded with its weight and its reason.
-      applicableTotal += chk.weight;
+    // A check that does not apply to this KIND of target was never in scope, so it is
+    // not a coverage gap — a Figma frame has no runtime motion preference.
+    if (!applies) {
+      return { row: { ...meta(chk), status: 'n/a', reason: `only applies to ${chk.applies_to} targets` } };
+    }
+    // Everything past this point could have been measured. Whether it was is the
+    // coverage question, and every miss is recorded with its weight and its reason.
+    if (countCoverage) applicableTotal += chk.weight;
 
-      if (forcedNa) {
-        dropped.push({ id: chk.id, weight: chk.weight, kind: 'forced', reason: 'marked N/A for this audit' });
-        outChecks.push({ ...meta(chk), status: 'n/a', reason: 'marked N/A for this audit' });
-        continue;
-      }
-      if (chk.method === 'judged' && (!result || typeof result.ratio !== 'number')) {
-        unassessed.push(chk.id);
-        dropped.push({ id: chk.id, weight: chk.weight, kind: 'unassessed', reason: 'judged check was never assessed' });
-        outChecks.push({ ...meta(chk), status: 'unassessed' });
-        continue;
-      }
-      if (!result || result.na || result.ratio == null) {
-        const why = result?.reason || 'nothing of this kind present to measure';
-        dropped.push({ id: chk.id, weight: chk.weight, kind: 'unmeasurable', reason: why });
-        outChecks.push({ ...meta(chk), status: 'n/a', reason: why });
-        continue;
-      }
+    const miss = (kind, reason) => {
+      if (countCoverage) dropped.push({ id: chk.id, weight: chk.weight, kind, reason });
+      return { row: { ...meta(chk), status: kind === 'unassessed' ? 'unassessed' : 'n/a', reason } };
+    };
 
-      // A judgement without a count is unfalsifiable: nobody can check 0.51 against
-      // anything. Requiring the count is what let the button reading be challenged.
-      let raw = result.ratio;
-      if (chk.method === 'judged' && !allowUncountedJudged) {
-        const c = result.counted;
-        if (!c || !Number.isFinite(c.matched) || !Number.isFinite(c.total) || c.total <= 0) {
-          throw new DgaError(
-            'JUDGED_WITHOUT_COUNT',
-            `${chk.id} was given a bare ratio (${result.ratio}) with no count. Supply ` +
-              `counted: { matched, total } so the number can be checked, or set allowUncountedJudged.`,
-            { checkId: chk.id }
-          );
-        }
-        const implied = c.matched / c.total;
-        if (Math.abs(implied - result.ratio) > 0.01) {
-          throw new DgaError(
-            'JUDGED_COUNT_MISMATCH',
-            `${chk.id} states ratio ${result.ratio} but its count says ${c.matched}/${c.total} = ` +
-              `${implied.toFixed(4)}. The number and the evidence for it have drifted apart.`,
-            { checkId: chk.id, stated: result.ratio, implied }
-          );
-        }
-        raw = implied;   // the count is the source of truth, not the rounded restatement
-      }
+    if (forcedNa) return miss('forced', 'marked N/A for this audit');
+    if (chk.method === 'judged' && (!result || typeof result.ratio !== 'number')) {
+      unassessed.push(chk.id);
+      return miss('unassessed', 'judged check was never assessed');
+    }
+    if (!result || result.na || result.ratio == null) {
+      return miss('unmeasurable', result?.reason || 'nothing of this kind present to measure');
+    }
 
-      // Out of range means a counting bug upstream. Clamping it silently turns that
-      // bug into a free perfect score, which is precisely how it would stay hidden.
-      if (!Number.isFinite(raw) || raw < -1e-9 || raw > 1 + 1e-9) {
+    // A judgement without a count is unfalsifiable: nobody can check 0.51 against
+    // anything. Requiring the count is what let the button reading be challenged.
+    let raw = result.ratio;
+    if (chk.method === 'judged' && !allowUncountedJudged) {
+      const c = result.counted;
+      if (!c || !Number.isFinite(c.matched) || !Number.isFinite(c.total) || c.total <= 0) {
         throw new DgaError(
-          'RATIO_OUT_OF_RANGE',
-          `${chk.id} produced a ratio of ${raw}, which is not a fraction between 0 and 1. ` +
-            'Something counted wrong; refusing to clamp it into a score.',
-          { checkId: chk.id, ratio: raw }
+          'JUDGED_WITHOUT_COUNT',
+          `${chk.id} was given a bare ratio (${result.ratio}) with no count. Supply ` +
+            `counted: { matched, total } so the number can be checked, or set allowUncountedJudged.`,
+          { checkId: chk.id }
         );
       }
-      const ratio = Math.max(0, Math.min(1, raw));
-      const pts = chk.scoring === 'binary' ? (ratio >= 1 ? chk.weight : 0) : chk.weight * ratio;
-      earned += pts;
-      available += chk.weight;
-      checksCounted++;
-      const passAt = chk.blocker ? PASS_BLOCKER : PASS_DEFAULT;
-      const passed = chk.scoring === 'binary' ? ratio >= 1 : ratio >= passAt;
-      if (passed) checksPassed++;
-      else if (chk.blocker) failedBlockers.push({ id: chk.id, title: chk.title, ratio: round2(ratio) });
+      const implied = c.matched / c.total;
+      if (Math.abs(implied - result.ratio) > 0.01) {
+        throw new DgaError(
+          'JUDGED_COUNT_MISMATCH',
+          `${chk.id} states ratio ${result.ratio} but its count says ${c.matched}/${c.total} = ` +
+            `${implied.toFixed(4)}. The number and the evidence for it have drifted apart.`,
+          { checkId: chk.id, stated: result.ratio, implied }
+        );
+      }
+      raw = implied;   // the count is the source of truth, not the rounded restatement
+    }
 
-      outChecks.push({
+    // Out of range means a counting bug upstream. Clamping it silently turns that
+    // bug into a free perfect score, which is precisely how it would stay hidden.
+    if (!Number.isFinite(raw) || raw < -1e-9 || raw > 1 + 1e-9) {
+      throw new DgaError(
+        'RATIO_OUT_OF_RANGE',
+        `${chk.id} produced a ratio of ${raw}, which is not a fraction between 0 and 1. ` +
+          'Something counted wrong; refusing to clamp it into a score.',
+        { checkId: chk.id, ratio: raw }
+      );
+    }
+    const ratio = Math.max(0, Math.min(1, raw));
+    const pts = chk.scoring === 'binary' ? (ratio >= 1 ? chk.weight : 0) : chk.weight * ratio;
+    const passAt = chk.blocker ? PASS_BLOCKER : PASS_DEFAULT;
+    const passed = chk.scoring === 'binary' ? ratio >= 1 : ratio >= passAt;
+
+    return {
+      pts,
+      weight: chk.weight,
+      passed,
+      row: {
         ...meta(chk),
         status: passed ? 'pass' : 'fail',
         ratio: round2(ratio),
@@ -1737,12 +1825,60 @@ function score({ rubric, tokens, captures = [], judged = {}, options = {} }) {
         available: chk.weight,
         measured: result.total != null ? { matched: result.matched, total: result.total } : undefined,
         notes: result.notes,
-      });
+      },
+    };
+  }
+
+  for (const cat of rubric.categories) {
+    const outChecks = [];
+    let earned = 0, available = 0;
+    for (const chk of cat.checks) {
+      // Extended checks measure practices nobody published. They are scored, but in
+      // their own block — never in the 100, and never able to cap a band.
+      if (chk.scope === 'extended') continue;
+      const r = evaluate(chk, { countCoverage: true });
+      outChecks.push(r.row);
+      if (r.pts === undefined) continue;
+      earned += r.pts;
+      available += r.weight;
+      checksCounted++;
+      if (r.passed) checksPassed++;
+      else if (chk.blocker) failedBlockers.push({ id: chk.id, title: chk.title, ratio: r.row.ratio });
     }
     earnedTotal += earned;
     availableTotal += available;
     categories.push({ id: cat.id, label: cat.label, weight: cat.weight, earned: round2(earned), available, checks: outChecks });
   }
+
+  /* -------------------------------------------------------------- extended */
+
+  // Scored the same way, reported apart. R2 (CSS logical properties) and M2
+  // (prefers-reduced-motion) are good practice that DGA has never published in any
+  // form — Figma cannot express either. Carrying them inside a government compliance
+  // score meant 5 of the 100 points traced to nothing but my own opinion.
+  const extRows = [];
+  let extEarned = 0, extAvailable = 0, extPassed = 0;
+  for (const cat of rubric.categories) {
+    for (const chk of cat.checks) {
+      if (chk.scope !== 'extended') continue;
+      const r = evaluate(chk, { countCoverage: false });
+      extRows.push({ ...r.row, category: cat.id });
+      if (r.pts === undefined) continue;
+      extEarned += r.pts;
+      extAvailable += r.weight;
+      if (r.passed) extPassed++;
+    }
+  }
+  const extended = {
+    label: 'Extended practice',
+    note: 'Measured, but outside the 100: nothing here is published by DGA, so it carries no compliance weight and never caps a band.',
+    earned: round2(extEarned),
+    available: round2(extAvailable),
+    score: extAvailable > 0 ? round2((extEarned / extAvailable) * 100) : null,
+    checksPassed: extPassed,
+    checksCounted: extRows.filter((r) => r.status === 'pass' || r.status === 'fail').length,
+    checks: extRows,
+  };
 
   if (unassessed.length && !allowUnassessed) {
     throw new DgaError(
@@ -1825,10 +1961,17 @@ function score({ rubric, tokens, captures = [], judged = {}, options = {} }) {
   if (silentWeight > maxSilent) capTo(`${round2(silentWeight)} points could not be measured at all`);
   const provisional = coveragePct < minCoverage || silentWeight > maxSilent;
 
+  // R2 and M2 still produce real observations, but they are not compliance failures.
+  // Stamping the scope onto each finding is what stops a renderer presenting an
+  // extended note beside a WCAG blocker as though they carried the same authority.
+  const scopeOf = new Map();
+  for (const cat of rubric.categories) for (const chk of cat.checks) scopeOf.set(chk.id, chk.scope || 'core');
+  for (const f of findings) f.scope = scopeOf.get(f.checkId) || 'core';
+
   const severityRank = { blocker: 0, major: 1, minor: 2 };
   findings.sort((a, b) => severityRank[a.severity] - severityRank[b.severity] || (b.occurrences || 0) - (a.occurrences || 0));
 
-  return {
+  const verdict = {
     schema: 'dga-score/1',
     standard: rubric.standard,
     target: {
@@ -1853,9 +1996,16 @@ function score({ rubric, tokens, captures = [], judged = {}, options = {} }) {
     failedBlockers,
     unassessed,
     parts: rollUpParts(rubric, categories, findings, round2),
+    extended,
     categories,
     findings,
   };
+
+  // A reference reading, so the number has something to be read against. Attached
+  // last because it is computed FROM the finished verdict. Context only: the band
+  // still comes from the absolute score against the ledger.
+  verdict.reference = benchmarks ? compareToBenchmark(verdict, benchmarks, { id: benchmarkId, viewport: benchmarkViewport }) : null;
+  return verdict;
 }
 
 /* ---------------------------------------------------------------- parts */
@@ -1916,6 +2066,120 @@ function rollUpParts(rubric, categories, findings, round2 = (n) => Math.round(n 
     };
   });
 }
+
+/* ---------------------------------------------------------------- region */
+
+/**
+ * A location can arrive as a bare CSS path (older captures, and the parity fixture) or
+ * as a full locator. Normalising both here is what lets the region view work without
+ * invalidating a single stored capture.
+ */
+function asLocator(x) {
+  if (!x) return null;
+  if (typeof x === 'string') return { sel: x, region: null, section: null, name: null, at: null };
+  return { sel: x.sel ?? x.selector ?? null, region: x.region ?? null, section: x.section ?? null,
+           name: x.name ?? null, at: x.at ?? null };
+}
+
+/**
+ * Where on the page did the points go?
+ *
+ * "P1 lost 4.84" is true and unusable. This groups every finding by the part of the page
+ * it sits in — header, navigation, main, footer, and the named section within it — so the
+ * answer becomes "the service cards in «الخدمات الأكثر استخداماً»".
+ *
+ * IMPORTANT, and stated in the output as well as here: the per-row points are an
+ * APPORTIONMENT, not a measurement. Points are computed per check across the whole page;
+ * a check that lost X points over findings totalling M occurrences contributes
+ * X x (occurrences / M) to each. That is a reasonable split, but it is arithmetic laid on
+ * top of a measurement, and printing it as though it were measured would be exactly the
+ * proxy-for-the-real-thing mistake this rubric has been cleaned of. Hence `pointsApprox`,
+ * and the ~ in every renderer.
+ */
+function byRegion(verdict, { maxRowsPerSection = 8 } = {}) {
+  if (!verdict || !Array.isArray(verdict.categories)) return [];
+  const round2 = (n) => Math.round(n * 100) / 100;
+
+  const lostFor = new Map();
+  for (const k of verdict.categories.flatMap((c) => c.checks)) {
+    if (k.status === 'fail') lostFor.set(k.id, (k.available ?? k.weight ?? 0) - (k.earned ?? 0));
+  }
+  const occFor = new Map();
+  for (const f of verdict.findings || []) {
+    if (!lostFor.has(f.checkId)) continue;
+    occFor.set(f.checkId, (occFor.get(f.checkId) || 0) + (f.occurrences || 1));
+  }
+
+  const groups = new Map();
+  for (const f of verdict.findings || []) {
+    const lost = lostFor.get(f.checkId);
+    if (lost === undefined) continue;
+    const locs = (f.where || []).map(asLocator).filter(Boolean);
+    const head = locs[0] || {};
+    const occ = f.occurrences || 1;
+    const region = head.region || 'unplaced';
+    const section = head.section || null;
+    const key = region + '\u0000' + (section || '');
+    if (!groups.has(key)) groups.set(key, { region, section, points: 0, rows: [] });
+    const g = groups.get(key);
+    const pts = round2(lost * (occ / (occFor.get(f.checkId) || 1)));
+    g.points = round2(g.points + pts);
+    g.rows.push({
+      checkId: f.checkId, severity: f.severity, summary: f.summary,
+      found: f.found ?? null, expected: f.expected ?? null,
+      occurrences: occ, pointsApprox: pts,
+      elements: locs.slice(0, 4).map((l) => ({ name: l.name, sel: l.sel, at: l.at })),
+      fix: f.fix ?? null,
+    });
+  }
+
+  const ORDER = ['header', 'navigation', 'search', 'main', 'form', 'aside', 'footer', 'unplaced'];
+  return [...groups.values()]
+    .map((g) => ({ ...g, rows: g.rows.sort((a, b) => b.pointsApprox - a.pointsApprox).slice(0, maxRowsPerSection) }))
+    .sort((a, b) => {
+      const d = ORDER.indexOf(a.region) - ORDER.indexOf(b.region);
+      return d !== 0 ? d : b.points - a.points;
+    });
+}
+
+/**
+ * A reference reading from data/benchmarks.json, so a score has something to be read
+ * against. dga.gov.sa is the publisher's own site: useful context, and explicitly NOT a
+ * definition of compliance — the band still comes from the absolute score against the
+ * ledger. A comparison is only drawn where BOTH sides measured the check; showing a real
+ * reading against a blank would invent a win.
+ */
+function compareToBenchmark(verdict, benchmarks, { id = null, viewport = 'web' } = {}) {
+  const site = (benchmarks?.sites || []).find((x) => (id ? x.id === id : true));
+  if (!site) return null;
+  const ref = site.viewports?.[viewport] || null;
+  if (!ref) return null;
+  const mine = new Map();
+  for (const k of verdict.categories.flatMap((c) => c.checks)) {
+    if (k.ratio != null && (k.status === 'pass' || k.status === 'fail')) mine.set(k.id, k.ratio);
+  }
+  const checks = [];
+  for (const [cid, ratio] of mine) {
+    const theirs = ref.checks?.[cid];
+    checks.push({
+      id: cid, mine: ratio,
+      reference: typeof theirs === 'number' ? theirs : null,
+      comparable: typeof theirs === 'number',
+      whyNot: typeof theirs === 'number' ? null
+        : (site.notMeasured || []).includes(cid) ? 'the reference site has no reading for this check' : 'not present in the reference',
+    });
+  }
+  return {
+    id: site.id, label: site.label, auditedAt: site.auditedAt,
+    dgaVersion: site.dgaVersion ?? null, viewport,
+    score: ref.score ?? null,
+    delta: ref.score == null ? null : round2delta(verdict.score - ref.score),
+    caveats: site.caveats || [],
+    checks: checks.sort((a, b) => (a.comparable === b.comparable ? 0 : a.comparable ? -1 : 1)),
+    basis: 'context, not a threshold — the band still comes from the absolute score against the ledger',
+  };
+}
+const round2delta = (n) => Math.round(n * 100) / 100;
 
 /* --------------------------------------------------------------- explain */
 
@@ -2012,7 +2276,7 @@ function explain(verdict, { part = null, check = null, maxFindings = 6 } = {}) {
  * groups and calls it twice, so every existing guarantee, including the
  * regression fixture, holds unchanged.
  */
-function scoreByViewport({ rubric, tokens, captures = [], judged = {}, options = {} }) {
+function scoreByViewport({ rubric, tokens, benchmarks = null, captures = [], judged = {}, options = {} }) {
   // The split point is the ledger's own desktop breakpoint, not a number picked
   // here — if DGA moves it, this moves with it.
   const bps = (tokens.breakpoints && tokens.breakpoints.list) || [];
@@ -2048,7 +2312,9 @@ function scoreByViewport({ rubric, tokens, captures = [], judged = {}, options =
     return {
       id: g.id, label: g.label, captured: true,
       captures: caps.map((c) => ({ label: c.label, width: c.viewport?.width ?? null })),
-      verdict: score({ rubric, tokens, captures: caps, judged, options }),
+      // benchmarkViewport is the group's own id, so a mobile reading is never compared
+      // against a desktop reference.
+      verdict: score({ rubric, tokens, benchmarks, captures: caps, judged, options: { ...options, benchmarkViewport: g.id } }),
     };
   });
 
@@ -2114,6 +2380,18 @@ function inlineReport(v, { maxFindings = 3 } = {}) {
   }
   // The denominator, stated. A score off 60% of the rubric is a different measurement
   // from a score off all of it, and the reader cannot tell them apart from the number.
+  const cell = (x) => String(x ?? '').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
+  if (v.reference && v.reference.score != null) {
+    const d = v.reference.delta;
+    L.push(`> Reference: **${v.reference.label}** scores **${v.reference.score}** on the same rubric` +
+      ` (${v.reference.viewport}${v.reference.dgaVersion ? `, DGA ${v.reference.dgaVersion}` : ''}) — ` +
+      `you are **${d == null ? '?' : d >= 0 ? `+${d}` : d}**. ${v.reference.basis}.`);
+  }
+  if (v.extended && v.extended.score != null) {
+    const failed = v.extended.checks.filter((k) => k.status === 'fail').map((k) => `\`${k.id}\` ${k.title}`);
+    L.push(`> Extended practice, **outside the 100**: ${v.extended.score}/100` +
+      `${failed.length ? ` — ${failed.join(', ')}` : ' — all clear'}. DGA publishes none of this, so it carries no compliance weight.`);
+  }
   if (v.coverage && v.coverage.pct < 100) {
     const worst3 = v.coverage.dropped.slice(0, 3).map((d) => `\`${d.id}\` ${d.reason}`).join(', ');
     L.push(`> Measured **${v.coverage.pct}%** of the rubric (${v.coverage.measuredWeight} of ${v.coverage.applicableWeight} points).` +
@@ -2135,6 +2413,32 @@ function inlineReport(v, { maxFindings = 3 } = {}) {
     const graded = c.checks.filter((k) => k.status === 'pass' || k.status === 'fail');
     L.push(`| ${c.label} | ${graded.length ? `${c.earned}/${c.available}` : 'n/a'} |`);
   }
+  /* ------------------------------------------- where the points went ---- */
+
+  // The question the old report could not answer. "P1 lost 4.84" is true and useless;
+  // this says which part of the page it happened in and what to look for there.
+  const regions = byRegion(v, { maxRowsPerSection: 4 });
+  if (regions.length) {
+    L.push('');
+    L.push('**Where the points went** — by where it sits on the page.');
+    L.push('_Points are ≈apportioned across a check\'s findings by occurrence, not measured per element._');
+    L.push('');
+    L.push('| Where | What | Found → expected | ≈pts |');
+    L.push('| --- | --- | --- | --: |');
+    for (const g of regions.slice(0, 7)) {
+      const place = g.section ? `${g.region} · ${g.section}` : g.region;
+      L.push(`| **${cell(place)}** | | | **≈${g.points}** |`);
+      for (const r of g.rows) {
+        const named = r.elements.map((e) => e.name).filter(Boolean).slice(0, 2).map((n) => `«${cell(n)}»`).join(' ');
+        const who = named || (r.elements[0]?.sel ? `\`${cell(r.elements[0].sel)}\`` : '—');
+        const val = r.found
+          ? `\`${cell(r.found)}\`${r.expected ? ` → \`${cell(r.expected)}\`` : ''}`
+          : '';
+        L.push(`| ${who} | \`${r.checkId}\` ${cell(r.summary)}${r.occurrences > 1 ? ` ×${r.occurrences}` : ''} | ${val} | ≈${r.pointsApprox} |`);
+      }
+    }
+  }
+
   // One row per failing check, not per finding. A page with 40 invisible borders
   // produces 40 near-identical A2 findings, and listing the same sentence three
   // times is noise — the count is the useful part, and the fix is one fix.
@@ -2159,7 +2463,11 @@ function inlineReport(v, { maxFindings = 3 } = {}) {
     top.forEach((f, i) => {
       const pts = lost.get(f.checkId);
       const worth = pts ? ` _(+${Math.round(pts * 10) / 10} pts)_` : '';
-      L.push(`${i + 1}. \`${f.checkId}\`${f.n > 1 ? ` ×${f.n}` : ''} ${f.summary}${worth} — ${f.fix}`);
+      const at = (f.where || []).map(asLocator).filter(Boolean)[0];
+      const place = at && (at.region || at.section)
+        ? ` _[${[at.region, at.section].filter(Boolean).join(' · ')}${at.name ? ` — «${at.name}»` : ''}]_`
+        : '';
+      L.push(`${i + 1}. \`${f.checkId}\`${f.n > 1 ? ` ×${f.n}` : ''} ${f.summary}${worth}${place} — ${f.fix}`);
     });
   }
   const na = v.categories.flatMap((c) => c.checks).filter((k) => k.status === 'n/a');
@@ -2227,6 +2535,8 @@ function inlineSplitReport(split, { maxFindings = 3 } = {}) {
  * were 97% of the disk footprint — 2.1MB of a 2.9MB report — and the same images
  * again inside the page. Downscale to ~900px JPEG before passing any.
  */
+
+
 
 function renderScorecard(S, { shots = [] } = {}) {
 
@@ -2327,7 +2637,10 @@ const findingsHtml = grouped
           <div><dt>Found</dt><dd><code>${esc(f.found ?? '—')}</code></dd></div>
           <div><dt>Expected</dt><dd><code>${esc(f.expected ?? '—')}</code></dd></div>
           ${f.sample ? `<div><dt>Content</dt><dd>${esc(f.sample)}</dd></div>` : ''}
-          ${f.where?.length ? `<div><dt>Where</dt><dd class="where">${f.where.slice(0, 6).map((w) => `<code>${esc(w)}</code>`).join('')}</dd></div>` : ''}
+          ${f.where?.length ? `<div><dt>Where</dt><dd class="where">${f.where.slice(0, 6).map(asLocator).filter(Boolean).map((w) => {
+            const place = [w.region, w.section].filter(Boolean).join(' · ');
+            return `<code>${esc(w.name ? `«${w.name}» ` : '')}${esc(w.sel || '')}${place ? ` — ${esc(place)}` : ''}</code>`;
+          }).join('')}</dd></div>` : ''}
           <div><dt>Fix</dt><dd>${esc(f.fix ?? '')}</dd></div>
         </dl>
       </li>`
@@ -2346,6 +2659,42 @@ const shotsHtml = shots.length
     ${shots.map((s) => `<figure><img src="${s.dataUri}" alt="${esc(s.label)} capture of ${esc(S.target?.name)}"><figcaption>${esc(s.label)}</figcaption></figure>`).join('')}
   </div>
 </section>`
+  : '';
+
+/* --------------------------------------------------- where the points went */
+
+// The section the report was missing. "P1 lost 4.84" names a check; this names a place.
+// Points are apportioned across a check's findings by occurrence — arithmetic on top of a
+// measurement, so every figure here carries a ~ and the lede says so outright.
+const regions = byRegion(S, { maxRowsPerSection: 6 });
+const regionHtml = regions.length
+  ? `<section class="block">
+  <h2>Where the points went</h2>
+  <p class="lede">Grouped by where it sits on the page. Points are <strong>≈apportioned</strong> across each check's findings by how often it occurs — they are not measured per element.</p>
+  ${regions.map((g) => `
+  <section class="region">
+    <h3>${esc(g.region)}${g.section ? ` <span class="sub">${esc(g.section)}</span>` : ''} <span class="count">≈${g.points} pts</span></h3>
+    <div class="scroll-x"><table class="rgn">
+      <thead><tr><th>Element</th><th>Check</th><th>Found</th><th>Expected</th><th class="n">×</th><th class="n">≈pts</th></tr></thead>
+      <tbody>${g.rows.map((r) => `<tr>
+        <td>${r.elements.map((e) => e.name ? `<strong>«${esc(e.name)}»</strong>` : `<code>${esc(e.sel || '—')}</code>`).slice(0, 2).join(' ')}</td>
+        <td><code>${esc(r.checkId)}</code> ${esc(r.summary)}</td>
+        <td><code>${esc(r.found ?? '—')}</code></td>
+        <td><code>${esc(r.expected ?? '—')}</code></td>
+        <td class="n">${r.occurrences}</td>
+        <td class="n">≈${r.pointsApprox}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>
+  </section>`).join('')}
+</section>`
+  : '';
+
+const refNote = S.reference && S.reference.score != null
+  ? `<p class="cap"><span class="stamp">Reference</span> <strong>${esc(S.reference.label)}</strong> scores <strong>${S.reference.score}</strong> on this same rubric (${esc(S.reference.viewport)}${S.reference.dgaVersion ? `, DGA ${esc(S.reference.dgaVersion)}` : ''}) — this target is <strong>${S.reference.delta >= 0 ? '+' : ''}${S.reference.delta}</strong> against it. ${esc(S.reference.basis)}.${S.reference.caveats?.length ? ` Reference caveats: ${S.reference.caveats.map(esc).join('; ')}.` : ''}</p>`
+  : '';
+
+const extNote = S.extended && S.extended.score != null
+  ? `<p class="cap"><span class="stamp warn">Outside the 100</span> <strong>Extended practice ${S.extended.score}/100</strong> — ${S.extended.checks.map((k) => `<code>${esc(k.id)}</code> ${esc(k.title)}${k.ratio != null ? ` (${k.ratio})` : ''}`).join(', ')}. DGA publishes none of this, so it carries no compliance weight and never caps a band.</p>`
   : '';
 
 const capNote = S.cappedFrom
@@ -2501,6 +2850,17 @@ const html = `<title>${esc(S.target?.name || 'Design')} Compliance Audit</title>
   .findings dt { font-family:var(--mono); font-size:.64rem; letter-spacing:.1em; text-transform:uppercase;
     color:var(--faint); padding-top:.22rem; }
   .findings dd { margin:0; color:var(--slate); min-width:0; overflow-wrap:anywhere; }
+  .region { border-top:1px solid var(--rule); padding-top:.9rem; margin-top:1.1rem; }
+  .region h3 { display:flex; align-items:baseline; gap:.5rem; flex-wrap:wrap; margin:0 0 .6rem;
+               font-size:.95rem; letter-spacing:.02em; text-transform:uppercase; color:var(--accent); }
+  .region h3 .sub { text-transform:none; letter-spacing:0; color:var(--ink); font-weight:600; }
+  .region h3 .count { margin-inline-start:auto; font-family:var(--mono); font-size:.78rem; color:var(--slate); text-transform:none; }
+  table.rgn { width:100%; border-collapse:collapse; font-size:.82rem; }
+  table.rgn th { text-align:start; font-weight:600; color:var(--faint); font-size:.72rem;
+                 text-transform:uppercase; letter-spacing:.04em; padding:.3rem .5rem; border-bottom:1px solid var(--rule); }
+  table.rgn td { padding:.4rem .5rem; border-bottom:1px solid var(--rule); vertical-align:top; color:var(--slate); }
+  table.rgn td strong { color:var(--ink); }
+  table.rgn .n { text-align:end; font-family:var(--mono); font-variant-numeric:tabular-nums; white-space:nowrap; }
   .findings dd code { font-size:.78rem; color:var(--ink); }
   .where code { display:block; color:var(--slate); font-size:.72rem; }
 
@@ -2543,6 +2903,8 @@ const html = `<title>${esc(S.target?.name || 'Design')} Compliance Audit</title>
       <p class="band tone-${bandTone}">${esc(S.band?.label || '—')}</p>
       <p class="tally">${S.checksPassed} of ${S.checksCounted} applicable checks met · ${S.earned} of ${S.available} points${S.checksTotal && S.checksCounted !== S.checksTotal ? ` · ${S.checksTotal - S.checksCounted} of ${S.checksTotal} not applicable to a ${esc(S.target?.type)} target` : ''}</p>
       ${capNote}
+      ${refNote}
+      ${extNote}
       ${unassessedNote}
     </div>
   </section>
@@ -2567,6 +2929,8 @@ const html = `<title>${esc(S.target?.name || 'Design')} Compliance Audit</title>
     <p class="lede">Nine categories, ${S.checksTotal} checks. Each category shows points earned against points available for this target — a check that cannot apply leaves the denominator rather than counting as a failure. Open a row for the individual checks.</p>
     <div class="scroll-x">${categoryRows}</div>
   </section>
+
+  ${regionHtml}
 
   ${
     findingsHtml
@@ -2692,6 +3056,7 @@ function renderSplitScorecard(split, { shots = [] } = {}) {
     rubric: RUBRIC,
     tokens: TOKENS,
     components: COMPONENTS,
+    benchmarks: BENCHMARKS,
 
     /** Probe this viewport, add it to the set, and score everything captured so far. */
     audit: function (opts) {
@@ -2700,7 +3065,7 @@ function renderSplitScorecard(split, { shots = [] } = {}) {
       var capture = probe({ label: label, minTargetPx: minTargetFor(window.innerWidth) });
       api.captures.push(capture);
       var args = {
-        rubric: RUBRIC, tokens: TOKENS, captures: api.captures,
+        rubric: RUBRIC, tokens: TOKENS, benchmarks: BENCHMARKS, captures: api.captures,
         judged: opts.judged || {},
         options: {
           targetType: 'site',
@@ -2729,6 +3094,21 @@ function renderSplitScorecard(split, { shots = [] } = {}) {
      *   __dga.explain({ check: "T1" })       -> what was found, and the fix
      */
     explain: function (q) { return explain(api.verdict, q || {}); },
+
+    /**
+     * Where did the points go, by place on the page?
+     *   __dga.regions()            -> header / nav / main / footer, worst first
+     * Points are apportioned across a check's findings by occurrence, so they are
+     * approximate per row and exact per check.
+     */
+    regions: function (v) {
+      var x = v || api.verdict;
+      if (x && x.schema === 'dga-score-split/1') {
+        return (x.viewports || []).filter(function (y) { return y.captured; })
+          .map(function (y) { return { viewport: y.id, regions: byRegion(y.verdict) }; });
+      }
+      return byRegion(x);
+    },
 
     /** Compact markdown for a chat reply. Handles a split or a single verdict. */
     inline: function (v) { return inlineReport(v || api.verdict); },

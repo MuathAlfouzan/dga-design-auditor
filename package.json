@@ -23,14 +23,16 @@
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node test/selftest.mjs && node test/parity.mjs && node test/integrity.test.mjs && node test/probe.test.mjs && node test/updates.test.mjs && node test/parts.test.mjs && node test/checks.test.mjs",
+    "test": "node test/selftest.mjs && node test/parity.mjs && node test/integrity.test.mjs && node test/probe.test.mjs && node test/updates.test.mjs && node test/parts.test.mjs && node test/checks.test.mjs && node test/locators.test.mjs",
     "test:score": "node test/selftest.mjs",
     "test:parity": "node test/parity.mjs",
     "test:integrity": "node test/integrity.test.mjs",
     "test:probe": "node test/probe.test.mjs",
     "test:updates": "node test/updates.test.mjs",
     "test:parts": "node test/parts.test.mjs",
-    "test:checks": "node test/checks.test.mjs"
+    "test:checks": "node test/checks.test.mjs",
+    "test:locators": "node test/locators.test.mjs",
+    "benchmark": "node scripts/benchmark.mjs"
   },
   "keywords": [
     "dga",

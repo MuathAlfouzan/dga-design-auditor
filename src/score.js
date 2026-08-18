@@ -67,12 +67,14 @@ function nearestToken(hexValue, palette) {
 
 /* ------------------------------------------------------------------ main */
 
-export function score({ rubric, tokens, captures = [], judged = {}, options = {} }) {
+export function score({ rubric, tokens, benchmarks = null, captures = [], judged = {}, options = {} }) {
   const {
     targetType = 'site',
     targetName = '(unnamed target)',
     targetUrl = null,
     na: naList = [],
+    benchmarkViewport = 'web',
+    benchmarkId = null,
     allowUnassessed = false,
     allowUncountedJudged = false,
     allowLowCoverage = false,
@@ -592,7 +594,7 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
       finding('A1', 'blocker', `Text contrast ${f.ratio}:1 is below the required ${f.required}:1`, {
         found: `${f.fg} on ${f.bg} at ${f.fontSize}px/${f.fontWeight} → ${f.ratio}:1`,
         expected: `${f.required}:1`,
-        where: [f.selector],
+        where: [f.loc || f.selector],
         sample: f.text,
         fix: `Needs about ${round2(f.required - f.ratio)} more contrast. Government services carry a statutory accessibility obligation — darken the text token or lighten the surface.`,
       });
@@ -616,7 +618,7 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
       finding('A2', 'blocker', `Boundary contrast ${f.ratio}:1 is below 3:1`, {
         found: `${f.border} against ${f.against} → ${f.ratio}:1`,
         expected: '3:1',
-        where: [f.selector],
+        where: [f.loc || f.selector],
         fix: 'An input whose border disappears against its background is not usable at low vision or in sunlight.',
       });
     }
@@ -650,7 +652,7 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
         finding('A3', 'major', `${f.probed - f.visible} of ${f.probed} probed controls show no focus indicator`, {
           found: `${f.probed - f.visible} controls unchanged on focus`,
           expected: 'a visible indicator on every interactive element',
-          where: f.missing.slice(0, 8).map((m) => m.selector),
+          where: f.missing.slice(0, 8).map((m) => m.loc || m.selector),
           fix: 'Never remove the outline without replacing it. Keyboard-only users navigate the whole service through this one affordance.',
         });
       }
@@ -673,7 +675,7 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
       finding('A4', 'major', `Target ${f.width}×${f.height}px is below the ${f.required}×${f.required}px minimum`, {
         found: `${f.width}×${f.height}px`,
         expected: `${f.required}×${f.required}px`,
-        where: [f.selector],
+        where: [f.loc || f.selector],
         sample: f.label,
         viewport: f.viewport,
         fix: 'Grow the control or its padding. Icon-only buttons are the usual offenders.',
@@ -723,88 +725,86 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
   let earnedTotal = 0, availableTotal = 0, applicableTotal = 0, checksPassed = 0, checksCounted = 0;
   const failedBlockers = [];
 
-  for (const cat of rubric.categories) {
-    const outChecks = [];
-    let earned = 0, available = 0;
-    for (const chk of cat.checks) {
-      const applies = chk.applies_to === 'both' || chk.applies_to === targetType;
-      const forcedNa = naList.includes(chk.id);
-      const result = chk.method === 'auto' ? auto[chk.id] : judged[chk.id];
+  /**
+   * Evaluate one check. Extracted so CORE and EXTENDED checks go through identical
+   * arithmetic — the only difference between them is which total they land in, and
+   * that difference must not be able to hide a second implementation.
+   *
+   * Returns { row } always, plus { pts, weight } when the check was actually graded.
+   */
+  function evaluate(chk, { countCoverage }) {
+    const applies = chk.applies_to === 'both' || chk.applies_to === targetType;
+    const forcedNa = naList.includes(chk.id);
+    const result = chk.method === 'auto' ? auto[chk.id] : judged[chk.id];
 
-      // A check that does not apply to this KIND of target was never in scope, so it
-      // is not a coverage gap — a Figma frame has no runtime motion preference.
-      if (!applies) {
-        outChecks.push({ ...meta(chk), status: 'n/a', reason: `only applies to ${chk.applies_to} targets` });
-        continue;
-      }
-      // Everything past this point could have been measured. Whether it was is the
-      // coverage question, and every miss is recorded with its weight and its reason.
-      applicableTotal += chk.weight;
+    // A check that does not apply to this KIND of target was never in scope, so it is
+    // not a coverage gap — a Figma frame has no runtime motion preference.
+    if (!applies) {
+      return { row: { ...meta(chk), status: 'n/a', reason: `only applies to ${chk.applies_to} targets` } };
+    }
+    // Everything past this point could have been measured. Whether it was is the
+    // coverage question, and every miss is recorded with its weight and its reason.
+    if (countCoverage) applicableTotal += chk.weight;
 
-      if (forcedNa) {
-        dropped.push({ id: chk.id, weight: chk.weight, kind: 'forced', reason: 'marked N/A for this audit' });
-        outChecks.push({ ...meta(chk), status: 'n/a', reason: 'marked N/A for this audit' });
-        continue;
-      }
-      if (chk.method === 'judged' && (!result || typeof result.ratio !== 'number')) {
-        unassessed.push(chk.id);
-        dropped.push({ id: chk.id, weight: chk.weight, kind: 'unassessed', reason: 'judged check was never assessed' });
-        outChecks.push({ ...meta(chk), status: 'unassessed' });
-        continue;
-      }
-      if (!result || result.na || result.ratio == null) {
-        const why = result?.reason || 'nothing of this kind present to measure';
-        dropped.push({ id: chk.id, weight: chk.weight, kind: 'unmeasurable', reason: why });
-        outChecks.push({ ...meta(chk), status: 'n/a', reason: why });
-        continue;
-      }
+    const miss = (kind, reason) => {
+      if (countCoverage) dropped.push({ id: chk.id, weight: chk.weight, kind, reason });
+      return { row: { ...meta(chk), status: kind === 'unassessed' ? 'unassessed' : 'n/a', reason } };
+    };
 
-      // A judgement without a count is unfalsifiable: nobody can check 0.51 against
-      // anything. Requiring the count is what let the button reading be challenged.
-      let raw = result.ratio;
-      if (chk.method === 'judged' && !allowUncountedJudged) {
-        const c = result.counted;
-        if (!c || !Number.isFinite(c.matched) || !Number.isFinite(c.total) || c.total <= 0) {
-          throw new DgaError(
-            'JUDGED_WITHOUT_COUNT',
-            `${chk.id} was given a bare ratio (${result.ratio}) with no count. Supply ` +
-              `counted: { matched, total } so the number can be checked, or set allowUncountedJudged.`,
-            { checkId: chk.id }
-          );
-        }
-        const implied = c.matched / c.total;
-        if (Math.abs(implied - result.ratio) > 0.01) {
-          throw new DgaError(
-            'JUDGED_COUNT_MISMATCH',
-            `${chk.id} states ratio ${result.ratio} but its count says ${c.matched}/${c.total} = ` +
-              `${implied.toFixed(4)}. The number and the evidence for it have drifted apart.`,
-            { checkId: chk.id, stated: result.ratio, implied }
-          );
-        }
-        raw = implied;   // the count is the source of truth, not the rounded restatement
-      }
+    if (forcedNa) return miss('forced', 'marked N/A for this audit');
+    if (chk.method === 'judged' && (!result || typeof result.ratio !== 'number')) {
+      unassessed.push(chk.id);
+      return miss('unassessed', 'judged check was never assessed');
+    }
+    if (!result || result.na || result.ratio == null) {
+      return miss('unmeasurable', result?.reason || 'nothing of this kind present to measure');
+    }
 
-      // Out of range means a counting bug upstream. Clamping it silently turns that
-      // bug into a free perfect score, which is precisely how it would stay hidden.
-      if (!Number.isFinite(raw) || raw < -1e-9 || raw > 1 + 1e-9) {
+    // A judgement without a count is unfalsifiable: nobody can check 0.51 against
+    // anything. Requiring the count is what let the button reading be challenged.
+    let raw = result.ratio;
+    if (chk.method === 'judged' && !allowUncountedJudged) {
+      const c = result.counted;
+      if (!c || !Number.isFinite(c.matched) || !Number.isFinite(c.total) || c.total <= 0) {
         throw new DgaError(
-          'RATIO_OUT_OF_RANGE',
-          `${chk.id} produced a ratio of ${raw}, which is not a fraction between 0 and 1. ` +
-            'Something counted wrong; refusing to clamp it into a score.',
-          { checkId: chk.id, ratio: raw }
+          'JUDGED_WITHOUT_COUNT',
+          `${chk.id} was given a bare ratio (${result.ratio}) with no count. Supply ` +
+            `counted: { matched, total } so the number can be checked, or set allowUncountedJudged.`,
+          { checkId: chk.id }
         );
       }
-      const ratio = Math.max(0, Math.min(1, raw));
-      const pts = chk.scoring === 'binary' ? (ratio >= 1 ? chk.weight : 0) : chk.weight * ratio;
-      earned += pts;
-      available += chk.weight;
-      checksCounted++;
-      const passAt = chk.blocker ? PASS_BLOCKER : PASS_DEFAULT;
-      const passed = chk.scoring === 'binary' ? ratio >= 1 : ratio >= passAt;
-      if (passed) checksPassed++;
-      else if (chk.blocker) failedBlockers.push({ id: chk.id, title: chk.title, ratio: round2(ratio) });
+      const implied = c.matched / c.total;
+      if (Math.abs(implied - result.ratio) > 0.01) {
+        throw new DgaError(
+          'JUDGED_COUNT_MISMATCH',
+          `${chk.id} states ratio ${result.ratio} but its count says ${c.matched}/${c.total} = ` +
+            `${implied.toFixed(4)}. The number and the evidence for it have drifted apart.`,
+          { checkId: chk.id, stated: result.ratio, implied }
+        );
+      }
+      raw = implied;   // the count is the source of truth, not the rounded restatement
+    }
 
-      outChecks.push({
+    // Out of range means a counting bug upstream. Clamping it silently turns that
+    // bug into a free perfect score, which is precisely how it would stay hidden.
+    if (!Number.isFinite(raw) || raw < -1e-9 || raw > 1 + 1e-9) {
+      throw new DgaError(
+        'RATIO_OUT_OF_RANGE',
+        `${chk.id} produced a ratio of ${raw}, which is not a fraction between 0 and 1. ` +
+          'Something counted wrong; refusing to clamp it into a score.',
+        { checkId: chk.id, ratio: raw }
+      );
+    }
+    const ratio = Math.max(0, Math.min(1, raw));
+    const pts = chk.scoring === 'binary' ? (ratio >= 1 ? chk.weight : 0) : chk.weight * ratio;
+    const passAt = chk.blocker ? PASS_BLOCKER : PASS_DEFAULT;
+    const passed = chk.scoring === 'binary' ? ratio >= 1 : ratio >= passAt;
+
+    return {
+      pts,
+      weight: chk.weight,
+      passed,
+      row: {
         ...meta(chk),
         status: passed ? 'pass' : 'fail',
         ratio: round2(ratio),
@@ -812,12 +812,60 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
         available: chk.weight,
         measured: result.total != null ? { matched: result.matched, total: result.total } : undefined,
         notes: result.notes,
-      });
+      },
+    };
+  }
+
+  for (const cat of rubric.categories) {
+    const outChecks = [];
+    let earned = 0, available = 0;
+    for (const chk of cat.checks) {
+      // Extended checks measure practices nobody published. They are scored, but in
+      // their own block — never in the 100, and never able to cap a band.
+      if (chk.scope === 'extended') continue;
+      const r = evaluate(chk, { countCoverage: true });
+      outChecks.push(r.row);
+      if (r.pts === undefined) continue;
+      earned += r.pts;
+      available += r.weight;
+      checksCounted++;
+      if (r.passed) checksPassed++;
+      else if (chk.blocker) failedBlockers.push({ id: chk.id, title: chk.title, ratio: r.row.ratio });
     }
     earnedTotal += earned;
     availableTotal += available;
     categories.push({ id: cat.id, label: cat.label, weight: cat.weight, earned: round2(earned), available, checks: outChecks });
   }
+
+  /* -------------------------------------------------------------- extended */
+
+  // Scored the same way, reported apart. R2 (CSS logical properties) and M2
+  // (prefers-reduced-motion) are good practice that DGA has never published in any
+  // form — Figma cannot express either. Carrying them inside a government compliance
+  // score meant 5 of the 100 points traced to nothing but my own opinion.
+  const extRows = [];
+  let extEarned = 0, extAvailable = 0, extPassed = 0;
+  for (const cat of rubric.categories) {
+    for (const chk of cat.checks) {
+      if (chk.scope !== 'extended') continue;
+      const r = evaluate(chk, { countCoverage: false });
+      extRows.push({ ...r.row, category: cat.id });
+      if (r.pts === undefined) continue;
+      extEarned += r.pts;
+      extAvailable += r.weight;
+      if (r.passed) extPassed++;
+    }
+  }
+  const extended = {
+    label: 'Extended practice',
+    note: 'Measured, but outside the 100: nothing here is published by DGA, so it carries no compliance weight and never caps a band.',
+    earned: round2(extEarned),
+    available: round2(extAvailable),
+    score: extAvailable > 0 ? round2((extEarned / extAvailable) * 100) : null,
+    checksPassed: extPassed,
+    checksCounted: extRows.filter((r) => r.status === 'pass' || r.status === 'fail').length,
+    checks: extRows,
+  };
 
   if (unassessed.length && !allowUnassessed) {
     throw new DgaError(
@@ -900,10 +948,17 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
   if (silentWeight > maxSilent) capTo(`${round2(silentWeight)} points could not be measured at all`);
   const provisional = coveragePct < minCoverage || silentWeight > maxSilent;
 
+  // R2 and M2 still produce real observations, but they are not compliance failures.
+  // Stamping the scope onto each finding is what stops a renderer presenting an
+  // extended note beside a WCAG blocker as though they carried the same authority.
+  const scopeOf = new Map();
+  for (const cat of rubric.categories) for (const chk of cat.checks) scopeOf.set(chk.id, chk.scope || 'core');
+  for (const f of findings) f.scope = scopeOf.get(f.checkId) || 'core';
+
   const severityRank = { blocker: 0, major: 1, minor: 2 };
   findings.sort((a, b) => severityRank[a.severity] - severityRank[b.severity] || (b.occurrences || 0) - (a.occurrences || 0));
 
-  return {
+  const verdict = {
     schema: 'dga-score/1',
     standard: rubric.standard,
     target: {
@@ -928,9 +983,16 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
     failedBlockers,
     unassessed,
     parts: rollUpParts(rubric, categories, findings, round2),
+    extended,
     categories,
     findings,
   };
+
+  // A reference reading, so the number has something to be read against. Attached
+  // last because it is computed FROM the finished verdict. Context only: the band
+  // still comes from the absolute score against the ledger.
+  verdict.reference = benchmarks ? compareToBenchmark(verdict, benchmarks, { id: benchmarkId, viewport: benchmarkViewport }) : null;
+  return verdict;
 }
 
 /* ---------------------------------------------------------------- parts */
@@ -991,6 +1053,120 @@ export function rollUpParts(rubric, categories, findings, round2 = (n) => Math.r
     };
   });
 }
+
+/* ---------------------------------------------------------------- region */
+
+/**
+ * A location can arrive as a bare CSS path (older captures, and the parity fixture) or
+ * as a full locator. Normalising both here is what lets the region view work without
+ * invalidating a single stored capture.
+ */
+export function asLocator(x) {
+  if (!x) return null;
+  if (typeof x === 'string') return { sel: x, region: null, section: null, name: null, at: null };
+  return { sel: x.sel ?? x.selector ?? null, region: x.region ?? null, section: x.section ?? null,
+           name: x.name ?? null, at: x.at ?? null };
+}
+
+/**
+ * Where on the page did the points go?
+ *
+ * "P1 lost 4.84" is true and unusable. This groups every finding by the part of the page
+ * it sits in — header, navigation, main, footer, and the named section within it — so the
+ * answer becomes "the service cards in «الخدمات الأكثر استخداماً»".
+ *
+ * IMPORTANT, and stated in the output as well as here: the per-row points are an
+ * APPORTIONMENT, not a measurement. Points are computed per check across the whole page;
+ * a check that lost X points over findings totalling M occurrences contributes
+ * X x (occurrences / M) to each. That is a reasonable split, but it is arithmetic laid on
+ * top of a measurement, and printing it as though it were measured would be exactly the
+ * proxy-for-the-real-thing mistake this rubric has been cleaned of. Hence `pointsApprox`,
+ * and the ~ in every renderer.
+ */
+export function byRegion(verdict, { maxRowsPerSection = 8 } = {}) {
+  if (!verdict || !Array.isArray(verdict.categories)) return [];
+  const round2 = (n) => Math.round(n * 100) / 100;
+
+  const lostFor = new Map();
+  for (const k of verdict.categories.flatMap((c) => c.checks)) {
+    if (k.status === 'fail') lostFor.set(k.id, (k.available ?? k.weight ?? 0) - (k.earned ?? 0));
+  }
+  const occFor = new Map();
+  for (const f of verdict.findings || []) {
+    if (!lostFor.has(f.checkId)) continue;
+    occFor.set(f.checkId, (occFor.get(f.checkId) || 0) + (f.occurrences || 1));
+  }
+
+  const groups = new Map();
+  for (const f of verdict.findings || []) {
+    const lost = lostFor.get(f.checkId);
+    if (lost === undefined) continue;
+    const locs = (f.where || []).map(asLocator).filter(Boolean);
+    const head = locs[0] || {};
+    const occ = f.occurrences || 1;
+    const region = head.region || 'unplaced';
+    const section = head.section || null;
+    const key = region + '\u0000' + (section || '');
+    if (!groups.has(key)) groups.set(key, { region, section, points: 0, rows: [] });
+    const g = groups.get(key);
+    const pts = round2(lost * (occ / (occFor.get(f.checkId) || 1)));
+    g.points = round2(g.points + pts);
+    g.rows.push({
+      checkId: f.checkId, severity: f.severity, summary: f.summary,
+      found: f.found ?? null, expected: f.expected ?? null,
+      occurrences: occ, pointsApprox: pts,
+      elements: locs.slice(0, 4).map((l) => ({ name: l.name, sel: l.sel, at: l.at })),
+      fix: f.fix ?? null,
+    });
+  }
+
+  const ORDER = ['header', 'navigation', 'search', 'main', 'form', 'aside', 'footer', 'unplaced'];
+  return [...groups.values()]
+    .map((g) => ({ ...g, rows: g.rows.sort((a, b) => b.pointsApprox - a.pointsApprox).slice(0, maxRowsPerSection) }))
+    .sort((a, b) => {
+      const d = ORDER.indexOf(a.region) - ORDER.indexOf(b.region);
+      return d !== 0 ? d : b.points - a.points;
+    });
+}
+
+/**
+ * A reference reading from data/benchmarks.json, so a score has something to be read
+ * against. dga.gov.sa is the publisher's own site: useful context, and explicitly NOT a
+ * definition of compliance — the band still comes from the absolute score against the
+ * ledger. A comparison is only drawn where BOTH sides measured the check; showing a real
+ * reading against a blank would invent a win.
+ */
+export function compareToBenchmark(verdict, benchmarks, { id = null, viewport = 'web' } = {}) {
+  const site = (benchmarks?.sites || []).find((x) => (id ? x.id === id : true));
+  if (!site) return null;
+  const ref = site.viewports?.[viewport] || null;
+  if (!ref) return null;
+  const mine = new Map();
+  for (const k of verdict.categories.flatMap((c) => c.checks)) {
+    if (k.ratio != null && (k.status === 'pass' || k.status === 'fail')) mine.set(k.id, k.ratio);
+  }
+  const checks = [];
+  for (const [cid, ratio] of mine) {
+    const theirs = ref.checks?.[cid];
+    checks.push({
+      id: cid, mine: ratio,
+      reference: typeof theirs === 'number' ? theirs : null,
+      comparable: typeof theirs === 'number',
+      whyNot: typeof theirs === 'number' ? null
+        : (site.notMeasured || []).includes(cid) ? 'the reference site has no reading for this check' : 'not present in the reference',
+    });
+  }
+  return {
+    id: site.id, label: site.label, auditedAt: site.auditedAt,
+    dgaVersion: site.dgaVersion ?? null, viewport,
+    score: ref.score ?? null,
+    delta: ref.score == null ? null : round2delta(verdict.score - ref.score),
+    caveats: site.caveats || [],
+    checks: checks.sort((a, b) => (a.comparable === b.comparable ? 0 : a.comparable ? -1 : 1)),
+    basis: 'context, not a threshold — the band still comes from the absolute score against the ledger',
+  };
+}
+const round2delta = (n) => Math.round(n * 100) / 100;
 
 /* --------------------------------------------------------------- explain */
 
@@ -1087,7 +1263,7 @@ export function explain(verdict, { part = null, check = null, maxFindings = 6 } 
  * groups and calls it twice, so every existing guarantee, including the
  * regression fixture, holds unchanged.
  */
-export function scoreByViewport({ rubric, tokens, captures = [], judged = {}, options = {} }) {
+export function scoreByViewport({ rubric, tokens, benchmarks = null, captures = [], judged = {}, options = {} }) {
   // The split point is the ledger's own desktop breakpoint, not a number picked
   // here — if DGA moves it, this moves with it.
   const bps = (tokens.breakpoints && tokens.breakpoints.list) || [];
@@ -1123,7 +1299,9 @@ export function scoreByViewport({ rubric, tokens, captures = [], judged = {}, op
     return {
       id: g.id, label: g.label, captured: true,
       captures: caps.map((c) => ({ label: c.label, width: c.viewport?.width ?? null })),
-      verdict: score({ rubric, tokens, captures: caps, judged, options }),
+      // benchmarkViewport is the group's own id, so a mobile reading is never compared
+      // against a desktop reference.
+      verdict: score({ rubric, tokens, benchmarks, captures: caps, judged, options: { ...options, benchmarkViewport: g.id } }),
     };
   });
 
@@ -1189,6 +1367,18 @@ export function inlineReport(v, { maxFindings = 3 } = {}) {
   }
   // The denominator, stated. A score off 60% of the rubric is a different measurement
   // from a score off all of it, and the reader cannot tell them apart from the number.
+  const cell = (x) => String(x ?? '').replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
+  if (v.reference && v.reference.score != null) {
+    const d = v.reference.delta;
+    L.push(`> Reference: **${v.reference.label}** scores **${v.reference.score}** on the same rubric` +
+      ` (${v.reference.viewport}${v.reference.dgaVersion ? `, DGA ${v.reference.dgaVersion}` : ''}) — ` +
+      `you are **${d == null ? '?' : d >= 0 ? `+${d}` : d}**. ${v.reference.basis}.`);
+  }
+  if (v.extended && v.extended.score != null) {
+    const failed = v.extended.checks.filter((k) => k.status === 'fail').map((k) => `\`${k.id}\` ${k.title}`);
+    L.push(`> Extended practice, **outside the 100**: ${v.extended.score}/100` +
+      `${failed.length ? ` — ${failed.join(', ')}` : ' — all clear'}. DGA publishes none of this, so it carries no compliance weight.`);
+  }
   if (v.coverage && v.coverage.pct < 100) {
     const worst3 = v.coverage.dropped.slice(0, 3).map((d) => `\`${d.id}\` ${d.reason}`).join(', ');
     L.push(`> Measured **${v.coverage.pct}%** of the rubric (${v.coverage.measuredWeight} of ${v.coverage.applicableWeight} points).` +
@@ -1210,6 +1400,32 @@ export function inlineReport(v, { maxFindings = 3 } = {}) {
     const graded = c.checks.filter((k) => k.status === 'pass' || k.status === 'fail');
     L.push(`| ${c.label} | ${graded.length ? `${c.earned}/${c.available}` : 'n/a'} |`);
   }
+  /* ------------------------------------------- where the points went ---- */
+
+  // The question the old report could not answer. "P1 lost 4.84" is true and useless;
+  // this says which part of the page it happened in and what to look for there.
+  const regions = byRegion(v, { maxRowsPerSection: 4 });
+  if (regions.length) {
+    L.push('');
+    L.push('**Where the points went** — by where it sits on the page.');
+    L.push('_Points are ≈apportioned across a check\'s findings by occurrence, not measured per element._');
+    L.push('');
+    L.push('| Where | What | Found → expected | ≈pts |');
+    L.push('| --- | --- | --- | --: |');
+    for (const g of regions.slice(0, 7)) {
+      const place = g.section ? `${g.region} · ${g.section}` : g.region;
+      L.push(`| **${cell(place)}** | | | **≈${g.points}** |`);
+      for (const r of g.rows) {
+        const named = r.elements.map((e) => e.name).filter(Boolean).slice(0, 2).map((n) => `«${cell(n)}»`).join(' ');
+        const who = named || (r.elements[0]?.sel ? `\`${cell(r.elements[0].sel)}\`` : '—');
+        const val = r.found
+          ? `\`${cell(r.found)}\`${r.expected ? ` → \`${cell(r.expected)}\`` : ''}`
+          : '';
+        L.push(`| ${who} | \`${r.checkId}\` ${cell(r.summary)}${r.occurrences > 1 ? ` ×${r.occurrences}` : ''} | ${val} | ≈${r.pointsApprox} |`);
+      }
+    }
+  }
+
   // One row per failing check, not per finding. A page with 40 invisible borders
   // produces 40 near-identical A2 findings, and listing the same sentence three
   // times is noise — the count is the useful part, and the fix is one fix.
@@ -1234,7 +1450,11 @@ export function inlineReport(v, { maxFindings = 3 } = {}) {
     top.forEach((f, i) => {
       const pts = lost.get(f.checkId);
       const worth = pts ? ` _(+${Math.round(pts * 10) / 10} pts)_` : '';
-      L.push(`${i + 1}. \`${f.checkId}\`${f.n > 1 ? ` ×${f.n}` : ''} ${f.summary}${worth} — ${f.fix}`);
+      const at = (f.where || []).map(asLocator).filter(Boolean)[0];
+      const place = at && (at.region || at.section)
+        ? ` _[${[at.region, at.section].filter(Boolean).join(' · ')}${at.name ? ` — «${at.name}»` : ''}]_`
+        : '';
+      L.push(`${i + 1}. \`${f.checkId}\`${f.n > 1 ? ` ×${f.n}` : ''} ${f.summary}${worth}${place} — ${f.fix}`);
     });
   }
   const na = v.categories.flatMap((c) => c.checks).filter((k) => k.status === 'n/a');

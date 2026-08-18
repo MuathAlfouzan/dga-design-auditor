@@ -75,11 +75,16 @@ function run(fixture, { width = 1280, height = 900 } = {}) {
          var v = window.__dga.audit({ label: 'fx', combined: true, allowUnassessed: true,
                                       na: ['P1','P2','P3','C3','I1','I2'] });
          var rows = {};
-         v.categories.forEach(function (c) { c.checks.forEach(function (k) {
+         var take = function (k) {
            rows[k.id] = { status: k.status, ratio: k.ratio === undefined ? null : k.ratio,
                           reason: k.reason || null,
                           measured: k.measured ? k.measured.matched + '/' + k.measured.total : null };
-         }); });
+         };
+         v.categories.forEach(function (c) { c.checks.forEach(take); });
+         // Extended checks (R2, M2) are scored outside the 100 and reported in their own
+         // block. They must still be exercised in both directions — moving a check out of
+         // the headline is not a reason to stop testing it.
+         ((v.extended && v.extended.checks) || []).forEach(take);
          document.getElementById('out').textContent = JSON.stringify({ ok: true, score: v.score, rows: rows });
        } catch (e) {
          document.getElementById('out').textContent = JSON.stringify({ ok: false, error: String(e && e.stack || e) });

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><title>landmarks and headings</title>
+<style>
+  /* Deliberately off-ledger values, so every region produces findings to place.
+     The point of this fixture is WHERE things are, not what they score. */
+  :root { color-scheme: light; }
+  body { margin: 0; font-family: Georgia, serif; font-size: 15px; background: #ffffff; color: #303030; }
+  .btn { display: inline-flex; gap: 7px; padding: 5px 13px; border-radius: 11px;
+         border: 3px solid #cfcfcf; background: #7b2ff7; color: #ffe600; font-size: 15px; }
+  .swatch { background: #ff5c00; color: #20183b; padding: 9px; margin-left: 7px; }
+</style>
+</head>
+<body>
+  <header>
+    <!-- Outside the nav on purpose: closest() takes the most specific landmark, so an
+         element inside <nav> inside <header> is "navigation", not "header". Only a
+         header child that is NOT in the nav can prove the header case resolves. -->
+    <p class="swatch">هيئة الحكومة الرقمية</p>
+    <nav aria-label="التنقل الرئيسي">
+      <a href="#" class="btn">تسجيل الدخول</a>
+      <a href="#" class="btn">الخدمات</a>
+    </nav>
+  </header>
+
+  <main>
+    <section aria-label="الخدمات الأكثر استخداماً">
+      <h2>الخدمات</h2>
+      <button type="button" class="btn">ابدأ الخدمة</button>
+      <p class="swatch">بطاقة خدمة</p>
+    </section>
+
+    <!-- no aria-label here: the nearest heading inside the section must be used -->
+    <section>
+      <h2>الأخبار</h2>
+      <button type="button" class="btn">اقرأ المزيد</button>
+    </section>
+  </main>
+
+  <!-- outside every landmark AND after the last heading: the preceding-heading
+       fallback must still place this, which is the case most real pages hit -->
+  <div>
+    <p class="swatch">نص خارج المناطق</p>
+  </div>
+
+  <footer>
+    <p class="swatch">جميع الحقوق محفوظة</p>
+  </footer>
+</body>
+</html>

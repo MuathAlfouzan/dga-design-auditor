@@ -67,7 +67,10 @@
           "scoring": "fraction",
           "measure": "Occurrence-weighted share of color-bearing declarations within deltaE <= colorMatchDeltaE of some ledger color.",
           "blocker": false,
-          "fix": "Replace the literal color with the named DGA token. The finding names the nearest token for each offender."
+          "fix": "Replace the literal color with the named DGA token. The finding names the nearest token for each offender.",
+          "provenance": "ledger",
+          "authority": "Foundations / Colours — the published token palette",
+          "scope": "core"
         },
         {
           "id": "C2",
@@ -79,7 +82,10 @@
           "scoring": "fraction",
           "measure": "1 minus the occurrence-weighted share of far-off-palette colors used at least offPaletteMinOccurrences times. Near-misses are C1's problem, not this one.",
           "blocker": true,
-          "fix": "An unrecognisable brand color is an identity violation, not a styling preference. Move it onto the DGA palette or get the addition approved into the library."
+          "fix": "An unrecognisable brand color is an identity violation, not a styling preference. Move it onto the DGA palette or get the addition approved into the library.",
+          "provenance": "ledger",
+          "authority": "Foundations / Colours / Brand",
+          "scope": "core"
         },
         {
           "id": "C3",
@@ -91,7 +97,10 @@
           "scoring": "fraction",
           "measure": "Share of semantic-token usages whose surrounding role matches the token's meaning, plus destructive/among-status affordances that use the correct token.",
           "blocker": false,
-          "fix": "Error text in the brand green, or a success toast in red, breaks the one convention users carry between government platforms."
+          "fix": "Error text in the brand green, or a success toast in red, breaks the one convention users carry between government platforms.",
+          "provenance": "ledger",
+          "authority": "Foundations / Colours — success · warning · error · info roles",
+          "scope": "core"
         },
         {
           "id": "C4",
@@ -104,7 +113,10 @@
           "na_when": "target has no dark theme",
           "measure": "Same coverage calculation as C1, run against the dark-scheme capture and the ledger's dark set.",
           "blocker": false,
-          "fix": "Point the dark theme at the DGA dark tokens. Inverting or dimming light tokens drifts within one release."
+          "fix": "Point the dark theme at the DGA dark tokens. Inverting or dimming light tokens drifts within one release.",
+          "provenance": "ledger",
+          "authority": "Foundations / Colours — dark set",
+          "scope": "core"
         }
       ],
       "part": "foundations"
@@ -124,7 +136,10 @@
           "scoring": "fraction",
           "measure": "Occurrence-weighted share of rendered text whose resolved font family is in the ledger's font stack for that script.",
           "blocker": false,
-          "fix": "A substituted face is the single most visible compliance failure — it reads as a different government at a glance."
+          "fix": "A substituted face is the single most visible compliance failure — it reads as a different government at a glance.",
+          "provenance": "ledger",
+          "authority": "Foundations / Typography — IBM Plex Sans Arabic",
+          "scope": "core"
         },
         {
           "id": "T2",
@@ -136,7 +151,10 @@
           "scoring": "fraction",
           "measure": "Occurrence-weighted share of computed font-size values matching a ramp step exactly (px, after rem resolution).",
           "blocker": false,
-          "fix": "Snap to the nearest ramp step; the finding names it."
+          "fix": "Snap to the nearest ramp step; the finding names it.",
+          "provenance": "ledger",
+          "authority": "Foundations / Typography — the type ramp",
+          "scope": "core"
         },
         {
           "id": "T3",
@@ -148,7 +166,10 @@
           "scoring": "fraction",
           "measure": "Occurrence-weighted share of computed font-weight values in the ledger's allowed weight set.",
           "blocker": false,
-          "fix": "Synthetic or off-scale weights render inconsistently across platforms, especially in Arabic."
+          "fix": "Synthetic or off-scale weights render inconsistently across platforms, especially in Arabic.",
+          "provenance": "ledger",
+          "authority": "Foundations / Typography — weights 400 · 500 · 600 · 700",
+          "scope": "core"
         },
         {
           "id": "T4",
@@ -160,7 +181,10 @@
           "scoring": "fraction",
           "measure": "Share of text runs whose (size, line-height, letter-spacing) triple matches one ramp step. Matching leading alone lets a 14px body carry 72px display leading and pass, which is the mismatch this check exists to catch.",
           "blocker": false,
-          "fix": "Set the ramp's paired leading rather than a global multiplier — Arabic ascenders and descenders need the extra room."
+          "fix": "Set the ramp's paired leading rather than a global multiplier — Arabic ascenders and descenders need the extra room.",
+          "provenance": "ledger",
+          "authority": "Foundations / Typography — the ramp step (size, leading, tracking) triples",
+          "scope": "core"
         }
       ],
       "part": "foundations"
@@ -180,7 +204,10 @@
           "scoring": "fraction",
           "measure": "Occurrence-weighted share of non-zero spacing values matching a scale step.",
           "blocker": false,
-          "fix": "Off-grid spacing is what makes an otherwise on-token page feel unlike the rest of the platform."
+          "fix": "Off-grid spacing is what makes an otherwise on-token page feel unlike the rest of the platform.",
+          "provenance": "ledger",
+          "authority": "Foundations / Spacing — the spacing scale",
+          "scope": "core"
         },
         {
           "id": "S2",
@@ -192,7 +219,10 @@
           "scoring": "fraction",
           "measure": "Measured at desktop, tablet and mobile captures; each breakpoint whose container width and gutter match the ledger scores its third.",
           "blocker": false,
-          "fix": "Match the DGA container at each breakpoint so content lines up across linked government services."
+          "fix": "Match the DGA container at each breakpoint so content lines up across linked government services.",
+          "provenance": "ledger",
+          "authority": "Foundations / Grid — breakpoints, container widths and gutters",
+          "scope": "core"
         },
         {
           "id": "S3",
@@ -204,7 +234,10 @@
           "scoring": "fraction",
           "measure": "Share of between-section vertical gaps matching a rhythm step.",
           "blocker": false,
-          "fix": "Use the rhythm steps for section separation; the page reads as one document rather than stacked fragments."
+          "fix": "Use the rhythm steps for section separation; the page reads as one document rather than stacked fragments.",
+          "provenance": "ledger",
+          "authority": "Foundations / Spacing — section rhythm steps",
+          "scope": "core"
         }
       ],
       "part": "foundations"
@@ -224,7 +257,10 @@
           "scoring": "fraction",
           "measure": "Occurrence-weighted share of non-zero radii matching a scale step (fully-round pills excluded and checked against the pill token).",
           "blocker": false,
-          "fix": "Snap to the nearest radius step."
+          "fix": "Snap to the nearest radius step.",
+          "provenance": "ledger",
+          "authority": "Foundations / Radius — the radius scale",
+          "scope": "core"
         },
         {
           "id": "E2",
@@ -236,7 +272,10 @@
           "scoring": "fraction",
           "measure": "Share of visible borders whose width is on the scale and whose color is a ledger border token.",
           "blocker": false,
-          "fix": "Use the border tokens; hairlines that vary by a fraction of a pixel show up as banding on scaled displays."
+          "fix": "Use the border tokens; hairlines that vary by a fraction of a pixel show up as banding on scaled displays.",
+          "provenance": "ledger",
+          "authority": "Foundations / Borders — widths and border-role colours",
+          "scope": "core"
         },
         {
           "id": "E3",
@@ -248,7 +287,10 @@
           "scoring": "fraction",
           "measure": "Occurrence-weighted share of shadows matching an elevation token. Both sides are normalised to x/y/blur/spread plus rgba before comparison, because the ledger writes hex and the browser reports rgba() — comparing raw strings, or numbers scraped from them, can never match.",
           "blocker": false,
-          "fix": "Use the named elevation level. Hand-tuned shadows break the depth ordering the system defines."
+          "fix": "Use the named elevation level. Hand-tuned shadows break the depth ordering the system defines.",
+          "provenance": "ledger",
+          "authority": "Foundations / Shadows — the elevation levels",
+          "scope": "core"
         }
       ],
       "part": "foundations"
@@ -268,7 +310,10 @@
           "scoring": "fraction",
           "measure": "Share of identified component instances matching a DGA component by anatomy. On Figma targets, whether the instance is a library instance rather than a detached or hand-drawn frame.",
           "blocker": false,
-          "fix": "Adopt the library component. A rebuild that looks right today is the thing that drifts at the next DGA release."
+          "fix": "Adopt the library component. A rebuild that looks right today is the thing that drifts at the next DGA release.",
+          "provenance": "ledger",
+          "authority": "Components Library — component anatomy",
+          "scope": "core"
         },
         {
           "id": "P2",
@@ -280,7 +325,10 @@
           "scoring": "fraction",
           "measure": "Share of instances whose variant, size and hover/active/disabled/focus treatments match the spec.",
           "blocker": false,
-          "fix": "Missing disabled or focus treatments are the usual failure; both are specified, neither is optional."
+          "fix": "Missing disabled or focus treatments are the usual failure; both are specified, neither is optional.",
+          "provenance": "ledger",
+          "authority": "Components Library — variants, sizes and states",
+          "scope": "core"
         },
         {
           "id": "P3",
@@ -292,7 +340,10 @@
           "scoring": "fraction",
           "measure": "Share of instances whose measured internal geometry matches the spec within 1px.",
           "blocker": false,
-          "fix": "Restore the specified padding and min-height. Squeezed buttons are also the usual cause of an A4 target-size failure."
+          "fix": "Restore the specified padding and min-height. Squeezed buttons are also the usual cause of an A4 target-size failure.",
+          "provenance": "ledger",
+          "authority": "Components Library — internal geometry",
+          "scope": "core"
         }
       ],
       "part": "components"
@@ -312,7 +363,10 @@
           "scoring": "fraction",
           "measure": "Share of icons identifiable as DGA set members at a scale size. Mixed icon libraries on one page fail proportionally.",
           "blocker": false,
-          "fix": "Standardise on the DGA icon set. Two icon families on one screen is visible even to users who cannot name why."
+          "fix": "Standardise on the DGA icon set. Two icon families on one screen is visible even to users who cannot name why.",
+          "provenance": "ledger",
+          "authority": "Icons Library — family, size scale and stroke weight",
+          "scope": "core"
         },
         {
           "id": "I2",
@@ -324,7 +378,10 @@
           "scoring": "binary",
           "measure": "Pass only if every mark on the target satisfies variant, minimum size, clear space and color rules.",
           "blocker": true,
-          "fix": "Misuse of a government mark is an identity violation. Use the approved asset at approved size with its clear space intact."
+          "fix": "Misuse of a government mark is an identity violation. Use the approved asset at approved size with its clear space intact.",
+          "provenance": "ledger",
+          "authority": "Brand / identity — approved marks, minimum size, clear space",
+          "scope": "core"
         }
       ],
       "part": "components"
@@ -332,7 +389,7 @@
     {
       "id": "rtl",
       "label": "RTL & bilingual",
-      "weight": 8,
+      "weight": 5,
       "checks": [
         {
           "id": "R1",
@@ -344,7 +401,10 @@
           "scoring": "fraction",
           "measure": "Correct dir/lang on the document and on mixed-script runs, plus evidence that layout order, alignment and navigation actually mirror in the RTL capture.",
           "blocker": false,
-          "fix": "Set dir on the document and let logical properties carry the mirroring, rather than a per-component RTL override sheet."
+          "fix": "Set dir on the document and let logical properties carry the mirroring, rather than a per-component RTL override sheet.",
+          "provenance": "standard",
+          "authority": "HTML dir attribute · W3C i18n — an Arabic interface must be mirrored",
+          "scope": "core"
         },
         {
           "id": "R2",
@@ -356,7 +416,10 @@
           "scoring": "fraction",
           "measure": "Share of directional declarations written logically rather than physically, in FIRST-PARTY stylesheets only. Vendor bundles are counted separately and reported as context — scoring them measures the framework choice rather than the team's work.",
           "blocker": false,
-          "fix": "margin-inline-start over margin-left. Physical properties are why an RTL layout needs a second stylesheet and then diverges from the first."
+          "fix": "margin-inline-start over margin-left. Physical properties are why an RTL layout needs a second stylesheet and then diverges from the first.",
+          "provenance": "practice",
+          "authority": null,
+          "scope": "extended"
         },
         {
           "id": "R3",
@@ -368,7 +431,10 @@
           "scoring": "fraction",
           "measure": "Arabic-range text resolving to the Arabic face; chevrons and arrows mirrored in RTL; one numeral system (Arabic-Indic or Western) used consistently.",
           "blocker": false,
-          "fix": "Mixed numeral systems inside one interface is the most common bilingual defect and the easiest to fix."
+          "fix": "Mixed numeral systems inside one interface is the most common bilingual defect and the easiest to fix.",
+          "provenance": "standard",
+          "authority": "W3C i18n — one numeral system, Arabic set in an Arabic face",
+          "scope": "core"
         }
       ],
       "part": "standards"
@@ -388,7 +454,10 @@
           "scoring": "fraction",
           "measure": "Occurrence-weighted share of text runs meeting their applicable threshold against their effective background.",
           "blocker": true,
-          "fix": "Government services carry a statutory accessibility obligation. Darken the text token or lighten the surface — the finding gives the measured ratio and the needed delta."
+          "fix": "Government services carry a statutory accessibility obligation. Darken the text token or lighten the surface — the finding gives the measured ratio and the needed delta.",
+          "provenance": "wcag",
+          "authority": "WCAG 2.2 SC 1.4.3 Contrast (Minimum), AA",
+          "scope": "core"
         },
         {
           "id": "A2",
@@ -400,7 +469,10 @@
           "scoring": "fraction",
           "measure": "Share of borders that identify a UI COMPONENT or its state meeting 3:1 against their surroundings. Decorative borders — dividers, card outlines — are outside SC 1.4.11 and are skipped rather than failed; the skipped count is reported.",
           "blocker": true,
-          "fix": "An input whose border disappears against its background is not usable at low vision or in sunlight."
+          "fix": "An input whose border disappears against its background is not usable at low vision or in sunlight.",
+          "provenance": "wcag",
+          "authority": "WCAG 2.2 SC 1.4.11 Non-text Contrast, AA",
+          "scope": "core"
         },
         {
           "id": "A3",
@@ -412,7 +484,10 @@
           "scoring": "fraction",
           "measure": "Share of a sample of focusable elements whose computed style changes while genuinely in :focus-visible — seeded via a throwaway text input, because el.focus() alone does not match the pseudo-class. Ring and colour-only indicators are tallied separately. The contrast of the indicator itself is not measured.",
           "blocker": false,
-          "fix": "Never remove the outline without replacing it. Keyboard-only users navigate the whole service through this one affordance."
+          "fix": "Never remove the outline without replacing it. Keyboard-only users navigate the whole service through this one affordance.",
+          "provenance": "wcag",
+          "authority": "WCAG 2.2 SC 2.4.7 Focus Visible, AA",
+          "scope": "core"
         },
         {
           "id": "A4",
@@ -424,7 +499,10 @@
           "scoring": "fraction",
           "measure": "Share of interactive elements meeting the minimum, with the WCAG 2.2 exceptions applied: a target inline in a sentence leaves the denominator, and an undersized target passes if a 24px circle centred on it intersects no other target. Both exemption counts are reported.",
           "blocker": false,
-          "fix": "Grow the control or its padding. Icon-only buttons are the usual offenders."
+          "fix": "Grow the control or its padding. Icon-only buttons are the usual offenders.",
+          "provenance": "wcag",
+          "authority": "WCAG 2.2 SC 2.5.8 Target Size (Minimum), AA",
+          "scope": "core"
         }
       ],
       "part": "standards"
@@ -432,7 +510,7 @@
     {
       "id": "motion",
       "label": "Motion",
-      "weight": 4,
+      "weight": 2,
       "checks": [
         {
           "id": "M1",
@@ -444,7 +522,10 @@
           "scoring": "fraction",
           "measure": "Share of transition/animation declarations whose duration and timing function match motion tokens.",
           "blocker": false,
-          "fix": "Use the named duration and curve so motion feels the same across services."
+          "fix": "Use the named duration and curve so motion feels the same across services.",
+          "provenance": "ledger",
+          "authority": "Foundations / Motion — duration and easing tokens",
+          "scope": "core"
         },
         {
           "id": "M2",
@@ -456,7 +537,10 @@
           "scoring": "binary",
           "measure": "Pass if the stylesheet carries a prefers-reduced-motion rule and animation is actually suppressed under the emulated preference.",
           "blocker": false,
-          "fix": "Add a reduced-motion block that skips the motion rather than shortening it."
+          "fix": "Add a reduced-motion block that skips the motion rather than shortening it.",
+          "provenance": "practice",
+          "authority": null,
+          "scope": "extended"
         }
       ],
       "part": "foundations"
@@ -467,7 +551,7 @@
     {
       "id": "foundations",
       "label": "Foundations",
-      "weight": 58,
+      "weight": 56,
       "source": "Foundations - Platforms Code",
       "covers": "Colour tokens, the type ramp, the spacing and radius scales, elevation and motion."
     },
@@ -481,9 +565,14 @@
     {
       "id": "standards",
       "label": "Standards",
-      "weight": 18,
+      "weight": 15,
       "source": "DGA guidance, not a Figma library",
       "covers": "RTL and bilingual behaviour, and WCAG accessibility."
     }
-  ]
+  ],
+  "scoring": {
+    "coreWeight": 95,
+    "extendedWeight": 5,
+    "note": "The score out of 100 is earned/available over CORE checks only — every core point traces to a DGA Figma token, a WCAG success criterion, or a W3C i18n requirement, named in each check's `authority`. `extended` checks measure practices nobody published; they are scored and reported separately and never fold into the headline or cap a band."
+  }
 }

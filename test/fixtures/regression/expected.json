@@ -1,10 +1,10 @@
 {
-  "$comment": "Baseline verdict recorded by the original Node engine on a real government portal, before the pure-core extraction. The captures beside this file are that page with its identity removed — URLs, titles, selectors, text content and custom properties all replaced. None of that feeds the maths, which is why the verdict is unchanged; that it is unchanged is itself evidence the scrub touched nothing load-bearing. NOTE on the one deliberate re-baseline: earned moved 55.81 -> 55.80 when judged ratios began being computed FROM their counts (31/38 = 0.815789) instead of the rounded value restated beside them (0.816). Nothing measured changed. NOTE on A3: this capture predates the :focus-visible seeding fix, so its '80 of 80' finding is a known false positive of the old probe. It is pinned deliberately — captures without a `seeded` flag keep their original treatment, which is what makes this fixture a stable test of the scoring maths rather than of the probe.",
-  "score": 64.89,
-  "checksPassed": 8,
-  "checksCounted": 23,
-  "earned": 55.8,
-  "available": 86,
+  "$comment": "Baseline verdict recorded by the original Node engine on a real government portal, before the pure-core extraction. The captures beside this file are that page with its identity removed — URLs, titles, selectors, text content and custom properties all replaced. None of that feeds the maths, which is why the verdict is unchanged; that it is unchanged is itself evidence the scrub touched nothing load-bearing. NOTE on the one deliberate re-baseline: earned moved 55.81 -> 55.80 when judged ratios began being computed FROM their counts (31/38 = 0.815789) instead of the rounded value restated beside them (0.816). Nothing measured changed. NOTE on A3: this capture predates the :focus-visible seeding fix, so its '80 of 80' finding is a known false positive of the old probe. It is pinned deliberately — captures without a `seeded` flag keep their original treatment, which is what makes this fixture a stable test of the scoring maths rather than of the probe. NOTE on the second deliberate re-baseline: 64.89 -> 65.20 when R2 (CSS logical properties) and M2 (prefers-reduced-motion) moved OUT of the 100 into the `extended` block, because DGA publishes neither and Figma cannot express either. Nothing measured changed and no finding changed — the two checks simply stopped counting toward a compliance score they had no authority behind. The arithmetic reconciles exactly: earned 55.80 - 0.99 (R2) - 2.00 (M2) = 52.81, available 86 - 3 - 2 = 81, and 52.82/81 = 65.20.",
+  "score": 65.2,
+  "checksPassed": 7,
+  "checksCounted": 21,
+  "earned": 52.82,
+  "available": 81,
   "band": "partial",
   "cappedFrom": null,
   "failedBlockers": [
@@ -73,9 +73,9 @@
     "shape:4.79/8",
     "components:10.24/18",
     "brand:0/0",
-    "rtl:5.99/8",
+    "rtl:5/5",
     "a11y:5.74/10",
-    "motion:2/2"
+    "motion:0/0"
   ],
   "scoreOptions": {
     "targetType": "site",

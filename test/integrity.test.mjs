@@ -57,7 +57,7 @@ console.log('\n  Can the score be gamed?\n  ' + '─'.repeat(58));
 const base = run();
 
 check('the verdict states how much of the rubric it measured',
-  base.coverage && typeof base.coverage.pct === 'number' && base.coverage.applicableWeight === 100,
+  base.coverage && typeof base.coverage.pct === 'number' && base.coverage.applicableWeight === rubric.scoring.coreWeight,
   `coverage=${JSON.stringify(base.coverage?.pct)} applicable=${base.coverage?.applicableWeight}`);
 
 // Itemisation has to reconcile with the arithmetic, or it is decoration: the weights

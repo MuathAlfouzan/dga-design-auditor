@@ -119,6 +119,44 @@ By default the engine **refuses to score** when a judged check is neither assess
 marked `na`, because silently dropping the component checks is how a rebuild scores as
 compliant.
 
+### Where the points went — never report a check without a place
+
+`__dga.regions()` groups every finding by the part of the page it sits in — header,
+navigation, main, footer, and the named section inside it — using the page's own landmarks
+and headings. Report it. "P1 lost 4.84" names a check and helps nobody; "the service cards
+in «الخدمات الأكثر استخداماً» are at radius 16 where the library says 4" is a task someone
+can pick up.
+
+Per-row points are **apportioned** across a check's findings by occurrence, not measured
+per element. Print them with `≈` and say so once. The per-check total is exact; the split
+across places is arithmetic on top of it, and presenting arithmetic as measurement is the
+mistake this rubric has spent its whole life removing.
+
+### The 100, and what is outside it
+
+Every point in the score traces to something DGA published or something the law requires.
+Each check names it in `authority`: a Figma token path, or a WCAG 2.2 success criterion,
+or a W3C i18n requirement. A check that cannot name one does not belong in the 100.
+
+Two checks measure practices **nobody published** — `R2` (CSS logical properties, which
+Figma cannot express) and `M2` (prefers-reduced-motion). They are still measured, still
+reported, and scored in `verdict.extended` **outside the 100**. They never cap a band. Do
+not fold them back in: 5 points of a government compliance score resting on an inference is
+the difference between a number that survives a meeting and one that does not.
+
+### The reference line
+
+`verdict.reference` compares the target to a stored reading from `data/benchmarks.json` —
+`dga.gov.sa`, the publisher's own site. Report it beside the score:
+
+> Overall 71.2 · dga.gov.sa scores 71.8 on the same rubric
+
+This is **context, not a threshold.** The band always comes from the absolute score against
+the ledger. DGA's own site is evidence of practice, not a definition of compliance — it
+diverges from its own published library, which is a finding about the site rather than a
+correction to the rubric. And a comparison is only drawn where BOTH sides measured the
+check; where the reference has no reading, print `—` and the reason, never a win.
+
 ### Coverage — read this before reporting any number
 
 The score is `earned / available`, so **every check that leaves the denominator makes
