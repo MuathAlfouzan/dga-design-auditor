@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><title>accessibility scope</title>
+<style>
+  /* This fixture exists for two specific defects, both found on dga.gov.sa:
+     1. A2 judged the hairline around a CONTENT CARD as a component boundary, because the
+        card is wrapped in a link. SC 1.4.11 covers information required to IDENTIFY a
+        component; an outline that merely encloses a headline and a paragraph does not.
+     2. A3 could not be read at all where the browser will not hold OS focus, which made
+        "Ready to submit" unreachable. The reset/restore pair below is what the cascade
+        fallback has to resolve without observing anything. */
+  :root { color-scheme: light; }
+  body { margin: 0; padding: 24px; background: #ffffff; color: #161616;
+         font-family: "IBM Plex Sans Arabic"; font-size: 16px; line-height: 24px; }
+
+  *:focus { outline: none; }
+  *:focus-visible { outline: 2px solid #161616; outline-offset: 2px; }
+
+  /* IN SCOPE for A2: a control. Its border is how you know it is a field. */
+  .field { display: block; inline-size: 260px; min-height: 40px; padding-inline: 16px;
+           border: 1px solid #161616; border-radius: 4px; background: #ffffff; }
+
+  /* IN SCOPE: a link styled as a button — the border identifies the affordance. */
+  .btn { display: inline-flex; align-items: center; min-height: 40px; padding-inline: 16px;
+         border: 1px solid #161616; border-radius: 4px; background: #ffffff; color: #161616;
+         text-decoration: none; }
+
+  /* OUT OF SCOPE: a content card that happens to be a link. The faint border encloses
+     content; the link is identified by its heading and its hit area. 1.31:1 on purpose —
+     if this is ever counted again, A2 drops and the test fails loudly. */
+  .card { display: block; inline-size: 320px; padding: 24px; margin-block-start: 24px;
+          border: 1px solid #e5e7eb; border-radius: 16px; background: #ffffff;
+          color: #161616; text-decoration: none; }
+  .card h2 { margin: 0 0 8px; font-size: 20px; line-height: 30px; }
+  .card p  { margin: 0; font-size: 16px; line-height: 24px; }
+</style>
+</head>
+<body>
+  <main>
+    <h1>نطاق إمكانية الوصول</h1>
+
+    <label for="q">حقل البحث</label>
+    <input class="field" id="q" type="text" placeholder="اكتب هنا">
+
+    <p><a class="btn" href="#">إجراء أساسي</a></p>
+
+    <a class="card" href="#">
+      <h2>بطاقة محتوى</h2>
+      <p>هذه بطاقة محتوى داخل رابط. حدودها الباهتة تحيط بالمحتوى ولا تُعرِّف عنصر تحكم.</p>
+    </a>
+
+    <a class="card" href="#">
+      <h2>بطاقة أخرى</h2>
+      <p>نفس الحالة مرة أخرى، للتأكد من أن الاستثناء ليس مصادفة عنصر واحد.</p>
+    </a>
+  </main>
+</body>
+</html>

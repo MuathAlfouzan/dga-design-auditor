@@ -614,10 +614,18 @@ export function score({ rubric, tokens, criteria = null, benchmarks = null, capt
     const n = captures.reduce((a, x) => {
       a.checked += x.nonTextContrast?.checked || 0;
       a.pass += x.nonTextContrast?.passing || 0;
+      a.skipped += x.nonTextContrast?.decorativeSkipped || 0;
       a.find.push(...(x.nonTextContrast?.findings || []));
       return a;
-    }, { checked: 0, pass: 0, find: [] });
-    auto.A2 = { ratio: n.checked ? n.pass / n.checked : null, matched: n.pass, total: n.checked };
+    }, { checked: 0, pass: 0, skipped: 0, find: [] });
+    // The skip count rides along so narrowing A2's scope can never quietly inflate the
+    // ratio: a reviewer can see how many borders left the denominator, and why.
+    auto.A2 = {
+      ratio: n.checked ? n.pass / n.checked : null, matched: n.pass, total: n.checked,
+      notes: n.skipped
+        ? n.skipped + ' decorative borders excluded \u2014 SC 1.4.11 covers information that identifies a component, not enclosure'
+        : undefined,
+    };
     for (const f of n.find.sort((a, b) => a.ratio - b.ratio).slice(0, 8)) {
       finding('A2', 'blocker', `Boundary contrast ${f.ratio}:1 is below 3:1`, {
         found: `${f.border} against ${f.against} → ${f.ratio}:1`,
@@ -634,13 +642,23 @@ export function score({ rubric, tokens, criteria = null, benchmarks = null, capt
         a.ring += x.focus?.ring || 0;
         a.colourOnly += x.focus?.colourOnly || 0;
         a.seeded = a.seeded && (x.focus?.seeded !== false);
+        if (x.focus?.method) a.method = x.focus.method;
         a.missing.push(...(x.focus?.missing || []));
         return a;
-      }, { probed: 0, visible: 0, ring: 0, colourOnly: 0, seeded: true, missing: [] });
+      }, { probed: 0, visible: 0, ring: 0, colourOnly: 0, seeded: true, method: null, missing: [] });
+      const predicted = f.method === 'cascade-analysis';
       auto.A3 = { ratio: f.probed ? f.visible / f.probed : null, matched: f.visible, total: f.probed };
-      // A capture taken before the focus-visible seeding fix cannot tell a removed
-      // indicator from an unmatched pseudo-class, so it reports nothing rather than 0.
-      if (f.probed && !f.seeded) {
+      // Three cases, and they are not interchangeable:
+      //   observed          — the browser entered :focus-visible and we watched it
+      //   cascade-analysis  — it would not, so the CSS was resolved statically instead
+      //   neither           — a capture predating both, which can tell a removed
+      //                       indicator from an unmatched pseudo-class not at all
+      if (predicted) {
+        auto.A3.notes = `${f.visible} of ${f.probed} controls would receive a focus indicator, ` +
+          'predicted from the CSS cascade rather than observed — this browser would not enter ' +
+          ':focus-visible. Blind to focus styling applied by script or drawn on a pseudo-element.';
+        auto.A3.measuredBy = 'cascade-analysis';
+      } else if (f.probed && !f.seeded) {
         auto.A3 = { ratio: null, na: true, reason: 'browser would not enter :focus-visible, so focus styling could not be observed' };
       } else if (f.colourOnly) {
         finding('A3', 'minor', `${f.colourOnly} of ${f.probed} controls signal focus by colour change alone`, {
@@ -649,12 +667,12 @@ export function score({ rubric, tokens, criteria = null, benchmarks = null, capt
           fix: 'A colour swap meets SC 2.4.7 but fails SC 2.4.13 Focus Appearance. Add an outline so the indicator survives low vision and greyscale.',
         });
       }
-      if (f.missing.length && f.seeded) {
+      if (f.missing.length && (f.seeded || predicted)) {
         // Count from probed-minus-visible, never from missing.length — the probe caps
         // its missing[] sample at 20 per capture, so that array understates the failure
         // on any page with more than 20 unfocusable controls.
         finding('A3', 'major', `${f.probed - f.visible} of ${f.probed} probed controls show no focus indicator`, {
-          found: `${f.probed - f.visible} controls unchanged on focus`,
+          found: `${f.probed - f.visible} controls unchanged on focus${predicted ? ' (predicted from CSS, not observed)' : ''}`,
           expected: 'a visible indicator on every interactive element',
           where: f.missing.slice(0, 8).map((m) => m.loc || m.selector),
           fix: 'Never remove the outline without replacing it. Keyboard-only users navigate the whole service through this one affordance.',
@@ -694,7 +712,13 @@ export function score({ rubric, tokens, criteria = null, benchmarks = null, capt
     const dCov = scaleCoverage(durs, tokens.motion?.durations || [], 'M1', 'Transition duration', 'ms', 10);
     const eCov = setCoverage(eases, tokens.motion?.easings || [], 'M1', 'Easing', (x) => String(x).replace(/\s+/g, ''));
     const parts = [dCov.ratio, eCov.ratio].filter((r) => r != null);
-    auto.M1 = { ratio: parts.length ? parts.reduce((a, b) => a + b, 0) / parts.length : null, detail: { dCov, eCov } };
+    // A page with no transitions has no motion values to be wrong, which is an absence
+    // rather than a gap — saying otherwise left the design-system criterion permanently
+    // unconfirmable on any site that simply does not animate.
+    auto.M1 = parts.length
+      ? { ratio: parts.reduce((a, b) => a + b, 0) / parts.length, detail: { dCov, eCov } }
+      : { ratio: null, na: true, absent: true, detail: { dCov, eCov },
+          reason: 'no transition durations or easings are used on the page' };
 
     if (targetType === 'site') {
       const rm = captures.reduce((a, c) => a + (c.css?.reducedMotionRules || 0), 0);
@@ -771,8 +795,14 @@ export function score({ rubric, tokens, criteria = null, benchmarks = null, capt
       // No result at all means the probe found none of this kind on the page — an
       // absence. A result that declares itself absent says so explicitly. Everything
       // else is a gap: we could not look.
+      // Absence takes three shapes, and all of them hide nothing:
+      //   no result at all      — the probe found none of this kind
+      //   absent: true          — the check says so outright
+      //   total === 0           — a coverage helper with an empty denominator
+      // The third was missed at first, which left M1 (no motion values on the page)
+      // permanently blocking the design-system criterion for every site.
       return miss('unmeasurable', result?.reason || 'nothing of this kind present to measure',
-                  !result || result.absent === true);
+                  !result || result.absent === true || result.total === 0);
     }
 
     // A judgement without a count is unfalsifiable: nobody can check 0.51 against
@@ -826,6 +856,9 @@ export function score({ rubric, tokens, criteria = null, benchmarks = null, capt
         earned: round2(pts),
         available: chk.weight,
         measured: result.total != null ? { matched: result.matched, total: result.total } : undefined,
+        // How the number was arrived at, when that is not simply "observed". Distinct from
+        // `method`, which says auto vs judged — conflating the two hid the cascade note.
+        measuredBy: result.measuredBy,
         notes: result.notes,
       },
     };

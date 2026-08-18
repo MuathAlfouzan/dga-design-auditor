@@ -104,7 +104,7 @@ ${render}
     audit: function (opts) {
       opts = opts || {};
       var label = opts.label || ('capture-' + (api.captures.length + 1));
-      var capture = probe({ label: label, minTargetPx: minTargetFor(window.innerWidth) });
+      var capture = probe({ label: label, minTargetPx: minTargetFor(window.innerWidth), forceCascade: opts.forceCascade === true });
       api.captures.push(capture);
       var args = {
         rubric: RUBRIC, tokens: TOKENS, criteria: CRITERIA, benchmarks: BENCHMARKS, captures: api.captures,

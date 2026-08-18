@@ -13,6 +13,10 @@ export function probe(OPTS_IN = {}) {
   const MAX_SAMPLES = 6;
   const MAX_ELEMENTS = OPTS.maxElements || 6000;
   const MAX_FOCUS_PROBES = OPTS.maxFocusProbes || 40;
+  // Test and diagnostic switch: force the cascade path even where the browser CAN observe
+  // focus. Without it the fallback is unreachable in headless Chrome, which does hold OS
+  // focus — so the code that runs on the real audit surface would never be exercised.
+  const FORCE_CASCADE = OPTS.forceCascade === true;
   // WCAG 2.2 AA floor unless the ledger raises it for this viewport — DGA mobile
   // guidance is larger, and judging a 375px capture by the desktop number is how
   // mobile target sizes came out wrong before.
@@ -342,8 +346,25 @@ export function probe(OPTS_IN = {}) {
    * only job is a hairline does not.
    */
   const COMPONENTISH = 'input,select,textarea,button,a[href],summary,[role=button],[role=link],[role=tab],[role=checkbox],[role=radio],[role=switch],[role=combobox],[role=listbox],[role=menuitem],[role=textbox],[role=searchbox],[role=slider],[role=spinbutton],[contenteditable="true"]';
+  // SC 1.4.11 covers visual information required to IDENTIFY a component. A link
+  // wrapped around a headline and a paragraph is a content CARD: its outline encloses
+  // content rather than identifying an affordance, and the link is already identified
+  // by its text and its hit area. Counting those hairlines is what put dga.gov.sa at
+  // 3 of 34 — almost entirely news cards bordered #d2d6db on #f7fdf9.
+  const CARD_CONTENT = 'h1,h2,h3,h4,h5,h6,p,article,section,ul,ol,table,figure,blockquote';
+  function looksLikeContentCard(el) {
+    try {
+      const r = el.getBoundingClientRect();
+      if (r.height <= 96) return false;                 // too small to be a card
+      return !!(el.querySelector && el.querySelector(CARD_CONTENT));
+    } catch (e) { return false; }
+  }
+
   function isComponentBoundary(el) {
-    if (el.matches && el.matches(COMPONENTISH)) return true;
+    if (el.matches && el.matches(COMPONENTISH)) {
+      if (el.matches('a[href],[role=link]') && looksLikeContentCard(el)) return false;
+      return true;
+    }
     // A wrapper drawn around a control — the bordered shell of a search field, say —
     // is carrying that control's boundary.
     try {
@@ -834,7 +855,7 @@ export function probe(OPTS_IN = {}) {
   // programmatic focus. So park focus on a throwaway input between probes, which puts
   // every subsequent .focus() into a genuine focus-visible state. Same page, same
   // engine: 9 of 59 controls show a ring.
-  const focusProbe = { probed: 0, visible: 0, ring: 0, colourOnly: 0, seeded: false, missing: [] };
+  const focusProbe = { probed: 0, visible: 0, ring: 0, colourOnly: 0, seeded: false, method: 'observed', missing: [] };
   const prevActive = document.activeElement;
   const scrollX = window.scrollX;
   const scrollY = window.scrollY;
@@ -843,8 +864,92 @@ export function probe(OPTS_IN = {}) {
     return r.width > 0 && r.height > 0 && !el.hasAttribute('disabled');
   });
 
+
+  /**
+   * When the browser will not hold OS focus, :focus-visible can never match and the live
+   * probe reports nothing at all — which used to make A3 unmeasurable, and with it made
+   * "Ready to submit" unreachable on the only surface that renders a real desktop layout.
+   *
+   * So resolve the CSS instead of observing it: strip the pseudo-class off every focus
+   * rule, find which controls the remainder lands on, and order the matches by specificity
+   * then source order to see which declaration finally wins.
+   *
+   * This is EVIDENCE, NOT OBSERVATION, and every consumer is told so via `method`. It is
+   * blind to focus styling applied by script, and to anything a pseudo-element draws.
+   */
+  function specificity(sel) {
+    const s = String(sel).replace(/\[[^\]]*\]/g, '\u0000A').replace(/::[a-z-]+/gi, '');
+    const ids = (s.match(/#[\w-]+/g) || []).length;
+    const cls = (s.match(/\.[\w-]+/g) || []).length
+              + (s.match(/\u0000A/g) || []).length
+              + (s.match(/:(?!:)[a-z-]+/gi) || []).length;
+    const els = (s.match(/(^|[\s>+~])[a-z][\w-]*/gi) || []).length;
+    return ids * 10000 + cls * 100 + els;
+  }
+
+  function focusByCascade(probes) {
+    const rules = [];
+    let order = 0;
+    const walk = (list) => {
+      for (const r of list) {
+        try { if (r.cssRules) walk(r.cssRules); } catch (e) {}
+        const sel = r.selectorText;
+        if (!sel || !/:focus/.test(sel) || !r.style) continue;
+        for (const part of sel.split(',')) {
+          if (!/:focus/.test(part)) continue;
+          let bare = part.replace(/:focus-visible|:focus-within|:focus/g, '')
+                         .replace(/::(before|after)/g, '').trim();
+          if (!bare || /[>+~]$/.test(bare)) bare = bare ? bare + ' *' : '*';
+          rules.push({ bare, spec: specificity(part), order: order++, style: r.style });
+        }
+      }
+    };
+    for (const sheet of document.styleSheets) {
+      try { walk(sheet.cssRules); } catch (e) {}
+    }
+    // weakest first, so the last write wins the same way the cascade resolves it
+    rules.sort((a, b) => a.spec - b.spec || a.order - b.order);
+
+    const out = { probed: 0, visible: 0, ring: 0, colourOnly: 0, seeded: false,
+                  method: 'cascade-analysis', rulesConsidered: rules.length, missing: [] };
+    for (const el of probes) {
+      out.probed++;
+      let os = null, ow = null, shadow = null, colour = false;
+      for (const r of rules) {
+        let hit = false;
+        try { hit = el.matches(r.bare); } catch (e) { continue; }
+        if (!hit) continue;
+        const o = r.style.getPropertyValue('outline');
+        if (o) {
+          os = /none/.test(o) ? 'none' : 'solid';
+          ow = /none/.test(o) ? '0px' : (o.match(/[\d.]+px/) || ['2px'])[0];
+        }
+        const st = r.style.getPropertyValue('outline-style'); if (st) os = st;
+        const w = r.style.getPropertyValue('outline-width'); if (w) ow = w;
+        const b = r.style.getPropertyValue('box-shadow'); if (b) shadow = b;
+        if (r.style.getPropertyValue('color') || r.style.getPropertyValue('background-color') ||
+            r.style.getPropertyValue('border-color') || r.style.getPropertyValue('text-decoration') ||
+            r.style.getPropertyValue('text-decoration-line')) colour = true;
+      }
+      // Nothing in the author CSS touched the outline, so the UA default ring still
+      // draws. Missing this counted well-behaved controls as bare.
+      const uaDefault = os === null && shadow === null;
+      const hasRing = uaDefault
+        || (os && os !== 'none' && parseFloat(ow || '0') > 0)
+        || (shadow && shadow !== 'none');
+      if (hasRing) { out.visible++; out.ring++; }
+      else if (colour) { out.visible++; out.colourOnly++; }
+      else if (out.missing.length < 20) {
+        out.missing.push({ selector: selectorFor(el), loc: locate(el),
+          label: (el.getAttribute('aria-label') || el.textContent || '').trim().slice(0, 40) });
+      }
+    }
+    return out;
+  }
+
   let seed = null;
   try {
+    if (FORCE_CASCADE) throw new Error('cascade forced');
     seed = document.createElement('input');
     seed.type = 'text';
     seed.tabIndex = -1;
@@ -890,6 +995,20 @@ export function probe(OPTS_IN = {}) {
     }
   }
   try { if (seed) seed.remove(); } catch (e) {}
+  // The live pass only means anything if the browser actually entered :focus-visible.
+  // When it did not, every control looks bare and the reading is worthless — so replace
+  // it with the cascade estimate rather than reporting a page-wide failure that is really
+  // a property of the audit environment.
+  if (!focusProbe.seeded) {
+    const est = focusByCascade(probes.slice(0, MAX_FOCUS_PROBES));
+    focusProbe.probed = est.probed;
+    focusProbe.visible = est.visible;
+    focusProbe.ring = est.ring;
+    focusProbe.colourOnly = est.colourOnly;
+    focusProbe.missing = est.missing;
+    focusProbe.method = est.method;
+    focusProbe.rulesConsidered = est.rulesConsidered;
+  }
   try {
     if (prevActive && prevActive.focus) prevActive.focus({ preventScroll: true });
     window.scrollTo(scrollX, scrollY);
