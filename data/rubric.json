@@ -408,7 +408,7 @@
           "applies_to": "site",
           "method": "auto",
           "scoring": "fraction",
-          "measure": "Share of focusable elements whose computed style changes visibly on :focus-visible, with an indicator meeting 3:1.",
+          "measure": "Share of a sample of focusable elements whose computed style changes while genuinely in :focus-visible — seeded via a throwaway text input, because el.focus() alone does not match the pseudo-class. Ring and colour-only indicators are tallied separately. The contrast of the indicator itself is not measured.",
           "blocker": false,
           "fix": "Never remove the outline without replacing it. Keyboard-only users navigate the whole service through this one affordance."
         },

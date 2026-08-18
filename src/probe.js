@@ -715,7 +715,20 @@ export function probe(OPTS_IN = {}) {
 
   // Actually focus a sample of controls and diff the computed style. Reading the
   // stylesheet alone cannot tell a replaced indicator from a removed one.
-  const focusProbe = { probed: 0, visible: 0, missing: [] };
+  //
+  // The trap that made this check report zero on every modern site: el.focus() does
+  // NOT make :focus-visible match. Nearly every design system now writes
+  //     *:focus { outline: none }   /   *:focus-visible { outline: ... }
+  // so a programmatic focus lands in the first rule, nothing changes, and a working
+  // keyboard ring gets filed as missing. Measured on dga.gov.sa: 118 :focus rules in
+  // the stylesheets, and zero computed-style change across all 59 controls.
+  //
+  // Per the :focus-visible spec, focus moved by script inherits the state when the
+  // previously focused element matched it — and a text input always matches on
+  // programmatic focus. So park focus on a throwaway input between probes, which puts
+  // every subsequent .focus() into a genuine focus-visible state. Same page, same
+  // engine: 9 of 59 controls show a ring.
+  const focusProbe = { probed: 0, visible: 0, ring: 0, colourOnly: 0, seeded: false, missing: [] };
   const prevActive = document.activeElement;
   const scrollX = window.scrollX;
   const scrollY = window.scrollY;
@@ -723,25 +736,54 @@ export function probe(OPTS_IN = {}) {
     const r = el.getBoundingClientRect();
     return r.width > 0 && r.height > 0 && !el.hasAttribute('disabled');
   });
+
+  let seed = null;
+  try {
+    seed = document.createElement('input');
+    seed.type = 'text';
+    seed.tabIndex = -1;
+    seed.setAttribute('aria-hidden', 'true');
+    seed.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none;';
+    document.body.appendChild(seed);
+    seed.focus({ preventScroll: true });
+    focusProbe.seeded = seed.matches(':focus-visible');
+  } catch (e) { seed = null; }
+
+  // color and text-decoration are in the key because underline-on-focus and
+  // colour-on-focus are both real indicators the previous six properties missed.
+  const focusKey = (cs) => [cs.outlineStyle, cs.outlineWidth, cs.outlineColor, cs.boxShadow,
+    cs.borderColor, cs.backgroundColor, cs.color, cs.textDecorationLine].join('|');
+
   for (const el of probes.slice(0, MAX_FOCUS_PROBES)) {
     try {
-      const before = getComputedStyle(el);
-      const b = [before.outlineStyle, before.outlineWidth, before.outlineColor, before.boxShadow, before.borderColor, before.backgroundColor].join('|');
+      const b = focusKey(getComputedStyle(el));
       el.focus({ preventScroll: true });
       const after = getComputedStyle(el);
-      const a = [after.outlineStyle, after.outlineWidth, after.outlineColor, after.boxShadow, after.borderColor, after.backgroundColor].join('|');
+      const a = focusKey(after);
       focusProbe.probed++;
-      const changed = a !== b;
+      const bp = b.split('|');
+      const ap = a.split('|');
+      const ringChanged = ap.slice(0, 4).some((v, i) => v !== bp[i]);        // outline*, box-shadow
+      const colourChanged = ap.slice(4).some((v, i) => v !== bp[i + 4]);     // border, bg, text, underline
       const hasOutline = after.outlineStyle !== 'none' && parseFloat(after.outlineWidth) > 0;
-      if (changed || hasOutline) focusProbe.visible++;
-      else if (focusProbe.missing.length < 20) {
+      if (ringChanged || hasOutline) {
+        focusProbe.visible++;
+        focusProbe.ring++;
+      } else if (colourChanged) {
+        // A colour swap alone satisfies SC 2.4.7 (technique C15) but not SC 2.4.13,
+        // so it counts as visible and is tallied apart rather than merged.
+        focusProbe.visible++;
+        focusProbe.colourOnly++;
+      } else if (focusProbe.missing.length < 20) {
         focusProbe.missing.push({ selector: selectorFor(el), label: (el.getAttribute('aria-label') || el.textContent || '').trim().slice(0, 40) });
       }
       el.blur();
+      if (seed) seed.focus({ preventScroll: true });   // re-arm focus-visible for the next probe
     } catch (e) {
       /* some controls refuse focus; not a finding */
     }
   }
+  try { if (seed) seed.remove(); } catch (e) {}
   try {
     if (prevActive && prevActive.focus) prevActive.focus({ preventScroll: true });
     window.scrollTo(scrollX, scrollY);

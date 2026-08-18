@@ -47,6 +47,18 @@
   .raised { box-shadow: 0 2px 4px -2px #1018280f, 0 4px 8px -2px #1018281a; } /* shadow-md */
 
   /* --- controls: contrast, target size, visible focus (A1-A4) ------------- */
+
+  /* The reset that hid a broken A3 for the whole life of this project. Nearly every
+     modern design system kills the bare :focus ring and restores a better one under
+     :focus-visible. A probe that calls el.focus() sees only the kill — the pseudo-class
+     never matches on programmatic focus — and reports a working keyboard ring as
+     missing. This fixture omitted the reset, so it passed while real sites failed.
+     Keep these two rules together: they are the shape of the bug. The restore has to
+     be universal, because the kill is — scoping it to .btn and .field leaves the prose
+     link below with no ring at all. */
+  *:focus { outline: none; }
+  *:focus-visible { outline: 2px solid #161616; outline-offset: 2px; }
+
   .btn {
     display: inline-flex; align-items: center; gap: 4px;
     min-height: 40px; padding-inline: 16px;

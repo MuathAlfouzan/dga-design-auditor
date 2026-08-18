@@ -623,11 +623,25 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
       const f = captures.reduce((a, x) => {
         a.probed += x.focus?.probed || 0;
         a.visible += x.focus?.visible || 0;
+        a.ring += x.focus?.ring || 0;
+        a.colourOnly += x.focus?.colourOnly || 0;
+        a.seeded = a.seeded && (x.focus?.seeded !== false);
         a.missing.push(...(x.focus?.missing || []));
         return a;
-      }, { probed: 0, visible: 0, missing: [] });
+      }, { probed: 0, visible: 0, ring: 0, colourOnly: 0, seeded: true, missing: [] });
       auto.A3 = { ratio: f.probed ? f.visible / f.probed : null, matched: f.visible, total: f.probed };
-      if (f.missing.length) {
+      // A capture taken before the focus-visible seeding fix cannot tell a removed
+      // indicator from an unmatched pseudo-class, so it reports nothing rather than 0.
+      if (f.probed && !f.seeded) {
+        auto.A3 = { ratio: null, na: true, reason: 'browser would not enter :focus-visible, so focus styling could not be observed' };
+      } else if (f.colourOnly) {
+        finding('A3', 'minor', `${f.colourOnly} of ${f.probed} controls signal focus by colour change alone`, {
+          found: `${f.colourOnly} colour-only, ${f.ring} with a ring`,
+          expected: 'an indicator with its own shape, not colour alone',
+          fix: 'A colour swap meets SC 2.4.7 but fails SC 2.4.13 Focus Appearance. Add an outline so the indicator survives low vision and greyscale.',
+        });
+      }
+      if (f.missing.length && f.seeded) {
         // Count from probed-minus-visible, never from missing.length — the probe caps
         // its missing[] sample at 20 per capture, so that array understates the failure
         // on any page with more than 20 unfocusable controls.
