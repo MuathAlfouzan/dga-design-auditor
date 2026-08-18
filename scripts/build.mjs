@@ -123,6 +123,14 @@ ${render}
       return verdict;
     },
 
+    /**
+     * Why is a score what it is, and what raises it?
+     *   __dga.explain()                      -> every part, worst first
+     *   __dga.explain({ part: "foundations" })
+     *   __dga.explain({ check: "T1" })       -> what was found, and the fix
+     */
+    explain: function (q) { return explain(api.verdict, q || {}); },
+
     /** Compact markdown for a chat reply. Handles a split or a single verdict. */
     inline: function (v) { return inlineReport(v || api.verdict); },
 

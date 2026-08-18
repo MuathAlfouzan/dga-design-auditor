@@ -7,34 +7,48 @@
     "authority": "Digital Government Authority, Saudi Arabia",
     "source": "https://www.figma.com/community/file/1392264328585493958/components-library-platforms-code"
   },
-
   "bands": [
-    { "id": "compliant", "label": "Compliant", "min": 90 },
-    { "id": "substantial", "label": "Substantially compliant", "min": 75 },
-    { "id": "partial", "label": "Partial", "min": 60 },
-    { "id": "non-compliant", "label": "Non-compliant", "min": 0 }
+    {
+      "id": "compliant",
+      "label": "Compliant",
+      "min": 90
+    },
+    {
+      "id": "substantial",
+      "label": "Substantially compliant",
+      "min": 75
+    },
+    {
+      "id": "partial",
+      "label": "Partial",
+      "min": 60
+    },
+    {
+      "id": "non-compliant",
+      "label": "Non-compliant",
+      "min": 0
+    }
   ],
-
   "$gate": "Government gate: any failed check with blocker:true caps the band at 'partial' regardless of the numeric score. The number is never altered — the band carries the gate, and the report names the blocker that capped it.",
   "blockerCapBand": "partial",
-
   "$passThreshold": "How much compliance counts as a check being 'met' for the X-of-N headline. Ordinary checks pass at 90% — a couple of stray values on a large page is drift, not a failure. Blocker checks pass only at 100%, because WCAG conformance and mark usage are not proportional: one text run below 4.5:1 means the page does not conform, however good the other ninety-nine are.",
-  "passThreshold": { "default": 0.9, "blocker": 1.0 },
-
+  "passThreshold": {
+    "default": 0.9,
+    "blocker": 1
+  },
   "$thresholds": "Tolerances used by the auditor's matchers. deltaE is the CSS Color 4 deltaEOK — Euclidean distance in OKLab, scaled x100 — so 2.0 is about one just-noticeable difference: a designer cannot see a pass and can see a fail.",
   "thresholds": {
-    "colorMatchDeltaE": 2.0,
-    "colorNearMissDeltaE": 10.0,
+    "colorMatchDeltaE": 2,
+    "colorNearMissDeltaE": 10,
     "contrastNormalText": 4.5,
-    "contrastLargeText": 3.0,
-    "contrastNonText": 3.0,
+    "contrastLargeText": 3,
+    "contrastNonText": 3,
     "largeTextPx": 24,
     "largeBoldPx": 18.66,
     "minTargetPx": 24,
     "offPaletteMinOccurrences": 3,
     "coverageIgnoreBelowOccurrences": 1
   },
-
   "categories": [
     {
       "id": "color",
@@ -90,9 +104,9 @@
           "blocker": false,
           "fix": "Point the dark theme at the DGA dark tokens. Inverting or dimming light tokens drifts within one release."
         }
-      ]
+      ],
+      "part": "foundations"
     },
-
     {
       "id": "typography",
       "label": "Typography",
@@ -146,9 +160,9 @@
           "blocker": false,
           "fix": "Set the ramp's paired leading rather than a global multiplier — Arabic ascenders and descenders need the extra room."
         }
-      ]
+      ],
+      "part": "foundations"
     },
-
     {
       "id": "spacing",
       "label": "Spacing & layout",
@@ -190,9 +204,9 @@
           "blocker": false,
           "fix": "Use the rhythm steps for section separation; the page reads as one document rather than stacked fragments."
         }
-      ]
+      ],
+      "part": "foundations"
     },
-
     {
       "id": "shape",
       "label": "Shape & elevation",
@@ -234,9 +248,9 @@
           "blocker": false,
           "fix": "Use the named elevation level. Hand-tuned shadows break the depth ordering the system defines."
         }
-      ]
+      ],
+      "part": "foundations"
     },
-
     {
       "id": "components",
       "label": "Components",
@@ -278,9 +292,9 @@
           "blocker": false,
           "fix": "Restore the specified padding and min-height. Squeezed buttons are also the usual cause of an A4 target-size failure."
         }
-      ]
+      ],
+      "part": "components"
     },
-
     {
       "id": "brand",
       "label": "Iconography & brand",
@@ -310,9 +324,9 @@
           "blocker": true,
           "fix": "Misuse of a government mark is an identity violation. Use the approved asset at approved size with its clear space intact."
         }
-      ]
+      ],
+      "part": "components"
     },
-
     {
       "id": "rtl",
       "label": "RTL & bilingual",
@@ -354,9 +368,9 @@
           "blocker": false,
           "fix": "Mixed numeral systems inside one interface is the most common bilingual defect and the easiest to fix."
         }
-      ]
+      ],
+      "part": "standards"
     },
-
     {
       "id": "a11y",
       "label": "Accessibility",
@@ -410,9 +424,9 @@
           "blocker": false,
           "fix": "Grow the control or its padding. Icon-only buttons are the usual offenders."
         }
-      ]
+      ],
+      "part": "standards"
     },
-
     {
       "id": "motion",
       "label": "Motion",
@@ -442,7 +456,32 @@
           "blocker": false,
           "fix": "Add a reduced-motion block that skips the motion rather than shortening it."
         }
-      ]
+      ],
+      "part": "foundations"
+    }
+  ],
+  "$parts": "Categories roll up into the three parts DGA actually publishes, so a score can be read against the part of the system it belongs to. foundations is what the Foundations file defines; components is the Components Library plus Icons; standards is the RTL and accessibility guidance, which is not a library and is why it is a part of its own rather than being forced into one of the other two. Part scores are normalised to 100 within their own available weight so they are comparable to each other and to the overall.",
+  "parts": [
+    {
+      "id": "foundations",
+      "label": "Foundations",
+      "weight": 58,
+      "source": "Foundations - Platforms Code",
+      "covers": "Colour tokens, the type ramp, the spacing and radius scales, elevation and motion."
+    },
+    {
+      "id": "components",
+      "label": "Components",
+      "weight": 24,
+      "source": "Components Library + Icons - Platforms Code",
+      "covers": "Component anatomy, variants and states, the icon set and official marks."
+    },
+    {
+      "id": "standards",
+      "label": "Standards",
+      "weight": 18,
+      "source": "DGA guidance, not a Figma library",
+      "covers": "RTL and bilingual behaviour, and WCAG accessibility."
     }
   ]
 }

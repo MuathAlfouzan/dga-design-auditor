@@ -329,6 +329,21 @@ const html = `<title>${esc(S.target?.name || 'Design')} Compliance Audit</title>
     </div>
   </section>
 
+  ${S.parts?.length ? `<section class="block">
+    <h2>The three parts of the system</h2>
+    <p class="lede">Each part is scored out of 100 within its own weight, so they can be compared with each other and with the overall. Foundations is what the Foundations file defines; Components is the Components Library and Icons; Standards is the RTL and accessibility guidance, which is not a library and so is a part of its own.</p>
+    <div class="scroll-x"><table class="checks">
+      <thead><tr><th>Part</th><th>Covers</th><th class="num">Score</th><th class="num">Points</th><th class="num">Checks met</th></tr></thead>
+      <tbody>${S.parts.map((p) => `<tr>
+        <th scope="row">${esc(p.label)}<span class="sub">${esc(p.source || "")}</span></th>
+        <td class="req">${esc(p.covers || "")}</td>
+        <td class="num">${p.score == null ? '<span class="dim">n/a</span>' : `${esc(p.score)}<span class="sub">of 100</span>`}</td>
+        <td class="num">${esc(p.earned)}<span class="sub">of ${esc(p.available)}</span></td>
+        <td class="num">${p.checksPassed} of ${p.checksCounted}</td>
+      </tr>`).join("")}</tbody>
+    </table></div>
+  </section>` : ""}
+
   <section class="block">
     <h2>Where the points went</h2>
     <p class="lede">Nine categories, ${S.checksTotal} checks. Each category shows points earned against points available for this target — a check that cannot apply leaves the denominator rather than counting as a failure. Open a row for the individual checks.</p>

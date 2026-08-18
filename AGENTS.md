@@ -271,3 +271,53 @@ one number stand for both.
 `audit({ combined: true })` returns the old single verdict. It exists for the
 regression fixture and for comparing against historical scores; it is not the
 reporting format.
+
+---
+
+## Three parts, and answering "why" and "how do I fix it"
+
+Every verdict rolls its nine categories into the three parts DGA actually publishes,
+so a score can be read against the part of the system it belongs to:
+
+| Part | Pts | Backed by |
+| --- | --: | --- |
+| **Foundations** | 58 | the Foundations file — colour, type ramp, spacing and radius scales, elevation, motion |
+| **Components** | 24 | Components Library + Icons — anatomy, variants, states, icon set, marks |
+| **Standards** | 18 | DGA guidance, not a library — RTL/bilingual and WCAG accessibility |
+
+Standards is a part of its own because it is backed by no library; folding it into
+either of the others would misattribute an accessibility failure to a component.
+
+Each part is **normalised to 100 within its own weight**, so `Foundations 66` and
+`Components 57` are directly comparable. `earned/available` keeps the raw points,
+which is what says where the real cost is.
+
+**The rollup never changes the overall.** A grouping that moves the number is a
+re-weighting in disguise; `parts.test.mjs` pins the fixture at 64.89 through it.
+
+### The site-level overall is the worst viewport
+
+`split.overall` takes the **weaker** viewport, not an average — per part as well as
+in total. An average lets a strong desktop hide a failing phone, which is the blur
+the viewport split exists to remove. It carries `from` (which viewport it came from)
+and `basis` (saying it is not a mean), so nobody has to assume.
+
+### Answering questions
+
+```js
+__dga.explain()                       // every part, worst first
+__dga.explain({ part: 'components' }) // one part: points lost, and what recovers them
+__dga.explain({ check: 'T1' })        // one check: what was found, versus what was expected, and the fix
+```
+
+Every answer has the same shape — **what was lost, why, and what recovers it** — and
+`recoverable` is sorted by points, because "fix this and gain 5" is actionable in a
+way that "this failed" is not.
+
+Judged checks (`P1`–`P3`, `C3`, `I1`, `I2`) carry a stated count in `notes` rather
+than findings, and `explain` reads both. Those are the checks people ask about most,
+so an explanation that only read findings would come back empty exactly where it
+matters.
+
+When the user asks about a split, `explain` answers per viewport — the same question
+can have different answers at 1440 and 390, which is the point of scoring them apart.

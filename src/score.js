@@ -702,8 +702,149 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
     cappedFrom,
     failedBlockers,
     unassessed,
+    parts: rollUpParts(rubric, categories, findings, round2),
     categories,
     findings,
+  };
+}
+
+/* ---------------------------------------------------------------- parts */
+
+/**
+ * Roll the nine categories up into the parts DGA actually publishes, so a score
+ * can be read against the part of the system it belongs to.
+ *
+ * Each part is normalised to 100 within its own available weight. That makes
+ * them comparable to each other and to the overall — 40/58 and 12/24 are hard to
+ * weigh by eye, 69 and 50 are not. `weightedShare` keeps the raw points, because
+ * that is what says which part is actually costing the most.
+ */
+export function rollUpParts(rubric, categories, findings, round2 = (n) => Math.round(n * 100) / 100) {
+  const defs = rubric.parts || [];
+  const byId = Object.fromEntries(categories.map((c) => [c.id, c]));
+  const findingsByCheck = new Map();
+  for (const f of findings) {
+    if (!findingsByCheck.has(f.checkId)) findingsByCheck.set(f.checkId, []);
+    findingsByCheck.get(f.checkId).push(f);
+  }
+
+  return defs.map((def) => {
+    const cats = rubric.categories.filter((c) => c.part === def.id).map((c) => byId[c.id]).filter(Boolean);
+    const earned = cats.reduce((a, c) => a + c.earned, 0);
+    const available = cats.reduce((a, c) => a + c.available, 0);
+    const checks = cats.flatMap((c) => c.checks);
+    const graded = checks.filter((k) => k.status === 'pass' || k.status === 'fail');
+    const failed = graded.filter((k) => k.status === 'fail');
+    return {
+      id: def.id,
+      label: def.label,
+      source: def.source,
+      covers: def.covers,
+      weight: def.weight,
+      earned: round2(earned),
+      available: round2(available),
+      // null, not 0, when nothing in the part could be measured — a part with no
+      // applicable checks has no score, and 0 would read as total failure.
+      score: available > 0 ? round2((earned / available) * 100) : null,
+      weightedShare: round2(earned),
+      checksPassed: graded.filter((k) => k.status === 'pass').length,
+      checksCounted: graded.length,
+      categories: cats.map((c) => c.id),
+      // What it would take to make this part whole, biggest win first.
+      recoverable: failed
+        .map((k) => ({
+          checkId: k.id,
+          title: k.title,
+          points: round2((k.available ?? k.weight) - (k.earned ?? 0)),
+          ratio: k.ratio ?? null,
+          blocker: !!k.blocker,
+          fix: k.fix,
+          findings: (findingsByCheck.get(k.id) || []).length,
+        }))
+        .sort((a, b) => b.points - a.points),
+      failedBlockers: failed.filter((k) => k.blocker).map((k) => k.id),
+    };
+  });
+}
+
+/* --------------------------------------------------------------- explain */
+
+/**
+ * Why is this score what it is, and what would raise it?
+ *
+ * Answers a question about the whole verdict, one part, or one check, always in
+ * the same shape: what was lost, why, and what recovers it. Points are the
+ * ordering, because "fix this and gain 5" is actionable in a way that "this
+ * failed" is not.
+ *
+ *   explain(verdict)                    -> the whole thing, worst first
+ *   explain(verdict, { part: 'foundations' })
+ *   explain(verdict, { check: 'T1' })
+ */
+export function explain(verdict, { part = null, check = null, maxFindings = 6 } = {}) {
+  if (verdict && verdict.schema === 'dga-score-split/1') {
+    return {
+      scope: 'split',
+      viewports: verdict.viewports
+        .filter((v) => v.captured)
+        .map((v) => ({ id: v.id, label: v.label, ...explain(v.verdict, { part, check, maxFindings }) })),
+    };
+  }
+
+  const allChecks = verdict.categories.flatMap((c) => c.checks);
+  const byCheck = (id) => allChecks.find((k) => k.id === id);
+
+  if (check) {
+    const k = byCheck(check);
+    if (!k) return { scope: 'check', checkId: check, error: `No check ${check} in this rubric.` };
+    const fs = verdict.findings.filter((f) => f.checkId === check);
+    return {
+      scope: 'check', checkId: k.id, title: k.title, status: k.status,
+      description: k.description,
+      lost: k.status === 'fail' ? Math.round(((k.available ?? k.weight) - (k.earned ?? 0)) * 100) / 100 : 0,
+      of: k.available ?? k.weight,
+      ratio: k.ratio ?? null,
+      measured: k.measured ?? null,
+      reason: k.reason ?? null,
+      notes: k.notes ?? null,
+      blocker: !!k.blocker,
+      why: fs.length
+        ? fs.slice(0, maxFindings).map((f) => ({
+            summary: f.summary, found: f.found, expected: f.expected,
+            occurrences: f.occurrences ?? 1, where: (f.where || []).slice(0, 3),
+          }))
+        : (k.notes ? [{ summary: k.notes, assessed: true }] : []),
+      moreFindings: Math.max(0, fs.length - maxFindings),
+      fix: k.fix,
+    };
+  }
+
+  const parts = verdict.parts || [];
+  const scope = part ? parts.filter((p) => p.id === part) : parts;
+  if (part && !scope.length) return { scope: 'part', part, error: `No part "${part}". Try: ${parts.map((p) => p.id).join(', ')}.` };
+
+  return {
+    scope: part ? 'part' : 'verdict',
+    score: verdict.score,
+    band: verdict.band,
+    parts: scope.map((p) => ({
+      id: p.id, label: p.label, score: p.score, earned: p.earned, available: p.available,
+      checksPassed: p.checksPassed, checksCounted: p.checksCounted,
+      lost: Math.round((p.available - p.earned) * 100) / 100,
+      recoverable: p.recoverable.map((r) => {
+        const fs = verdict.findings.filter((f) => f.checkId === r.checkId);
+        const k = byCheck(r.checkId);
+        return {
+          ...r,
+          // Judged checks produce a stated count in `notes` rather than findings,
+          // so a "why" that only read findings came back empty on exactly the
+          // checks a person is most likely to ask about.
+          why: fs.length
+            ? fs.slice(0, 3).map((f) => ({ summary: f.summary, found: f.found, expected: f.expected, occurrences: f.occurrences ?? 1 }))
+            : (k?.notes ? [{ summary: k.notes, assessed: true }] : []),
+        };
+      }),
+    })),
   };
 }
 
@@ -746,6 +887,29 @@ export function scoreByViewport({ rubric, tokens, captures = [], judged = {}, op
   });
 
   const scored = viewports.filter((v) => v.captured);
+
+  // A site-level figure, taken as the WORST viewport rather than an average.
+  // Averaging would let a strong desktop hide a failing phone, which is the
+  // blur the split exists to remove; a gate takes the weakest reading. Named
+  // `overall` because that is what it answers, and `basis` says how, so nobody
+  // has to assume it is a mean.
+  const worst = scored.length
+    ? scored.reduce((a, b) => (b.verdict.score < a.verdict.score ? b : a))
+    : null;
+
+  // Part scores across the site follow the same rule, part by part: a part is
+  // only as compliant as its weakest viewport.
+  const partIds = (rubric.parts || []).map((p) => p.id);
+  const overallParts = partIds.map((id) => {
+    const rows = scored.map((v) => ({ v, p: (v.verdict.parts || []).find((x) => x.id === id) })).filter((r) => r.p && r.p.score != null);
+    if (!rows.length) return { id, label: (rubric.parts.find((p) => p.id === id) || {}).label, score: null, note: 'not measurable in any captured viewport' };
+    const w = rows.reduce((a, b) => (b.p.score < a.p.score ? b : a));
+    return {
+      id, label: w.p.label, score: w.p.score, from: w.v.id,
+      byViewport: rows.map((r) => ({ viewport: r.v.id, score: r.p.score, earned: r.p.earned, available: r.p.available })),
+    };
+  });
+
   return {
     schema: 'dga-score-split/1',
     standard: rubric.standard,
@@ -754,9 +918,19 @@ export function scoreByViewport({ rubric, tokens, captures = [], judged = {}, op
     scoredAt: new Date().toISOString(),
     breakpoint: webMin,
     viewports,
-    // Deliberately no combined score. Averaging two viewports reintroduces the
-    // blur this split exists to remove.
-    worstBand: scored.length ? scored.map((v) => v.verdict.band).sort((a, b) => a.min - b.min)[0] ?? scored[0].verdict.band : null,
+    overall: worst
+      ? {
+          score: worst.verdict.score,
+          band: worst.verdict.band,
+          cappedFrom: worst.verdict.cappedFrom,
+          from: worst.id,
+          basis: 'worst viewport, not an average — a site is only as compliant as its weakest viewport',
+          parts: overallParts,
+          incomplete: scored.length < viewports.length
+            ? `Only ${scored.map((v) => v.label.toLowerCase()).join(' and ')} was captured, so this is not a full site reading.`
+            : null,
+        }
+      : null,
   };
 }
 
@@ -773,6 +947,14 @@ export function inlineReport(v, { maxFindings = 3 } = {}) {
       `A service cannot be reported as compliant while failing these.`);
   }
   L.push('');
+  if (v.parts?.length) {
+    L.push('| Part | Score | Points | Checks met |');
+    L.push('| --- | --- | --- | --- |');
+    for (const p of v.parts) {
+      L.push(`| **${p.label}** | ${p.score == null ? 'n/a' : `${p.score}/100`} | ${p.earned}/${p.available} | ${p.checksPassed} of ${p.checksCounted} |`);
+    }
+    L.push('');
+  }
   L.push('| Category | Points |');
   L.push('| --- | --- |');
   for (const c of v.categories) {
@@ -821,7 +1003,26 @@ export function inlineSplitReport(split, { maxFindings = 3 } = {}) {
   L.push('');
 
   const scored = split.viewports.filter((v) => v.captured);
+  if (split.overall) {
+    L.push(`**Overall ${split.overall.score}/100 · ${split.overall.band.label}** — the ${split.overall.from} reading, which is the weaker one. Not an average: a site is only as compliant as its weakest viewport.`);
+    if (split.overall.incomplete) L.push(`> ⚠ ${split.overall.incomplete}`);
+    L.push('');
+  }
   if (scored.length) {
+    // Parts across viewports, which is the table most questions are actually about.
+    const partIds = (split.overall?.parts || []).map((p) => p.id);
+    if (partIds.length) {
+      L.push(`| Part | ${scored.map((v) => v.label).join(' | ')} | Overall |`);
+      L.push(`| --- | ${scored.map(() => '---').join(' | ')} | --- |`);
+      for (const op of split.overall.parts) {
+        const cells = scored.map((v) => {
+          const p = (v.verdict.parts || []).find((x) => x.id === op.id);
+          return p && p.score != null ? `${p.score}` : 'n/a';
+        });
+        L.push(`| **${op.label}** | ${cells.join(' | ')} | ${op.score == null ? 'n/a' : `**${op.score}**`} |`);
+      }
+      L.push('');
+    }
     L.push('| Viewport | Score | Checks met | Band |');
     L.push('| --- | --- | --- | --- |');
     for (const v of scored) {
