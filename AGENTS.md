@@ -91,8 +91,15 @@ Read `__dga.components` first, so you are comparing against a spec rather than a
 impression. Pass results into the final `audit()` call:
 
 ```js
-__dga.audit({ label: 'mobile-375', judged: { P1: { ratio: 0.62, notes: '11 of 18 instances' } } })
+__dga.audit({ label: 'mobile-375', judged: {
+  P1: { ratio: 0.611, counted: { matched: 11, total: 18 }, notes: 'bespoke buttons, pill radius' }
+} })
 ```
+
+`counted` is **required**. The engine recomputes the ratio from it, rejects the pair if
+they disagree by more than a rounding step, and reports the count beside the score. A
+bare `ratio` is refused, because 0.62 with nothing behind it cannot be checked by the
+person reading the scorecard — and the judged checks are 27 of the 100 points.
 
 | Check | What to judge |
 | --- | --- |
@@ -111,6 +118,25 @@ evidence, and for `I2` it would move a government identity gate on nothing.
 By default the engine **refuses to score** when a judged check is neither assessed nor
 marked `na`, because silently dropping the component checks is how a rebuild scores as
 compliant.
+
+### Coverage — read this before reporting any number
+
+The score is `earned / available`, so **every check that leaves the denominator makes
+the rest count for more.** Measuring less raises the number. On the regression fixture,
+marking six checks `na` moves it from 64.89 to 82.43.
+
+The verdict therefore carries a `coverage` block, and every report must state it:
+
+- `coverage.pct` — how much of the applicable rubric was actually measured
+- `coverage.dropped` — every missing check with its weight and the reason
+- `provisional` — true below the evidence floor; the band is capped and cannot read
+  above Partial however high the number goes
+
+Two gaps, two treatments. A gap you **chose** — `na`, or an automated-only run that
+skips the judged checks — scores, flagged provisional. A gap **nobody chose**, where
+the engine expected a measurement and got nothing, stops the audit with
+`SILENT_COVERAGE_LOSS`: that is a broken capture, and a broken capture reads as a
+better site. Never report a bare score without its coverage.
 
 ---
 

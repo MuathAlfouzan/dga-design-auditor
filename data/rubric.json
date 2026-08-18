@@ -47,7 +47,9 @@
     "largeBoldPx": 18.66,
     "minTargetPx": 24,
     "offPaletteMinOccurrences": 3,
-    "coverageIgnoreBelowOccurrences": 1
+    "coverageIgnoreBelowOccurrences": 1,
+    "minCoverage": 0.75,
+    "maxSilentDropWeight": 15
   },
   "categories": [
     {

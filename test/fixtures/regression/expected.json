@@ -1,9 +1,9 @@
 {
-  "$comment": "Baseline verdict recorded by the original Node engine on a real government portal, before the pure-core extraction. The captures beside this file are that page with its identity removed — URLs, titles, selectors, text content and custom properties all replaced. None of that feeds the maths, which is why the verdict is unchanged; that it is unchanged is itself evidence the scrub touched nothing load-bearing.",
+  "$comment": "Baseline verdict recorded by the original Node engine on a real government portal, before the pure-core extraction. The captures beside this file are that page with its identity removed — URLs, titles, selectors, text content and custom properties all replaced. None of that feeds the maths, which is why the verdict is unchanged; that it is unchanged is itself evidence the scrub touched nothing load-bearing. NOTE on the one deliberate re-baseline: earned moved 55.81 -> 55.80 when judged ratios began being computed FROM their counts (31/38 = 0.815789) instead of the rounded value restated beside them (0.816). Nothing measured changed. NOTE on A3: this capture predates the :focus-visible seeding fix, so its '80 of 80' finding is a known false positive of the old probe. It is pinned deliberately — captures without a `seeded` flag keep their original treatment, which is what makes this fixture a stable test of the scoring maths rather than of the probe.",
   "score": 64.89,
   "checksPassed": 8,
   "checksCounted": 23,
-  "earned": 55.81,
+  "earned": 55.8,
   "available": 86,
   "band": "partial",
   "cappedFrom": null,

@@ -74,6 +74,8 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
     targetUrl = null,
     na: naList = [],
     allowUnassessed = false,
+    allowUncountedJudged = false,
+    allowLowCoverage = false,
   } = options;
 
   if (!tokens || !tokens.synced) {
@@ -716,8 +718,9 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
   const PASS_BLOCKER = rubric.passThreshold?.blocker ?? 1.0;
 
   const unassessed = [];
+  const dropped = [];
   const categories = [];
-  let earnedTotal = 0, availableTotal = 0, checksPassed = 0, checksCounted = 0;
+  let earnedTotal = 0, availableTotal = 0, applicableTotal = 0, checksPassed = 0, checksCounted = 0;
   const failedBlockers = [];
 
   for (const cat of rubric.categories) {
@@ -728,21 +731,70 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
       const forcedNa = naList.includes(chk.id);
       const result = chk.method === 'auto' ? auto[chk.id] : judged[chk.id];
 
-      if (!applies || forcedNa) {
-        outChecks.push({ ...meta(chk), status: 'n/a', reason: forcedNa ? 'marked N/A for this audit' : `only applies to ${chk.applies_to} targets` });
+      // A check that does not apply to this KIND of target was never in scope, so it
+      // is not a coverage gap — a Figma frame has no runtime motion preference.
+      if (!applies) {
+        outChecks.push({ ...meta(chk), status: 'n/a', reason: `only applies to ${chk.applies_to} targets` });
+        continue;
+      }
+      // Everything past this point could have been measured. Whether it was is the
+      // coverage question, and every miss is recorded with its weight and its reason.
+      applicableTotal += chk.weight;
+
+      if (forcedNa) {
+        dropped.push({ id: chk.id, weight: chk.weight, kind: 'forced', reason: 'marked N/A for this audit' });
+        outChecks.push({ ...meta(chk), status: 'n/a', reason: 'marked N/A for this audit' });
         continue;
       }
       if (chk.method === 'judged' && (!result || typeof result.ratio !== 'number')) {
         unassessed.push(chk.id);
+        dropped.push({ id: chk.id, weight: chk.weight, kind: 'unassessed', reason: 'judged check was never assessed' });
         outChecks.push({ ...meta(chk), status: 'unassessed' });
         continue;
       }
       if (!result || result.na || result.ratio == null) {
-        outChecks.push({ ...meta(chk), status: 'n/a', reason: result?.reason || 'nothing of this kind present to measure' });
+        const why = result?.reason || 'nothing of this kind present to measure';
+        dropped.push({ id: chk.id, weight: chk.weight, kind: 'unmeasurable', reason: why });
+        outChecks.push({ ...meta(chk), status: 'n/a', reason: why });
         continue;
       }
 
-      const ratio = Math.max(0, Math.min(1, result.ratio));
+      // A judgement without a count is unfalsifiable: nobody can check 0.51 against
+      // anything. Requiring the count is what let the button reading be challenged.
+      let raw = result.ratio;
+      if (chk.method === 'judged' && !allowUncountedJudged) {
+        const c = result.counted;
+        if (!c || !Number.isFinite(c.matched) || !Number.isFinite(c.total) || c.total <= 0) {
+          throw new DgaError(
+            'JUDGED_WITHOUT_COUNT',
+            `${chk.id} was given a bare ratio (${result.ratio}) with no count. Supply ` +
+              `counted: { matched, total } so the number can be checked, or set allowUncountedJudged.`,
+            { checkId: chk.id }
+          );
+        }
+        const implied = c.matched / c.total;
+        if (Math.abs(implied - result.ratio) > 0.01) {
+          throw new DgaError(
+            'JUDGED_COUNT_MISMATCH',
+            `${chk.id} states ratio ${result.ratio} but its count says ${c.matched}/${c.total} = ` +
+              `${implied.toFixed(4)}. The number and the evidence for it have drifted apart.`,
+            { checkId: chk.id, stated: result.ratio, implied }
+          );
+        }
+        raw = implied;   // the count is the source of truth, not the rounded restatement
+      }
+
+      // Out of range means a counting bug upstream. Clamping it silently turns that
+      // bug into a free perfect score, which is precisely how it would stay hidden.
+      if (!Number.isFinite(raw) || raw < -1e-9 || raw > 1 + 1e-9) {
+        throw new DgaError(
+          'RATIO_OUT_OF_RANGE',
+          `${chk.id} produced a ratio of ${raw}, which is not a fraction between 0 and 1. ` +
+            'Something counted wrong; refusing to clamp it into a score.',
+          { checkId: chk.id, ratio: raw }
+        );
+      }
+      const ratio = Math.max(0, Math.min(1, raw));
       const pts = chk.scoring === 'binary' ? (ratio >= 1 ? chk.weight : 0) : chk.weight * ratio;
       earned += pts;
       available += chk.weight;
@@ -777,16 +829,76 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
     );
   }
 
+  /* -------------------------------------------------------------- coverage */
+
+  // The score is earned/available, so every check that drops out of `available`
+  // makes the remaining ones count for more. Measuring LESS therefore raises the
+  // number. That is not hypothetical: a capture once filed itself under the wrong
+  // colour scheme, the entire 18-point colour category went n/a, and the site
+  // scored HIGHER for never having been measured. Nothing warned, because nothing
+  // was looking at the denominator.
+  //
+  // So the denominator is now part of the verdict, itemised, and there is a floor
+  // under it. A number computed from a third of the rubric is not a lower-confidence
+  // score — it is a different measurement wearing the same units.
+  // Two kinds of gap, and they are not the same risk.
+  //
+  //   acknowledged — someone passed --na, or left a judged check unassessed. A
+  //                  deliberate scope decision. An automated-only audit legitimately
+  //                  skips all 27 points of judged checks; that is a real mode, not
+  //                  an error, and it must stay possible.
+  //   silent       — the engine could not measure something it expected to. Nobody
+  //                  chose this and nobody will notice it. THIS is the dark-mode bug:
+  //                  18 points of colour quietly became unmeasurable and the score
+  //                  went UP. A budget on it turns that class of failure into a stop.
+  //
+  // So: refuse what nobody chose; label what someone did.
+  const coveragePct = applicableTotal > 0 ? availableTotal / applicableTotal : 0;
+  const minCoverage = rubric.thresholds?.minCoverage ?? 0.75;
+  const maxSilent = rubric.thresholds?.maxSilentDropWeight ?? 15;
+  const silent = dropped.filter((d) => d.kind === 'unmeasurable');
+  const silentWeight = silent.reduce((a, d) => a + d.weight, 0);
+
+  const coverage = {
+    measuredWeight: round2(availableTotal),
+    applicableWeight: round2(applicableTotal),
+    pct: round2(coveragePct * 100),
+    floor: round2(minCoverage * 100),
+    silentWeight: round2(silentWeight),
+    silentBudget: maxSilent,
+    dropped: dropped.sort((a, b) => b.weight - a.weight),
+  };
+
+  if (silentWeight > maxSilent && !allowLowCoverage) {
+    throw new DgaError(
+      'SILENT_COVERAGE_LOSS',
+      `${round2(silentWeight)} points of the rubric could not be measured at all, over a budget of ` +
+        `${maxSilent}: ` + silent.map((d) => `${d.id} (${d.weight}pt, ${d.reason})`).join('; ') +
+        '. Nobody asked for these to be skipped, so this is a broken capture rather than a ' +
+        'scoping decision — and because the score is earned/available, a broken capture reads ' +
+        'as a better site. Fix the capture, or set allowLowCoverage to score it anyway.',
+      { coverage }
+    );
+  }
+
   const finalScore = availableTotal > 0 ? round2((earnedTotal / availableTotal) * 100) : 0;
 
   let band = rubric.bands.find((b) => finalScore >= b.min) || rubric.bands[rubric.bands.length - 1];
   const capIndex = rubric.bands.findIndex((b) => b.id === rubric.blockerCapBand);
-  const bandIndex = rubric.bands.findIndex((b) => b.id === band.id);
   let cappedFrom = null;
-  if (failedBlockers.length && bandIndex < capIndex) {
-    cappedFrom = band.label;
-    band = rubric.bands[capIndex];
-  }
+  const capReasons = [];
+  const capTo = (why) => {
+    const at = rubric.bands.findIndex((b) => b.id === band.id);
+    capReasons.push(why);
+    if (at < capIndex) { cappedFrom = cappedFrom ?? band.label; band = rubric.bands[capIndex]; }
+  };
+  if (failedBlockers.length) capTo(`${failedBlockers.length} blocker check(s) failed`);
+  // Thin evidence caps the band too. Either gate counts: coverage below the floor, or
+  // a silent loss that was forced through. A verdict standing on 60% of the rubric
+  // cannot claim a band the other 40% never had a chance to disprove.
+  if (coveragePct < minCoverage) capTo(`only ${coverage.pct}% of the rubric was measured`);
+  if (silentWeight > maxSilent) capTo(`${round2(silentWeight)} points could not be measured at all`);
+  const provisional = coveragePct < minCoverage || silentWeight > maxSilent;
 
   const severityRank = { blocker: 0, major: 1, minor: 2 };
   findings.sort((a, b) => severityRank[a.severity] - severityRank[b.severity] || (b.occurrences || 0) - (a.occurrences || 0));
@@ -810,6 +922,9 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
     checksTotal: rubric.categories.reduce((a, c) => a + c.checks.length, 0),
     band: { id: band.id, label: band.label },
     cappedFrom,
+    capReasons,
+    coverage,
+    provisional,
     failedBlockers,
     unassessed,
     parts: rollUpParts(rubric, categories, findings, round2),
@@ -978,9 +1093,25 @@ export function scoreByViewport({ rubric, tokens, captures = [], judged = {}, op
   const bps = (tokens.breakpoints && tokens.breakpoints.list) || [];
   const webMin = bps.filter((b) => b.min > 0).map((b) => b.min).sort((a, b) => a - b)[0] ?? 768;
 
+  // A capture with no width used to fall through `?? 0` and land silently in Mobile,
+  // where it polluted a viewport it was never taken at. Same shape as the bug that
+  // filed captures under the wrong colour scheme: a missing field quietly became a
+  // real-looking value. Refuse it instead.
+  const widthless = captures.filter((c) => !Number.isFinite(c.viewport?.width));
+  if (widthless.length) {
+    throw new DgaError(
+      'CAPTURE_WITHOUT_VIEWPORT',
+      `${widthless.length} capture(s) carry no viewport width: ` +
+        `${widthless.map((c) => c.label || '(unlabelled)').join(', ')}. ` +
+        'A viewport split cannot place them, and defaulting them to mobile would ' +
+        'report findings against a width they were never taken at.',
+      { labels: widthless.map((c) => c.label ?? null) }
+    );
+  }
+
   const groups = [
-    { id: 'web', label: 'Web', match: (c) => (c.viewport?.width ?? 0) >= webMin },
-    { id: 'mobile', label: 'Mobile', match: (c) => (c.viewport?.width ?? 0) < webMin },
+    { id: 'web', label: 'Web', match: (c) => c.viewport.width >= webMin },
+    { id: 'mobile', label: 'Mobile', match: (c) => c.viewport.width < webMin },
   ];
 
   const viewports = groups.map((g) => {
@@ -1053,8 +1184,16 @@ export function inlineReport(v, { maxFindings = 3 } = {}) {
   const L = [];
   L.push(`**${v.target.name} — ${v.score}/100 · ${v.checksPassed} of ${v.checksCounted} checks met · ${v.band.label}**`);
   if (v.cappedFrom) {
-    L.push(`> Capped from **${v.cappedFrom}** by ${v.failedBlockers.map((b) => `\`${b.id}\` ${b.title}`).join(', ')}. ` +
+    L.push(`> Capped from **${v.cappedFrom}** by ${(v.capReasons || []).join('; ') || v.failedBlockers.map((b) => `\`${b.id}\` ${b.title}`).join(', ')}. ` +
       `A service cannot be reported as compliant while failing these.`);
+  }
+  // The denominator, stated. A score off 60% of the rubric is a different measurement
+  // from a score off all of it, and the reader cannot tell them apart from the number.
+  if (v.coverage && v.coverage.pct < 100) {
+    const worst3 = v.coverage.dropped.slice(0, 3).map((d) => `\`${d.id}\` ${d.reason}`).join(', ');
+    L.push(`> Measured **${v.coverage.pct}%** of the rubric (${v.coverage.measuredWeight} of ${v.coverage.applicableWeight} points).` +
+      ` Not measured: ${worst3}${v.coverage.dropped.length > 3 ? `, +${v.coverage.dropped.length - 3} more` : ''}.` +
+      (v.provisional ? ' **Provisional** — below the evidence floor.' : ''));
   }
   L.push('');
   if (v.parts?.length) {

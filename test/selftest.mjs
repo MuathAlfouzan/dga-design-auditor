@@ -116,8 +116,12 @@ function capture({ label, width, container, gutter, textRuns = 100, textPassing 
   };
 }
 
+// Judged checks must carry the count their ratio came from — score() recomputes the
+// ratio from it and rejects the pair if they disagree, so a judgement can always be
+// checked against something. 12 of 12 is the fixture's "fully compliant".
 const judgedPerfect = Object.fromEntries(
-  ['C3', 'P1', 'P2', 'P3', 'I1', 'I2'].map((id) => [id, { ratio: 1, notes: 'fixture: fully compliant' }])
+  ['C3', 'P1', 'P2', 'P3', 'I1', 'I2'].map((id) => [id,
+    { ratio: 1, counted: { matched: 12, total: 12 }, notes: 'fixture: fully compliant' }])
 );
 
 const w = (name, obj) => {
@@ -129,7 +133,10 @@ const w = (name, obj) => {
 const tokensPath = w('tokens.json', tokens);
 const unsyncedPath = w('tokens-unsynced.json', { ...tokens, synced: null });
 const judgedPath = w('judged.json', judgedPerfect);
-const judgedPartialPath = w('judged-partial.json', { C3: { ratio: 1 }, P1: { ratio: 1 } });
+const judgedPartialPath = w('judged-partial.json', {
+  C3: { ratio: 1, counted: { matched: 12, total: 12 } },
+  P1: { ratio: 1, counted: { matched: 12, total: 12 } },
+});
 
 const desktop = w('observed-desktop.json', capture({ label: 'desktop-light', width: 1280, container: 1200, gutter: 24 }));
 const mobile = w('observed-mobile.json', capture({ label: 'mobile-light', width: 375, container: 375, gutter: 16 }));
@@ -156,23 +163,24 @@ const failing = w(
 // and keeping them meant none of the 13 assertions had to change when scoring
 // moved out of Node and into the page.
 const rubric = JSON.parse(readFileSync(resolve(HERE, '../data/rubric.json'), 'utf8'));
-const CODES = { NO_CAPTURES: 2, LEDGER_UNSYNCED: 3, UNASSESSED_JUDGED: 4 };
+const CODES = { NO_CAPTURES: 2, LEDGER_UNSYNCED: 3, UNASSESSED_JUDGED: 4, SILENT_COVERAGE_LOSS: 5 };
 
 function run(extra, expectCode = 0, tokensFile = tokensPath) {
   const captures = [];
-  let judged = {}, na = [];
+  let judged = {}, na = [], allowLowCoverage = false;
   for (let i = 0; i < extra.length; i += 2) {
     const flag = extra[i], val = extra[i + 1];
     if (flag === '--observed') captures.push(JSON.parse(readFileSync(val, 'utf8')));
     else if (flag === '--judged') judged = JSON.parse(readFileSync(val, 'utf8'));
     else if (flag === '--na') na = val.split(',');
+    else if (flag === '--allow-low-coverage') { allowLowCoverage = true; i -= 1; }
   }
   try {
     const json = score({
       rubric,
       tokens: JSON.parse(readFileSync(tokensFile, 'utf8')),
       captures, judged,
-      options: { targetType: 'site', targetName: 'Fixture', na },
+      options: { targetType: 'site', targetName: 'Fixture', na, allowLowCoverage },
     });
     return { ok: expectCode === 0, status: 0, stderr: '', json };
   } catch (e) {
@@ -244,16 +252,33 @@ check(
   `C1 ${dmColour?.checks?.find((k) => k.id === 'C1')?.status} — ${dmColour?.checks?.find((k) => k.id === 'C1')?.reason || ''}`
 );
 
-/* …while a genuinely dark page still routes to the dark set, which is empty in
-   this ledger, so C1 correctly finds nothing. */
-const trulyDark = run([
+/* …while a genuinely dark page still routes to the dark set. That set is empty in
+   this ledger, so the whole colour category becomes unmeasurable — and because
+   nobody asked for it to be skipped, that is a SILENT loss and the audit stops.
+   This is the honest outcome: DGA publishes no dark tokens, so a dark site cannot
+   be scored for colour, and a score that quietly omitted 15 points would read as
+   better than one that measured them. */
+const darkArgs = [
   '--observed', w('observed-trulydark.json', capture({ label: 'dark', width: 1280, container: 1200, gutter: 24, colorScheme: 'dark', renderedScheme: 'dark' })),
   '--judged', judgedPath,
-]);
+];
+const trulyDarkRefused = run(darkArgs, 5);
+check(
+  'a dark render against a ledger with no dark set refuses to score',
+  trulyDarkRefused.ok && /C1|C2/.test(trulyDarkRefused.stderr),
+  `exit ${trulyDarkRefused.status} — ${trulyDarkRefused.stderr.slice(0, 120)}`
+);
+
+const trulyDark = run([...darkArgs, '--allow-low-coverage']);
 check(
   'a genuinely dark render still routes to the dark set',
   trulyDark.json?.categories?.find((c) => c.id === 'color')?.checks?.find((k) => k.id === 'C1')?.status === 'n/a',
   `C1 ${trulyDark.json?.categories?.find((c) => c.id === 'color')?.checks?.find((k) => k.id === 'C1')?.status}`
+);
+check(
+  '…and forcing it through marks the verdict provisional',
+  trulyDark.json?.provisional === true,
+  `provisional=${trulyDark.json?.provisional} coverage=${trulyDark.json?.coverage?.pct}%`
 );
 
 console.log('\n  ' + '─'.repeat(50));

@@ -1,15 +1,18 @@
 {
-  "$comment": "Judged-check ratios for the regression fixture. Each is a counted assessment made against data/components.json on the desktop capture. C3, I1 and I2 are absent by design — they were passed --na, which is part of what this fixture pins.",
+  "$comment": "Judged-check ratios for the regression fixture. Each is a counted assessment made against data/components.json on the desktop capture. C3, I1 and I2 are absent by design — they were passed --na, which is part of what this fixture pins. `counted` is the evidence the ratio is derived from; score() recomputes the ratio from it and rejects the pair if they disagree, so the number can never drift away from what was actually counted.",
   "P1": {
     "ratio": 0.816,
+    "counted": { "matched": 31, "total": 38 },
     "notes": "31 of 38 instances compliant (prose removed with the source page)"
   },
   "P2": {
     "ratio": 0.531,
+    "counted": { "matched": 17, "total": 32 },
     "notes": "17 of 32 instances compliant (prose removed with the source page)"
   },
   "P3": {
     "ratio": 0.211,
+    "counted": { "matched": 8, "total": 38 },
     "notes": "8 of 38 instances compliant (prose removed with the source page)"
   }
 }
