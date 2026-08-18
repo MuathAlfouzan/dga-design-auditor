@@ -361,3 +361,77 @@ const html = `<title>${esc(S.target?.name || 'Design')} Compliance Audit</title>
 
   return html;
 }
+
+/* ------------------------------------------------- split: web vs mobile */
+
+/**
+ * Two viewports on one page, each with its own score.
+ *
+ * Built by rendering each verdict through renderScorecard and stitching the
+ * bodies under one masthead — the per-verdict renderer stays untouched and
+ * therefore stays the thing the tests already cover. The shared header carries
+ * the comparison, which is the reason for the split: seeing 63.6 against 66.4
+ * tells you where to look, and a single blended 64.9 does not.
+ */
+export function renderSplitScorecard(split, { shots = [] } = {}) {
+  const scored = split.viewports.filter((v) => v.captured);
+  if (!scored.length) throw new Error('renderSplitScorecard: no captured viewport to render');
+
+  const parts = scored.map((v) => ({ v, html: renderScorecard(v.verdict, { shots }) }));
+  const head = parts[0].html.slice(0, parts[0].html.indexOf('<div class="wrap">'));
+
+  const bodyOf = (html) => {
+    const open = html.indexOf('<div class="wrap">') + '<div class="wrap">'.length;
+    const close = html.lastIndexOf('</div>');
+    return html
+      .slice(open, close)
+      // one masthead for the page, not one per viewport
+      .replace(/<header class="masthead">[\s\S]*?<\/header>/, '');
+  };
+
+  const e = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const tone = (b) => ({ compliant: 'pass', substantial: 'pass', partial: 'warn', 'non-compliant': 'fail' }[b] || 'warn');
+
+  const compare = `
+  <section class="block" style="margin-top:0">
+    <h2>Two viewports, scored separately</h2>
+    <p class="lede">A page can pass at desktop width and fail at phone width — target sizes and containers are
+    properties of a viewport, not of a site. Blending them into one number describes neither, so each is scored
+    on its own. Split at ${split.breakpoint}px, the DGA desktop breakpoint.</p>
+    <div class="scroll-x">
+      <table class="checks">
+        <thead><tr><th>Viewport</th><th class="num">Score</th><th class="num">Checks met</th><th>Band</th></tr></thead>
+        <tbody>
+        ${scored.map((v) => `<tr>
+          <th scope="row">${e(v.label)} <span class="sub">${v.captures.map((c) => e(c.width) + 'px').join(', ')}</span></th>
+          <td class="num">${e(v.verdict.score)}<span class="sub">of 100</span></td>
+          <td class="num">${v.verdict.checksPassed} of ${v.verdict.checksCounted}</td>
+          <td><span class="pill tone-${tone(v.verdict.band.id)}">${e(v.verdict.band.label)}</span>${v.verdict.cappedFrom ? `<span class="sub">capped from ${e(v.verdict.cappedFrom)}</span>` : ''}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    ${split.viewports.filter((v) => !v.captured).map((v) => `<p class="cap"><span class="stamp warn">Not captured</span> ${e(v.note)}</p>`).join('')}
+  </section>`;
+
+  const masthead = `
+  <header class="masthead">
+    <p class="eyebrow">${e(split.standard?.name || 'DGA Platforms Code')} · compliance audit</p>
+    <h1>${e(split.target?.name || 'Untitled target')}</h1>
+    ${split.target?.url ? `<p class="target">${e(split.target.url)}</p>` : ''}
+    <div class="meta">
+      <span>Audited <b>${e((split.scoredAt || '').slice(0, 10))}</b></span>
+      <span>Ledger synced <b>${e(split.ledger?.synced || 'never')}</b></span>
+      ${split.ledger?.dgaVersion ? `<span>DGA release <b>${e(split.ledger.dgaVersion)}</b></span>` : ''}
+      <span>Viewports <b>${scored.length}</b></span>
+    </div>
+  </header>`;
+
+  const sections = parts.map(({ v, html }) => `
+  <section class="block">
+    <h2 style="font-size:1.35rem">${e(v.label)} — ${e(v.verdict.score)}/100 · ${e(v.verdict.band.label)}</h2>
+    ${bodyOf(html)}
+  </section>`).join('\n');
+
+  return `${head}<div class="wrap">\n${masthead}\n${compare}\n${sections}\n</div>\n`;
+}

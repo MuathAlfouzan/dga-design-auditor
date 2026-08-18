@@ -89,8 +89,15 @@ const FIXTURE = `<!doctype html><html lang="en"><head><meta charset="utf-8"><tit
   <script src="./dga-rate.js"></script>
   <script>
     try {
-      var v = window.__dga.audit({ label: 'fixture', na: ['C3','P1','P2','P3','I1','I2'] });
+      var na = ['C3','P1','P2','P3','I1','I2'];
+      // combined:true is the single-verdict path the rest of these assertions
+      // were written against; the split is checked separately just below.
+      var v = window.__dga.audit({ label: 'fixture', na: na, combined: true });
       var c = window.__dga.captures[0];
+      window.__dga.reset();
+      var sp = window.__dga.audit({ label: 'fixture', na: na });
+      var web = sp.viewports.filter(function (x) { return x.id === 'web'; })[0];
+      var mob = sp.viewports.filter(function (x) { return x.id === 'mobile'; })[0];
       document.getElementById('out').textContent = JSON.stringify({
         ok: true,
         score: v.score, band: v.band.id, checksCounted: v.checksCounted,
@@ -98,7 +105,16 @@ const FIXTURE = `<!doctype html><html lang="en"><head><meta charset="utf-8"><tit
         tallyKeys: Object.keys(c.tallies).length,
         fontSizes: c.tallies.fontSize.values.map(function (x) { return x.value; }),
         radii: c.tallies.radius.values.map(function (x) { return x.value; }),
-        htmlLen: window.__dga.html().length, inlineLen: window.__dga.inline().length
+        htmlLen: window.__dga.html(v).length, inlineLen: window.__dga.inline(v).length,
+        split: {
+          schema: sp.schema, breakpoint: sp.breakpoint,
+          hasCombinedScore: 'score' in sp,
+          webCaptured: web.captured, mobileCaptured: mob.captured,
+          scoredScore: (web.captured ? web : mob).verdict.score,
+          missingNote: (web.captured ? mob : web).note,
+          splitHtmlLen: window.__dga.html(sp).length,
+          splitInlineLen: window.__dga.inline(sp).length
+        }
       });
     } catch (e) {
       document.getElementById('out').textContent = JSON.stringify({ ok: false, error: String(e && e.stack || e) });
@@ -174,6 +190,24 @@ check('all 18 tallies present', R.tallyKeys === 18, `got ${R.tallyKeys}`);
 check('scored a real number', typeof R.score === 'number' && R.score >= 0 && R.score <= 100, `score=${R.score}`);
 check('renderer produced a page', R.htmlLen > 20000, `${R.htmlLen} chars`);
 check('inline report produced', R.inlineLen > 100 && R.inlineLen < 4000, `${R.inlineLen} chars`);
+
+/* the split is the default: web and mobile scored separately, never blended */
+check('audit() returns a split by default', R.split.schema === 'dga-score-split/1', R.split.schema);
+check('split carries NO combined score', R.split.hasCombinedScore === false,
+  'a single figure across both viewports is the thing the split exists to prevent');
+check('split point is the ledger breakpoint', R.split.breakpoint === 768, `got ${R.split.breakpoint}`);
+// One capture at one width, so exactly one viewport is scored and the other is
+// a stated gap. Which one depends on the headless window, so assert the shape
+// rather than the side.
+check('exactly one viewport is scored from one capture',
+  (R.split.webCaptured ? 1 : 0) + (R.split.mobileCaptured ? 1 : 0) === 1,
+  `web=${R.split.webCaptured} mobile=${R.split.mobileCaptured}`);
+check('the scored viewport carries a number', typeof R.split.scoredScore === 'number',
+  `got ${R.split.scoredScore}`);
+check('the uncaptured viewport is a stated gap, not a pass', typeof R.split.missingNote === 'string' && R.split.missingNote.length > 20,
+  `note=${R.split.missingNote}`);
+check('split renders a page', R.split.splitHtmlLen > 20000, `${R.split.splitHtmlLen} chars`);
+check('split renders an inline report', R.split.splitInlineLen > 150, `${R.split.splitInlineLen} chars`);
 
 console.log('\n  ' + '─'.repeat(52));
 console.log(bad ? `\x1b[31m  ${bad} failing\x1b[0m\n` : `\x1b[32m  all passing\x1b[0m  (fixture scored ${R.score}, ${R.checksCounted} checks)\n`);

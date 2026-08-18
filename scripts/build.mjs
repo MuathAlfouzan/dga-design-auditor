@@ -100,7 +100,7 @@ ${render}
       var label = opts.label || ('capture-' + (api.captures.length + 1));
       var capture = probe({ label: label, minTargetPx: minTargetFor(window.innerWidth) });
       api.captures.push(capture);
-      var verdict = score({
+      var args = {
         rubric: RUBRIC, tokens: TOKENS, captures: api.captures,
         judged: opts.judged || {},
         options: {
@@ -110,7 +110,12 @@ ${render}
           na: opts.na || [],
           allowUnassessed: !!opts.allowUnassessed,
         },
-      });
+      };
+      // Web and mobile are scored SEPARATELY and reported that way by default.
+      // Target sizes and containers belong to a viewport, not to a site, so one
+      // blended number describes neither. combined:true returns the old single
+      // verdict, which the regression fixture still pins.
+      var verdict = opts.combined ? score(args) : scoreByViewport(args);
       api.verdict = verdict;
       // Raw tallies stay in the page unless explicitly asked for: shipping them back
       // is 32KB per capture, which is the thing that made the old design unusable.
@@ -118,11 +123,16 @@ ${render}
       return verdict;
     },
 
-    /** Compact markdown for a chat reply. */
+    /** Compact markdown for a chat reply. Handles a split or a single verdict. */
     inline: function (v) { return inlineReport(v || api.verdict); },
 
-    /** The full scorecard page as an HTML string. */
-    html: function (v, o) { return renderScorecard(v || api.verdict, o || {}); },
+    /** The full scorecard page as an HTML string. Handles a split or a single verdict. */
+    html: function (v, o) {
+      var x = v || api.verdict;
+      return x && x.schema === 'dga-score-split/1'
+        ? renderSplitScorecard(x, o || {})
+        : renderScorecard(x, o || {});
+    },
 
     /** Render the scorecard over the page itself, for a human looking at the tab. */
     overlay: function (v) {
@@ -132,7 +142,7 @@ ${render}
       host.innerHTML =
         '<button onclick="this.parentNode.remove()" style="position:fixed;top:12px;right:16px;z-index:1;' +
         'font:600 13px system-ui;padding:6px 12px;border:1px solid #c6ccdb;border-radius:5px;background:#fff;cursor:pointer">Close</button>' +
-        renderScorecard(v || api.verdict, {});
+        api.html(v);
       document.body.appendChild(host);
       return 'overlay rendered';
     },

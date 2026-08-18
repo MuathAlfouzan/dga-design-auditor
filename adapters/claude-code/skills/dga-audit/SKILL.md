@@ -26,8 +26,12 @@ for evidence.
 
 ```javascript
 // in the page, via whichever browser tool applies
-const { verdict } = await window.__dga.rate({ label: 'desktop' });
+window.__dga.audit({ label: 'desktop' });   // then resize and capture mobile
 ```
+
+**Two scores, always** — web and mobile are scored separately and reported as two
+results. There is no combined number: a single figure across both viewports describes
+neither. Capture both; a viewport you did not measure is reported as a gap, not a pass.
 
 Load it from the CDN when the page allows it, or paste `dist/dga-rate.js` when CSP or a
 WAF blocks the fetch. `AGENTS.md` covers both.

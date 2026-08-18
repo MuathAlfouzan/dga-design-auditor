@@ -707,10 +707,65 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
   };
 }
 
+/* --------------------------------------------------------- split by viewport */
+
+/**
+ * Score web and mobile SEPARATELY rather than as one blended number.
+ *
+ * Merging the two hides exactly what matters most. A4 target sizes and S2
+ * containers are properties of a viewport, not of a site: a page can pass at
+ * 1440 and fail at 390, and averaging the two produces a figure describing
+ * neither. Two numbers say where the problem is; one says only that there is one.
+ *
+ * `score()` is untouched and still takes whatever captures it is given — this
+ * groups and calls it twice, so every existing guarantee, including the
+ * regression fixture, holds unchanged.
+ */
+export function scoreByViewport({ rubric, tokens, captures = [], judged = {}, options = {} }) {
+  // The split point is the ledger's own desktop breakpoint, not a number picked
+  // here — if DGA moves it, this moves with it.
+  const bps = (tokens.breakpoints && tokens.breakpoints.list) || [];
+  const webMin = bps.filter((b) => b.min > 0).map((b) => b.min).sort((a, b) => a - b)[0] ?? 768;
+
+  const groups = [
+    { id: 'web', label: 'Web', match: (c) => (c.viewport?.width ?? 0) >= webMin },
+    { id: 'mobile', label: 'Mobile', match: (c) => (c.viewport?.width ?? 0) < webMin },
+  ];
+
+  const viewports = groups.map((g) => {
+    const caps = captures.filter(g.match);
+    if (!caps.length) {
+      return { id: g.id, label: g.label, captured: false, captures: [], verdict: null,
+        note: `No ${g.label.toLowerCase()} capture was taken, so nothing is reported for it. This is a gap in the audit, not a pass.` };
+    }
+    return {
+      id: g.id, label: g.label, captured: true,
+      captures: caps.map((c) => ({ label: c.label, width: c.viewport?.width ?? null })),
+      verdict: score({ rubric, tokens, captures: caps, judged, options }),
+    };
+  });
+
+  const scored = viewports.filter((v) => v.captured);
+  return {
+    schema: 'dga-score-split/1',
+    standard: rubric.standard,
+    target: { name: options.targetName ?? '(unnamed target)', url: options.targetUrl ?? null, type: options.targetType ?? 'site' },
+    ledger: { synced: tokens.synced, dgaVersion: tokens.dgaVersion || null },
+    scoredAt: new Date().toISOString(),
+    breakpoint: webMin,
+    viewports,
+    // Deliberately no combined score. Averaging two viewports reintroduces the
+    // blur this split exists to remove.
+    worstBand: scored.length ? scored.map((v) => v.verdict.band).sort((a, b) => a.min - b.min)[0] ?? scored[0].verdict.band : null,
+  };
+}
+
 /* ------------------------------------------------------------- inline out */
 
 /** Compact markdown for a chat reply — the default result format. */
 export function inlineReport(v, { maxFindings = 3 } = {}) {
+  // A split carries no score of its own; report each viewport in turn.
+  if (v && v.schema === 'dga-score-split/1') return inlineSplitReport(v, { maxFindings });
   const L = [];
   L.push(`**${v.target.name} — ${v.score}/100 · ${v.checksPassed} of ${v.checksCounted} checks met · ${v.band.label}**`);
   if (v.cappedFrom) {
@@ -753,5 +808,34 @@ export function inlineReport(v, { maxFindings = 3 } = {}) {
   }
   const na = v.categories.flatMap((c) => c.checks).filter((k) => k.status === 'n/a');
   if (na.length) L.push('', `_Not applicable: ${na.map((k) => k.id).join(', ')} — these leave the denominator rather than counting as failures._`);
+  return L.join('\n');
+}
+
+/**
+ * Two results, side by side. No combined figure: a single number across both
+ * viewports is what this split exists to stop producing.
+ */
+export function inlineSplitReport(split, { maxFindings = 3 } = {}) {
+  const L = [];
+  L.push(`**${split.target.name}** — scored separately per viewport (split at ${split.breakpoint}px, the DGA desktop breakpoint).`);
+  L.push('');
+
+  const scored = split.viewports.filter((v) => v.captured);
+  if (scored.length) {
+    L.push('| Viewport | Score | Checks met | Band |');
+    L.push('| --- | --- | --- | --- |');
+    for (const v of scored) {
+      const d = v.verdict;
+      L.push(`| **${v.label}** ${v.captures.map((c) => `${c.width}px`).join(', ')} | ${d.score}/100 | ${d.checksPassed} of ${d.checksCounted} | ${d.band.label}${d.cappedFrom ? ` _(capped from ${d.cappedFrom})_` : ''} |`);
+    }
+  }
+  for (const v of split.viewports.filter((x) => !x.captured)) {
+    L.push('', `⚠ **${v.label}** — ${v.note}`);
+  }
+
+  for (const v of scored) {
+    L.push('', `### ${v.label}`, '', inlineReport(v.verdict, { maxFindings }));
+  }
+  L.push('', `_Ledger ${split.ledger.synced}${split.ledger.dgaVersion ? `, DGA ${split.ledger.dgaVersion}` : ''}._`);
   return L.join('\n');
 }

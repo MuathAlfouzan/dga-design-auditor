@@ -1323,10 +1323,65 @@ function score({ rubric, tokens, captures = [], judged = {}, options = {} }) {
   };
 }
 
+/* --------------------------------------------------------- split by viewport */
+
+/**
+ * Score web and mobile SEPARATELY rather than as one blended number.
+ *
+ * Merging the two hides exactly what matters most. A4 target sizes and S2
+ * containers are properties of a viewport, not of a site: a page can pass at
+ * 1440 and fail at 390, and averaging the two produces a figure describing
+ * neither. Two numbers say where the problem is; one says only that there is one.
+ *
+ * `score()` is untouched and still takes whatever captures it is given — this
+ * groups and calls it twice, so every existing guarantee, including the
+ * regression fixture, holds unchanged.
+ */
+function scoreByViewport({ rubric, tokens, captures = [], judged = {}, options = {} }) {
+  // The split point is the ledger's own desktop breakpoint, not a number picked
+  // here — if DGA moves it, this moves with it.
+  const bps = (tokens.breakpoints && tokens.breakpoints.list) || [];
+  const webMin = bps.filter((b) => b.min > 0).map((b) => b.min).sort((a, b) => a - b)[0] ?? 768;
+
+  const groups = [
+    { id: 'web', label: 'Web', match: (c) => (c.viewport?.width ?? 0) >= webMin },
+    { id: 'mobile', label: 'Mobile', match: (c) => (c.viewport?.width ?? 0) < webMin },
+  ];
+
+  const viewports = groups.map((g) => {
+    const caps = captures.filter(g.match);
+    if (!caps.length) {
+      return { id: g.id, label: g.label, captured: false, captures: [], verdict: null,
+        note: `No ${g.label.toLowerCase()} capture was taken, so nothing is reported for it. This is a gap in the audit, not a pass.` };
+    }
+    return {
+      id: g.id, label: g.label, captured: true,
+      captures: caps.map((c) => ({ label: c.label, width: c.viewport?.width ?? null })),
+      verdict: score({ rubric, tokens, captures: caps, judged, options }),
+    };
+  });
+
+  const scored = viewports.filter((v) => v.captured);
+  return {
+    schema: 'dga-score-split/1',
+    standard: rubric.standard,
+    target: { name: options.targetName ?? '(unnamed target)', url: options.targetUrl ?? null, type: options.targetType ?? 'site' },
+    ledger: { synced: tokens.synced, dgaVersion: tokens.dgaVersion || null },
+    scoredAt: new Date().toISOString(),
+    breakpoint: webMin,
+    viewports,
+    // Deliberately no combined score. Averaging two viewports reintroduces the
+    // blur this split exists to remove.
+    worstBand: scored.length ? scored.map((v) => v.verdict.band).sort((a, b) => a.min - b.min)[0] ?? scored[0].verdict.band : null,
+  };
+}
+
 /* ------------------------------------------------------------- inline out */
 
 /** Compact markdown for a chat reply — the default result format. */
 function inlineReport(v, { maxFindings = 3 } = {}) {
+  // A split carries no score of its own; report each viewport in turn.
+  if (v && v.schema === 'dga-score-split/1') return inlineSplitReport(v, { maxFindings });
   const L = [];
   L.push(`**${v.target.name} — ${v.score}/100 · ${v.checksPassed} of ${v.checksCounted} checks met · ${v.band.label}**`);
   if (v.cappedFrom) {
@@ -1369,6 +1424,35 @@ function inlineReport(v, { maxFindings = 3 } = {}) {
   }
   const na = v.categories.flatMap((c) => c.checks).filter((k) => k.status === 'n/a');
   if (na.length) L.push('', `_Not applicable: ${na.map((k) => k.id).join(', ')} — these leave the denominator rather than counting as failures._`);
+  return L.join('\n');
+}
+
+/**
+ * Two results, side by side. No combined figure: a single number across both
+ * viewports is what this split exists to stop producing.
+ */
+function inlineSplitReport(split, { maxFindings = 3 } = {}) {
+  const L = [];
+  L.push(`**${split.target.name}** — scored separately per viewport (split at ${split.breakpoint}px, the DGA desktop breakpoint).`);
+  L.push('');
+
+  const scored = split.viewports.filter((v) => v.captured);
+  if (scored.length) {
+    L.push('| Viewport | Score | Checks met | Band |');
+    L.push('| --- | --- | --- | --- |');
+    for (const v of scored) {
+      const d = v.verdict;
+      L.push(`| **${v.label}** ${v.captures.map((c) => `${c.width}px`).join(', ')} | ${d.score}/100 | ${d.checksPassed} of ${d.checksCounted} | ${d.band.label}${d.cappedFrom ? ` _(capped from ${d.cappedFrom})_` : ''} |`);
+    }
+  }
+  for (const v of split.viewports.filter((x) => !x.captured)) {
+    L.push('', `⚠ **${v.label}** — ${v.note}`);
+  }
+
+  for (const v of scored) {
+    L.push('', `### ${v.label}`, '', inlineReport(v.verdict, { maxFindings }));
+  }
+  L.push('', `_Ledger ${split.ledger.synced}${split.ledger.dgaVersion ? `, DGA ${split.ledger.dgaVersion}` : ''}._`);
   return L.join('\n');
 }
 
@@ -1737,6 +1821,80 @@ const html = `<title>${esc(S.target?.name || 'Design')} Compliance Audit</title>
   return html;
 }
 
+/* ------------------------------------------------- split: web vs mobile */
+
+/**
+ * Two viewports on one page, each with its own score.
+ *
+ * Built by rendering each verdict through renderScorecard and stitching the
+ * bodies under one masthead — the per-verdict renderer stays untouched and
+ * therefore stays the thing the tests already cover. The shared header carries
+ * the comparison, which is the reason for the split: seeing 63.6 against 66.4
+ * tells you where to look, and a single blended 64.9 does not.
+ */
+function renderSplitScorecard(split, { shots = [] } = {}) {
+  const scored = split.viewports.filter((v) => v.captured);
+  if (!scored.length) throw new Error('renderSplitScorecard: no captured viewport to render');
+
+  const parts = scored.map((v) => ({ v, html: renderScorecard(v.verdict, { shots }) }));
+  const head = parts[0].html.slice(0, parts[0].html.indexOf('<div class="wrap">'));
+
+  const bodyOf = (html) => {
+    const open = html.indexOf('<div class="wrap">') + '<div class="wrap">'.length;
+    const close = html.lastIndexOf('</div>');
+    return html
+      .slice(open, close)
+      // one masthead for the page, not one per viewport
+      .replace(/<header class="masthead">[\s\S]*?<\/header>/, '');
+  };
+
+  const e = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const tone = (b) => ({ compliant: 'pass', substantial: 'pass', partial: 'warn', 'non-compliant': 'fail' }[b] || 'warn');
+
+  const compare = `
+  <section class="block" style="margin-top:0">
+    <h2>Two viewports, scored separately</h2>
+    <p class="lede">A page can pass at desktop width and fail at phone width — target sizes and containers are
+    properties of a viewport, not of a site. Blending them into one number describes neither, so each is scored
+    on its own. Split at ${split.breakpoint}px, the DGA desktop breakpoint.</p>
+    <div class="scroll-x">
+      <table class="checks">
+        <thead><tr><th>Viewport</th><th class="num">Score</th><th class="num">Checks met</th><th>Band</th></tr></thead>
+        <tbody>
+        ${scored.map((v) => `<tr>
+          <th scope="row">${e(v.label)} <span class="sub">${v.captures.map((c) => e(c.width) + 'px').join(', ')}</span></th>
+          <td class="num">${e(v.verdict.score)}<span class="sub">of 100</span></td>
+          <td class="num">${v.verdict.checksPassed} of ${v.verdict.checksCounted}</td>
+          <td><span class="pill tone-${tone(v.verdict.band.id)}">${e(v.verdict.band.label)}</span>${v.verdict.cappedFrom ? `<span class="sub">capped from ${e(v.verdict.cappedFrom)}</span>` : ''}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+    ${split.viewports.filter((v) => !v.captured).map((v) => `<p class="cap"><span class="stamp warn">Not captured</span> ${e(v.note)}</p>`).join('')}
+  </section>`;
+
+  const masthead = `
+  <header class="masthead">
+    <p class="eyebrow">${e(split.standard?.name || 'DGA Platforms Code')} · compliance audit</p>
+    <h1>${e(split.target?.name || 'Untitled target')}</h1>
+    ${split.target?.url ? `<p class="target">${e(split.target.url)}</p>` : ''}
+    <div class="meta">
+      <span>Audited <b>${e((split.scoredAt || '').slice(0, 10))}</b></span>
+      <span>Ledger synced <b>${e(split.ledger?.synced || 'never')}</b></span>
+      ${split.ledger?.dgaVersion ? `<span>DGA release <b>${e(split.ledger.dgaVersion)}</b></span>` : ''}
+      <span>Viewports <b>${scored.length}</b></span>
+    </div>
+  </header>`;
+
+  const sections = parts.map(({ v, html }) => `
+  <section class="block">
+    <h2 style="font-size:1.35rem">${e(v.label)} — ${e(v.verdict.score)}/100 · ${e(v.verdict.band.label)}</h2>
+    ${bodyOf(html)}
+  </section>`).join('\n');
+
+  return `${head}<div class="wrap">\n${masthead}\n${compare}\n${sections}\n</div>\n`;
+}
+
 
   /* ------------------------------------------------------------- surface */
 
@@ -1767,7 +1925,7 @@ const html = `<title>${esc(S.target?.name || 'Design')} Compliance Audit</title>
       var label = opts.label || ('capture-' + (api.captures.length + 1));
       var capture = probe({ label: label, minTargetPx: minTargetFor(window.innerWidth) });
       api.captures.push(capture);
-      var verdict = score({
+      var args = {
         rubric: RUBRIC, tokens: TOKENS, captures: api.captures,
         judged: opts.judged || {},
         options: {
@@ -1777,7 +1935,12 @@ const html = `<title>${esc(S.target?.name || 'Design')} Compliance Audit</title>
           na: opts.na || [],
           allowUnassessed: !!opts.allowUnassessed,
         },
-      });
+      };
+      // Web and mobile are scored SEPARATELY and reported that way by default.
+      // Target sizes and containers belong to a viewport, not to a site, so one
+      // blended number describes neither. combined:true returns the old single
+      // verdict, which the regression fixture still pins.
+      var verdict = opts.combined ? score(args) : scoreByViewport(args);
       api.verdict = verdict;
       // Raw tallies stay in the page unless explicitly asked for: shipping them back
       // is 32KB per capture, which is the thing that made the old design unusable.
@@ -1785,11 +1948,16 @@ const html = `<title>${esc(S.target?.name || 'Design')} Compliance Audit</title>
       return verdict;
     },
 
-    /** Compact markdown for a chat reply. */
+    /** Compact markdown for a chat reply. Handles a split or a single verdict. */
     inline: function (v) { return inlineReport(v || api.verdict); },
 
-    /** The full scorecard page as an HTML string. */
-    html: function (v, o) { return renderScorecard(v || api.verdict, o || {}); },
+    /** The full scorecard page as an HTML string. Handles a split or a single verdict. */
+    html: function (v, o) {
+      var x = v || api.verdict;
+      return x && x.schema === 'dga-score-split/1'
+        ? renderSplitScorecard(x, o || {})
+        : renderScorecard(x, o || {});
+    },
 
     /** Render the scorecard over the page itself, for a human looking at the tab. */
     overlay: function (v) {
@@ -1799,7 +1967,7 @@ const html = `<title>${esc(S.target?.name || 'Design')} Compliance Audit</title>
       host.innerHTML =
         '<button onclick="this.parentNode.remove()" style="position:fixed;top:12px;right:16px;z-index:1;' +
         'font:600 13px system-ui;padding:6px 12px;border:1px solid #c6ccdb;border-radius:5px;background:#fff;cursor:pointer">Close</button>' +
-        renderScorecard(v || api.verdict, {});
+        api.html(v);
       document.body.appendChild(host);
       return 'overlay rendered';
     },

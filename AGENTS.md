@@ -235,3 +235,39 @@ freshnessLine(freshness);  // one line, safe to put at the top of a report
 Report the verdict plainly. If the ledger is behind, say which file changed and what its
 log says changed in it — "Components Library, 3 Nov 2025: Digital Stamp text" is
 actionable in a way that "something moved" is not.
+
+---
+
+## Web and mobile are scored separately
+
+`audit()` returns a **split** by default — one verdict per viewport, no combined
+figure. This is deliberate and it is not a display choice.
+
+Target sizes and container widths are properties of a *viewport*, not of a site. A
+page can pass at 1440 and fail at 390. Averaging the two produces a number that
+describes neither, and the one thing an auditor must not do is report a figure that
+is true of nothing. On the regression fixture the split reads **Web 63.63 / Mobile
+66.42**, where the blended figure was 64.89 — the 2.8-point spread is the finding,
+and blending hid it.
+
+```js
+const split = window.__dga.audit({ label: 'desktop' });   // capture 1
+// resize to 390, then:
+const both  = window.__dga.audit({ label: 'mobile' });    // capture 2, both scored
+both.viewports;      // [{ id:'web', captured, verdict }, { id:'mobile', … }]
+both.score;          // undefined — there is no combined score, by design
+window.__dga.inline(both);   // two tables, then each viewport in full
+window.__dga.html(both);     // one page, comparison header, both sections
+```
+
+The split point is the ledger's own desktop breakpoint (`768`), so if DGA move it,
+this moves with it.
+
+**Capture both viewports.** A viewport with no capture is reported as a stated gap,
+never as a pass — but a gap is still a hole in the audit. If a window will not
+resize, say which viewport you measured and which you did not, rather than letting
+one number stand for both.
+
+`audit({ combined: true })` returns the old single verdict. It exists for the
+regression fixture and for comparing against historical scores; it is not the
+reporting format.
