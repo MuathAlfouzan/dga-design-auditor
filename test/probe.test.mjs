@@ -70,6 +70,18 @@ const FIXTURE = `<!doctype html><html lang="en"><head><meta charset="utf-8"><tit
   .low-contrast { color: #bbbbbb; background: #ffffff; font-size: 14px; }
   .tiny-target { width: 16px; height: 16px; display: inline-block; }
   .ok-target { width: 48px; height: 48px; display: inline-block; }
+  /* WCAG 2.2 spacing exception: undersized but with room around it, so the 24px
+     circles do not intersect — passes. */
+  .spaced-target { width: 16px; height: 16px; display: inline-block; margin: 40px; }
+  /* Undersized AND crowded: centres 16px apart, circles intersect — must fail. */
+  .crowded { width: 16px; height: 16px; display: inline-block; margin: 0; }
+  /* 1.4.11 covers controls, not decoration. The divider must be SKIPPED and the
+     input's faint border must still FAIL — both at the same 1.2:1 contrast. */
+  .divider { border-top: 1px solid #eeeeee; height: 1px; }
+  .faint-input { border: 1px solid #eeeeee; padding: 8px; }
+  /* margin:auto resolves to a large pixel value that nobody authored — S1 must not
+     read it as an off-scale spacing decision. */
+  .centred { width: 200px; margin: 0 auto; }
   @media (prefers-reduced-motion: reduce) { .card { transition: none; } }
 </style></head>
 <body>
@@ -81,8 +93,13 @@ const FIXTURE = `<!doctype html><html lang="en"><head><meta charset="utf-8"><tit
     <p class="nested-child">Nested child, only reachable if nesting is walked</p>
     <p class="low-contrast">This text fails contrast on purpose</p>
     <p dir="rtl" lang="ar" style="font-family: 'IBM Plex Sans Arabic', sans-serif">مرحبا بكم في المنصة</p>
-    <a href="#" class="tiny-target" aria-label="too small"></a>
+    <a href="#" class="spaced-target" aria-label="small but spaced"></a>
     <a href="#" class="ok-target" aria-label="big enough"></a>
+    <div><a href="#" class="crowded" aria-label="crowded 1"></a><a href="#" class="crowded" aria-label="crowded 2"></a><a href="#" class="crowded" aria-label="crowded 3"></a></div>
+    <p>Read the <a href="#">published guidance</a> before submitting, since it explains the whole process in detail.</p>
+    <div class="divider"></div>
+    <input class="faint-input" type="text" aria-label="faint border">
+    <div class="centred">centred by auto margins</div>
     <button type="button" style="padding: 12px 16px; border-radius: 4px; background: #1b8354; color: #ffffff; border: 0">Primary</button>
   </main>
   <pre id="out"></pre>
@@ -101,7 +118,8 @@ const FIXTURE = `<!doctype html><html lang="en"><head><meta charset="utf-8"><tit
       document.getElementById('out').textContent = JSON.stringify({
         ok: true,
         score: v.score, band: v.band.id, checksCounted: v.checksCounted,
-        css: c.css, targets: c.targets, contrast: c.contrast, rtl: c.rtl,
+        css: c.css, targets: c.targets, contrast: c.contrast, rtl: c.rtl, nonText: c.nonTextContrast,
+        spacing: c.tallies.spacing.values.map(function (x) { return x.value; }),
         tallyKeys: Object.keys(c.tallies).length,
         fontSizes: c.tallies.fontSize.values.map(function (x) { return x.value; }),
         radii: c.tallies.radius.values.map(function (x) { return x.value; }),
@@ -179,12 +197,32 @@ check('contrast measured, and the deliberate failure caught',
 check('target sizes measured against the ledger minimum',
   R.targets.interactive >= 2 && R.targets.passing >= 1 && R.targets.minTargetPx > 0,
   `interactive=${R.targets.interactive} passing=${R.targets.passing} min=${R.targets.minTargetPx}`);
-check('the 16px target was flagged and the 48px one was not',
+// WCAG 2.2 exceptions, in both directions. Crowded undersized targets must still
+// fail; an undersized target with room around it, and a link inside a sentence,
+// must not. Counting every link was flagging body prose as a conformance failure.
+check('crowded undersized targets are still flagged',
   R.targets.interactive - R.targets.passing >= 1, JSON.stringify(R.targets));
+check('the spacing exception is applied, not ignored',
+  R.targets.spacingExempt >= 1, JSON.stringify(R.targets));
+check('a link inside a sentence is exempt as inline',
+  R.targets.inlineExempt >= 1, JSON.stringify(R.targets));
+
+// 1.4.11 covers what identifies a control, not decoration. The fixture gives the
+// divider and the input the SAME faint border, so only the scope can separate them.
+check('a faint border on an input is still a non-text contrast failure',
+  R.nonText.checked >= 1 && R.nonText.checked - R.nonText.passing >= 1,
+  JSON.stringify(R.nonText));
+check('a decorative divider is skipped rather than failed',
+  R.nonText.decorativeSkipped >= 1, JSON.stringify(R.nonText));
+
+// getComputedStyle resolves margin:auto to pixels; that is layout, not a decision.
+check('auto margins are not reported as off-scale spacing',
+  !R.spacing.some((v) => Number(v) > 300),
+  `spacing values seen: ${R.spacing.slice(0, 12).join(', ')}`);
 check('Arabic run detected and attributed to an Arabic face',
   R.rtl.arabicRuns >= 1 && R.rtl.arabicRunsInArabicFace >= 1, JSON.stringify(R.rtl));
 check('radius scale captured', R.radii.length >= 1, `radii=${R.radii.join(', ')}`);
-check('all 18 tallies present', R.tallyKeys === 18, `got ${R.tallyKeys}`);
+check('all 19 tallies present', R.tallyKeys === 19, `got ${R.tallyKeys}`);
 
 /* the surface */
 check('scored a real number', typeof R.score === 'number' && R.score >= 0 && R.score <= 100, `score=${R.score}`);

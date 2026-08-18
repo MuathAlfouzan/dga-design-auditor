@@ -156,7 +156,7 @@
           "applies_to": "both",
           "method": "auto",
           "scoring": "fraction",
-          "measure": "Share of text runs whose (size, line-height, letter-spacing) triple matches a ramp step. Arabic needs its own leading, so mismatches here are counted per script.",
+          "measure": "Share of text runs whose (size, line-height, letter-spacing) triple matches one ramp step. Matching leading alone lets a 14px body carry 72px display leading and pass, which is the mismatch this check exists to catch.",
           "blocker": false,
           "fix": "Set the ramp's paired leading rather than a global multiplier — Arabic ascenders and descenders need the extra room."
         }
@@ -244,7 +244,7 @@
           "applies_to": "both",
           "method": "auto",
           "scoring": "fraction",
-          "measure": "Occurrence-weighted share of non-none shadows matching an elevation token within a small numeric tolerance.",
+          "measure": "Occurrence-weighted share of shadows matching an elevation token. Both sides are normalised to x/y/blur/spread plus rgba before comparison, because the ledger writes hex and the browser reports rgba() — comparing raw strings, or numbers scraped from them, can never match.",
           "blocker": false,
           "fix": "Use the named elevation level. Hand-tuned shadows break the depth ordering the system defines."
         }
@@ -352,7 +352,7 @@
           "applies_to": "site",
           "method": "auto",
           "scoring": "fraction",
-          "measure": "Share of directional declarations (margin, padding, inset, border, text-align, float) written logically rather than physically, from authored stylesheet rules.",
+          "measure": "Share of directional declarations written logically rather than physically, in FIRST-PARTY stylesheets only. Vendor bundles are counted separately and reported as context — scoring them measures the framework choice rather than the team's work.",
           "blocker": false,
           "fix": "margin-inline-start over margin-left. Physical properties are why an RTL layout needs a second stylesheet and then diverges from the first."
         },
@@ -396,7 +396,7 @@
           "applies_to": "both",
           "method": "auto",
           "scoring": "fraction",
-          "measure": "Share of borders, icon fills and control boundaries meeting 3:1.",
+          "measure": "Share of borders that identify a UI COMPONENT or its state meeting 3:1 against their surroundings. Decorative borders — dividers, card outlines — are outside SC 1.4.11 and are skipped rather than failed; the skipped count is reported.",
           "blocker": true,
           "fix": "An input whose border disappears against its background is not usable at low vision or in sunlight."
         },
@@ -420,7 +420,7 @@
           "applies_to": "both",
           "method": "auto",
           "scoring": "fraction",
-          "measure": "Share of interactive elements whose hit box meets the minimum, counting the spacing exception where neighbours are far enough apart.",
+          "measure": "Share of interactive elements meeting the minimum, with the WCAG 2.2 exceptions applied: a target inline in a sentence leaves the denominator, and an undersized target passes if a 24px circle centred on it intersects no other target. Both exemption counts are reported.",
           "blocker": false,
           "fix": "Grow the control or its padding. Icon-only buttons are the usual offenders."
         }

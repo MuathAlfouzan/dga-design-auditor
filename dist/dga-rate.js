@@ -14,7 +14,7 @@
 (function () {
   'use strict';
 
-  var RUBRIC = {"version":1,"standard":{"name":"DGA Platforms Code","arabicName":"كود المنصات","authority":"Digital Government Authority, Saudi Arabia","source":"https://www.figma.com/community/file/1392264328585493958/components-library-platforms-code"},"bands":[{"id":"compliant","label":"Compliant","min":90},{"id":"substantial","label":"Substantially compliant","min":75},{"id":"partial","label":"Partial","min":60},{"id":"non-compliant","label":"Non-compliant","min":0}],"blockerCapBand":"partial","passThreshold":{"default":0.9,"blocker":1},"thresholds":{"colorMatchDeltaE":2,"colorNearMissDeltaE":10,"contrastNormalText":4.5,"contrastLargeText":3,"contrastNonText":3,"largeTextPx":24,"largeBoldPx":18.66,"minTargetPx":24,"offPaletteMinOccurrences":3,"coverageIgnoreBelowOccurrences":1},"categories":[{"id":"color","label":"Color & tokens","weight":18,"checks":[{"id":"C1","weight":8,"title":"Color token coverage","description":"Every text, background, border and fill color resolves to a DGA color token.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of color-bearing declarations within deltaE <= colorMatchDeltaE of some ledger color.","blocker":false,"fix":"Replace the literal color with the named DGA token. The finding names the nearest token for each offender."},{"id":"C2","weight":4,"title":"No off-palette brand color","description":"No color far from every DGA token (deltaE > colorNearMissDeltaE) is used repeatedly as a brand or accent surface.","applies_to":"both","method":"auto","scoring":"fraction","measure":"1 minus the occurrence-weighted share of far-off-palette colors used at least offPaletteMinOccurrences times. Near-misses are C1's problem, not this one.","blocker":true,"fix":"An unrecognisable brand color is an identity violation, not a styling preference. Move it onto the DGA palette or get the addition approved into the library."},{"id":"C3","weight":3,"title":"Semantic colors used semantically","description":"success / warning / error / info tokens appear only in their semantic roles, and those roles use no other color.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of semantic-token usages whose surrounding role matches the token's meaning, plus destructive/among-status affordances that use the correct token.","blocker":false,"fix":"Error text in the brand green, or a success toast in red, breaks the one convention users carry between government platforms."},{"id":"C4","weight":3,"title":"Dark theme from the DS dark set","description":"If the target ships a dark theme, its colors come from the DGA dark-mode tokens rather than ad-hoc darkening.","applies_to":"both","method":"auto","scoring":"fraction","na_when":"target has no dark theme","measure":"Same coverage calculation as C1, run against the dark-scheme capture and the ledger's dark set.","blocker":false,"fix":"Point the dark theme at the DGA dark tokens. Inverting or dimming light tokens drifts within one release."}],"part":"foundations"},{"id":"typography","label":"Typography","weight":16,"checks":[{"id":"T1","weight":5,"title":"Typeface stack","description":"Latin and Arabic text render in the DGA typefaces, each script in the face specified for it.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of rendered text whose resolved font family is in the ledger's font stack for that script.","blocker":false,"fix":"A substituted face is the single most visible compliance failure — it reads as a different government at a glance."},{"id":"T2","weight":5,"title":"Type scale","description":"Font sizes come from the DGA type ramp.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of computed font-size values matching a ramp step exactly (px, after rem resolution).","blocker":false,"fix":"Snap to the nearest ramp step; the finding names it."},{"id":"T3","weight":3,"title":"Font weights","description":"Only the weights the DGA system defines are used.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of computed font-weight values in the ledger's allowed weight set.","blocker":false,"fix":"Synthetic or off-scale weights render inconsistently across platforms, especially in Arabic."},{"id":"T4","weight":3,"title":"Line height and tracking","description":"Line-height and letter-spacing match the ramp step's paired values.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of text runs whose (size, line-height, letter-spacing) triple matches a ramp step. Arabic needs its own leading, so mismatches here are counted per script.","blocker":false,"fix":"Set the ramp's paired leading rather than a global multiplier — Arabic ascenders and descenders need the extra room."}],"part":"foundations"},{"id":"spacing","label":"Spacing & layout","weight":12,"checks":[{"id":"S1","weight":6,"title":"Spacing scale","description":"Padding, margin and gap values sit on the DGA spacing grid.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of non-zero spacing values matching a scale step.","blocker":false,"fix":"Off-grid spacing is what makes an otherwise on-token page feel unlike the rest of the platform."},{"id":"S2","weight":3,"title":"Container widths and gutters","description":"Page container max-widths, gutters and column behaviour follow the DGA breakpoints.","applies_to":"site","method":"auto","scoring":"fraction","measure":"Measured at desktop, tablet and mobile captures; each breakpoint whose container width and gutter match the ledger scores its third.","blocker":false,"fix":"Match the DGA container at each breakpoint so content lines up across linked government services."},{"id":"S3","weight":3,"title":"Vertical rhythm","description":"Section and block spacing uses the DGA rhythm steps rather than arbitrary gaps.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of between-section vertical gaps matching a rhythm step.","blocker":false,"fix":"Use the rhythm steps for section separation; the page reads as one document rather than stacked fragments."}],"part":"foundations"},{"id":"shape","label":"Shape & elevation","weight":8,"checks":[{"id":"E1","weight":3,"title":"Corner radii","description":"border-radius values come from the DGA radius scale.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of non-zero radii matching a scale step (fully-round pills excluded and checked against the pill token).","blocker":false,"fix":"Snap to the nearest radius step."},{"id":"E2","weight":2,"title":"Borders","description":"Border widths and colors come from the DGA border tokens.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of visible borders whose width is on the scale and whose color is a ledger border token.","blocker":false,"fix":"Use the border tokens; hairlines that vary by a fraction of a pixel show up as banding on scaled displays."},{"id":"E3","weight":3,"title":"Elevation","description":"box-shadow values come from the DGA elevation set.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of non-none shadows matching an elevation token within a small numeric tolerance.","blocker":false,"fix":"Use the named elevation level. Hand-tuned shadows break the depth ordering the system defines."}],"part":"foundations"},{"id":"components","label":"Components","weight":18,"checks":[{"id":"P1","weight":8,"title":"DS components, not rebuilds","description":"Buttons, inputs, selects, cards, tabs, tables, navigation, modals and alerts correspond to DGA components rather than bespoke reimplementations.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of identified component instances matching a DGA component by anatomy. On Figma targets, whether the instance is a library instance rather than a detached or hand-drawn frame.","blocker":false,"fix":"Adopt the library component. A rebuild that looks right today is the thing that drifts at the next DGA release."},{"id":"P2","weight":5,"title":"Variants, sizes and states","description":"Component variants (primary / secondary / tertiary), sizes and interaction states are the ones the system defines.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of instances whose variant, size and hover/active/disabled/focus treatments match the spec.","blocker":false,"fix":"Missing disabled or focus treatments are the usual failure; both are specified, neither is optional."},{"id":"P3","weight":5,"title":"Component anatomy","description":"Internal padding, icon-and-label spacing and order, and minimum heights match the component spec.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of instances whose measured internal geometry matches the spec within 1px.","blocker":false,"fix":"Restore the specified padding and min-height. Squeezed buttons are also the usual cause of an A4 target-size failure."}],"part":"components"},{"id":"brand","label":"Iconography & brand","weight":6,"checks":[{"id":"I1","weight":3,"title":"Icon set","description":"Icons come from the DGA icon set, at scale sizes, with the specified stroke weight.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of icons identifiable as DGA set members at a scale size. Mixed icon libraries on one page fail proportionally.","blocker":false,"fix":"Standardise on the DGA icon set. Two icon families on one screen is visible even to users who cannot name why."},{"id":"I2","weight":3,"title":"Logo and lockup","description":"Official marks use approved variants at or above minimum size, with the specified clear space, uncropped and unrecoloured.","applies_to":"both","method":"judged","scoring":"binary","measure":"Pass only if every mark on the target satisfies variant, minimum size, clear space and color rules.","blocker":true,"fix":"Misuse of a government mark is an identity violation. Use the approved asset at approved size with its clear space intact."}],"part":"components"},{"id":"rtl","label":"RTL & bilingual","weight":8,"checks":[{"id":"R1","weight":3,"title":"Direction and mirroring","description":"Arabic renders with dir=rtl and the layout mirrors — not just the text.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Correct dir/lang on the document and on mixed-script runs, plus evidence that layout order, alignment and navigation actually mirror in the RTL capture.","blocker":false,"fix":"Set dir on the document and let logical properties carry the mirroring, rather than a per-component RTL override sheet."},{"id":"R2","weight":3,"title":"Logical properties","description":"Layout uses inline/block logical properties instead of left/right physical ones.","applies_to":"site","method":"auto","scoring":"fraction","measure":"Share of directional declarations (margin, padding, inset, border, text-align, float) written logically rather than physically, from authored stylesheet rules.","blocker":false,"fix":"margin-inline-start over margin-left. Physical properties are why an RTL layout needs a second stylesheet and then diverges from the first."},{"id":"R3","weight":2,"title":"Arabic typography and numerals","description":"Arabic runs use the Arabic face, directional icons mirror, and the numeral system is consistent throughout.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Arabic-range text resolving to the Arabic face; chevrons and arrows mirrored in RTL; one numeral system (Arabic-Indic or Western) used consistently.","blocker":false,"fix":"Mixed numeral systems inside one interface is the most common bilingual defect and the easiest to fix."}],"part":"standards"},{"id":"a11y","label":"Accessibility","weight":10,"checks":[{"id":"A1","weight":4,"title":"Text contrast (WCAG AA)","description":"Every text run meets 4.5:1, or 3:1 where it qualifies as large text.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of text runs meeting their applicable threshold against their effective background.","blocker":true,"fix":"Government services carry a statutory accessibility obligation. Darken the text token or lighten the surface — the finding gives the measured ratio and the needed delta."},{"id":"A2","weight":2,"title":"Non-text contrast","description":"UI boundaries, icons and graphical affordances meet 3:1 against their surroundings.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of borders, icon fills and control boundaries meeting 3:1.","blocker":true,"fix":"An input whose border disappears against its background is not usable at low vision or in sunlight."},{"id":"A3","weight":2,"title":"Visible focus","description":"Every interactive element shows a visible focus indicator on keyboard focus.","applies_to":"site","method":"auto","scoring":"fraction","measure":"Share of focusable elements whose computed style changes visibly on :focus-visible, with an indicator meeting 3:1.","blocker":false,"fix":"Never remove the outline without replacing it. Keyboard-only users navigate the whole service through this one affordance."},{"id":"A4","weight":2,"title":"Target size","description":"Interactive targets are at least 24x24 CSS px (WCAG 2.2 AA), spacing exceptions allowed.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of interactive elements whose hit box meets the minimum, counting the spacing exception where neighbours are far enough apart.","blocker":false,"fix":"Grow the control or its padding. Icon-only buttons are the usual offenders."}],"part":"standards"},{"id":"motion","label":"Motion","weight":4,"checks":[{"id":"M1","weight":2,"title":"Motion tokens","description":"Transition durations and easing curves come from the DGA motion tokens.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of transition/animation declarations whose duration and timing function match motion tokens.","blocker":false,"fix":"Use the named duration and curve so motion feels the same across services."},{"id":"M2","weight":2,"title":"Reduced motion","description":"prefers-reduced-motion is honoured.","applies_to":"site","method":"auto","scoring":"binary","measure":"Pass if the stylesheet carries a prefers-reduced-motion rule and animation is actually suppressed under the emulated preference.","blocker":false,"fix":"Add a reduced-motion block that skips the motion rather than shortening it."}],"part":"foundations"}],"parts":[{"id":"foundations","label":"Foundations","weight":58,"source":"Foundations - Platforms Code","covers":"Colour tokens, the type ramp, the spacing and radius scales, elevation and motion."},{"id":"components","label":"Components","weight":24,"source":"Components Library + Icons - Platforms Code","covers":"Component anatomy, variants and states, the icon set and official marks."},{"id":"standards","label":"Standards","weight":18,"source":"DGA guidance, not a Figma library","covers":"RTL and bilingual behaviour, and WCAG accessibility."}]};
+  var RUBRIC = {"version":1,"standard":{"name":"DGA Platforms Code","arabicName":"كود المنصات","authority":"Digital Government Authority, Saudi Arabia","source":"https://www.figma.com/community/file/1392264328585493958/components-library-platforms-code"},"bands":[{"id":"compliant","label":"Compliant","min":90},{"id":"substantial","label":"Substantially compliant","min":75},{"id":"partial","label":"Partial","min":60},{"id":"non-compliant","label":"Non-compliant","min":0}],"blockerCapBand":"partial","passThreshold":{"default":0.9,"blocker":1},"thresholds":{"colorMatchDeltaE":2,"colorNearMissDeltaE":10,"contrastNormalText":4.5,"contrastLargeText":3,"contrastNonText":3,"largeTextPx":24,"largeBoldPx":18.66,"minTargetPx":24,"offPaletteMinOccurrences":3,"coverageIgnoreBelowOccurrences":1},"categories":[{"id":"color","label":"Color & tokens","weight":18,"checks":[{"id":"C1","weight":8,"title":"Color token coverage","description":"Every text, background, border and fill color resolves to a DGA color token.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of color-bearing declarations within deltaE <= colorMatchDeltaE of some ledger color.","blocker":false,"fix":"Replace the literal color with the named DGA token. The finding names the nearest token for each offender."},{"id":"C2","weight":4,"title":"No off-palette brand color","description":"No color far from every DGA token (deltaE > colorNearMissDeltaE) is used repeatedly as a brand or accent surface.","applies_to":"both","method":"auto","scoring":"fraction","measure":"1 minus the occurrence-weighted share of far-off-palette colors used at least offPaletteMinOccurrences times. Near-misses are C1's problem, not this one.","blocker":true,"fix":"An unrecognisable brand color is an identity violation, not a styling preference. Move it onto the DGA palette or get the addition approved into the library."},{"id":"C3","weight":3,"title":"Semantic colors used semantically","description":"success / warning / error / info tokens appear only in their semantic roles, and those roles use no other color.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of semantic-token usages whose surrounding role matches the token's meaning, plus destructive/among-status affordances that use the correct token.","blocker":false,"fix":"Error text in the brand green, or a success toast in red, breaks the one convention users carry between government platforms."},{"id":"C4","weight":3,"title":"Dark theme from the DS dark set","description":"If the target ships a dark theme, its colors come from the DGA dark-mode tokens rather than ad-hoc darkening.","applies_to":"both","method":"auto","scoring":"fraction","na_when":"target has no dark theme","measure":"Same coverage calculation as C1, run against the dark-scheme capture and the ledger's dark set.","blocker":false,"fix":"Point the dark theme at the DGA dark tokens. Inverting or dimming light tokens drifts within one release."}],"part":"foundations"},{"id":"typography","label":"Typography","weight":16,"checks":[{"id":"T1","weight":5,"title":"Typeface stack","description":"Latin and Arabic text render in the DGA typefaces, each script in the face specified for it.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of rendered text whose resolved font family is in the ledger's font stack for that script.","blocker":false,"fix":"A substituted face is the single most visible compliance failure — it reads as a different government at a glance."},{"id":"T2","weight":5,"title":"Type scale","description":"Font sizes come from the DGA type ramp.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of computed font-size values matching a ramp step exactly (px, after rem resolution).","blocker":false,"fix":"Snap to the nearest ramp step; the finding names it."},{"id":"T3","weight":3,"title":"Font weights","description":"Only the weights the DGA system defines are used.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of computed font-weight values in the ledger's allowed weight set.","blocker":false,"fix":"Synthetic or off-scale weights render inconsistently across platforms, especially in Arabic."},{"id":"T4","weight":3,"title":"Line height and tracking","description":"Line-height and letter-spacing match the ramp step's paired values.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of text runs whose (size, line-height, letter-spacing) triple matches one ramp step. Matching leading alone lets a 14px body carry 72px display leading and pass, which is the mismatch this check exists to catch.","blocker":false,"fix":"Set the ramp's paired leading rather than a global multiplier — Arabic ascenders and descenders need the extra room."}],"part":"foundations"},{"id":"spacing","label":"Spacing & layout","weight":12,"checks":[{"id":"S1","weight":6,"title":"Spacing scale","description":"Padding, margin and gap values sit on the DGA spacing grid.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of non-zero spacing values matching a scale step.","blocker":false,"fix":"Off-grid spacing is what makes an otherwise on-token page feel unlike the rest of the platform."},{"id":"S2","weight":3,"title":"Container widths and gutters","description":"Page container max-widths, gutters and column behaviour follow the DGA breakpoints.","applies_to":"site","method":"auto","scoring":"fraction","measure":"Measured at desktop, tablet and mobile captures; each breakpoint whose container width and gutter match the ledger scores its third.","blocker":false,"fix":"Match the DGA container at each breakpoint so content lines up across linked government services."},{"id":"S3","weight":3,"title":"Vertical rhythm","description":"Section and block spacing uses the DGA rhythm steps rather than arbitrary gaps.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of between-section vertical gaps matching a rhythm step.","blocker":false,"fix":"Use the rhythm steps for section separation; the page reads as one document rather than stacked fragments."}],"part":"foundations"},{"id":"shape","label":"Shape & elevation","weight":8,"checks":[{"id":"E1","weight":3,"title":"Corner radii","description":"border-radius values come from the DGA radius scale.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of non-zero radii matching a scale step (fully-round pills excluded and checked against the pill token).","blocker":false,"fix":"Snap to the nearest radius step."},{"id":"E2","weight":2,"title":"Borders","description":"Border widths and colors come from the DGA border tokens.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of visible borders whose width is on the scale and whose color is a ledger border token.","blocker":false,"fix":"Use the border tokens; hairlines that vary by a fraction of a pixel show up as banding on scaled displays."},{"id":"E3","weight":3,"title":"Elevation","description":"box-shadow values come from the DGA elevation set.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of shadows matching an elevation token. Both sides are normalised to x/y/blur/spread plus rgba before comparison, because the ledger writes hex and the browser reports rgba() — comparing raw strings, or numbers scraped from them, can never match.","blocker":false,"fix":"Use the named elevation level. Hand-tuned shadows break the depth ordering the system defines."}],"part":"foundations"},{"id":"components","label":"Components","weight":18,"checks":[{"id":"P1","weight":8,"title":"DS components, not rebuilds","description":"Buttons, inputs, selects, cards, tabs, tables, navigation, modals and alerts correspond to DGA components rather than bespoke reimplementations.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of identified component instances matching a DGA component by anatomy. On Figma targets, whether the instance is a library instance rather than a detached or hand-drawn frame.","blocker":false,"fix":"Adopt the library component. A rebuild that looks right today is the thing that drifts at the next DGA release."},{"id":"P2","weight":5,"title":"Variants, sizes and states","description":"Component variants (primary / secondary / tertiary), sizes and interaction states are the ones the system defines.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of instances whose variant, size and hover/active/disabled/focus treatments match the spec.","blocker":false,"fix":"Missing disabled or focus treatments are the usual failure; both are specified, neither is optional."},{"id":"P3","weight":5,"title":"Component anatomy","description":"Internal padding, icon-and-label spacing and order, and minimum heights match the component spec.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of instances whose measured internal geometry matches the spec within 1px.","blocker":false,"fix":"Restore the specified padding and min-height. Squeezed buttons are also the usual cause of an A4 target-size failure."}],"part":"components"},{"id":"brand","label":"Iconography & brand","weight":6,"checks":[{"id":"I1","weight":3,"title":"Icon set","description":"Icons come from the DGA icon set, at scale sizes, with the specified stroke weight.","applies_to":"both","method":"judged","scoring":"fraction","measure":"Share of icons identifiable as DGA set members at a scale size. Mixed icon libraries on one page fail proportionally.","blocker":false,"fix":"Standardise on the DGA icon set. Two icon families on one screen is visible even to users who cannot name why."},{"id":"I2","weight":3,"title":"Logo and lockup","description":"Official marks use approved variants at or above minimum size, with the specified clear space, uncropped and unrecoloured.","applies_to":"both","method":"judged","scoring":"binary","measure":"Pass only if every mark on the target satisfies variant, minimum size, clear space and color rules.","blocker":true,"fix":"Misuse of a government mark is an identity violation. Use the approved asset at approved size with its clear space intact."}],"part":"components"},{"id":"rtl","label":"RTL & bilingual","weight":8,"checks":[{"id":"R1","weight":3,"title":"Direction and mirroring","description":"Arabic renders with dir=rtl and the layout mirrors — not just the text.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Correct dir/lang on the document and on mixed-script runs, plus evidence that layout order, alignment and navigation actually mirror in the RTL capture.","blocker":false,"fix":"Set dir on the document and let logical properties carry the mirroring, rather than a per-component RTL override sheet."},{"id":"R2","weight":3,"title":"Logical properties","description":"Layout uses inline/block logical properties instead of left/right physical ones.","applies_to":"site","method":"auto","scoring":"fraction","measure":"Share of directional declarations written logically rather than physically, in FIRST-PARTY stylesheets only. Vendor bundles are counted separately and reported as context — scoring them measures the framework choice rather than the team's work.","blocker":false,"fix":"margin-inline-start over margin-left. Physical properties are why an RTL layout needs a second stylesheet and then diverges from the first."},{"id":"R3","weight":2,"title":"Arabic typography and numerals","description":"Arabic runs use the Arabic face, directional icons mirror, and the numeral system is consistent throughout.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Arabic-range text resolving to the Arabic face; chevrons and arrows mirrored in RTL; one numeral system (Arabic-Indic or Western) used consistently.","blocker":false,"fix":"Mixed numeral systems inside one interface is the most common bilingual defect and the easiest to fix."}],"part":"standards"},{"id":"a11y","label":"Accessibility","weight":10,"checks":[{"id":"A1","weight":4,"title":"Text contrast (WCAG AA)","description":"Every text run meets 4.5:1, or 3:1 where it qualifies as large text.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Occurrence-weighted share of text runs meeting their applicable threshold against their effective background.","blocker":true,"fix":"Government services carry a statutory accessibility obligation. Darken the text token or lighten the surface — the finding gives the measured ratio and the needed delta."},{"id":"A2","weight":2,"title":"Non-text contrast","description":"UI boundaries, icons and graphical affordances meet 3:1 against their surroundings.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of borders that identify a UI COMPONENT or its state meeting 3:1 against their surroundings. Decorative borders — dividers, card outlines — are outside SC 1.4.11 and are skipped rather than failed; the skipped count is reported.","blocker":true,"fix":"An input whose border disappears against its background is not usable at low vision or in sunlight."},{"id":"A3","weight":2,"title":"Visible focus","description":"Every interactive element shows a visible focus indicator on keyboard focus.","applies_to":"site","method":"auto","scoring":"fraction","measure":"Share of focusable elements whose computed style changes visibly on :focus-visible, with an indicator meeting 3:1.","blocker":false,"fix":"Never remove the outline without replacing it. Keyboard-only users navigate the whole service through this one affordance."},{"id":"A4","weight":2,"title":"Target size","description":"Interactive targets are at least 24x24 CSS px (WCAG 2.2 AA), spacing exceptions allowed.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of interactive elements meeting the minimum, with the WCAG 2.2 exceptions applied: a target inline in a sentence leaves the denominator, and an undersized target passes if a 24px circle centred on it intersects no other target. Both exemption counts are reported.","blocker":false,"fix":"Grow the control or its padding. Icon-only buttons are the usual offenders."}],"part":"standards"},{"id":"motion","label":"Motion","weight":4,"checks":[{"id":"M1","weight":2,"title":"Motion tokens","description":"Transition durations and easing curves come from the DGA motion tokens.","applies_to":"both","method":"auto","scoring":"fraction","measure":"Share of transition/animation declarations whose duration and timing function match motion tokens.","blocker":false,"fix":"Use the named duration and curve so motion feels the same across services."},{"id":"M2","weight":2,"title":"Reduced motion","description":"prefers-reduced-motion is honoured.","applies_to":"site","method":"auto","scoring":"binary","measure":"Pass if the stylesheet carries a prefers-reduced-motion rule and animation is actually suppressed under the emulated preference.","blocker":false,"fix":"Add a reduced-motion block that skips the motion rather than shortening it."}],"part":"foundations"}],"parts":[{"id":"foundations","label":"Foundations","weight":58,"source":"Foundations - Platforms Code","covers":"Colour tokens, the type ramp, the spacing and radius scales, elevation and motion."},{"id":"components","label":"Components","weight":24,"source":"Components Library + Icons - Platforms Code","covers":"Component anatomy, variants and states, the icon set and official marks."},{"id":"standards","label":"Standards","weight":18,"source":"DGA guidance, not a Figma library","covers":"RTL and bilingual behaviour, and WCAG accessibility."}]};
   var TOKENS = {"synced":"2026-08-18","source":{"standard":"DGA Platforms Code","publisher":"SDGA / Digital Government Authority, Saudi Arabia","profile":"https://www.figma.com/@sdga","manifest":"See sources.json — 23 published files, 4 of them the system itself.","syncedFiles":[{"name":"Foundations - Platforms Code","id":"1392267405633663431","synced":"2026-08-17","pages":["FOUNDATIONS 2:2","Colors 2:3","Typography 2:4","Effect styles 2:5","Spacing, radius & grids 2:6"]},{"name":"Components Library - Platforms Code","id":"1392264328585493958","synced":"2026-08-17","pages":["Get Started 16026:49769","Buttons 1:1183","Inline Alert 1730:46041","Text input 954:19434","Card 8940:22264","UI Shell Nav Header 429:130167","Tags 12:539"]},{"name":"Mobile Components - Platforms Code","id":"1392271796654597578","synced":"2026-08-18","pages":["Buttons 1:1183","Text input 954:19434","Card 11367:20133","UI Shell - Tab Bar 8332:23832","Checkbox 954:11220 (cross-check)"]}],"precedence":"Foundations > Components Library > templates. Conflicts are listed in $notes, never averaged."},"color":{"light":{"Button/button-background-primary-default":"#1b8354","Button/button-background-primary-hovered":"#166a45","Button/button-background-primary-pressed":"#104631","Button/button-background-primary-selected":"#14573a","Button/button-background-primary-focused":"#1b8354","Text/text-primary":"#0d121c","Background/background-primary-50":"#f3fcf6","Background/background-primary-400":"#54c08a","Background/background-SA-Flag":"#074d31","Icon/background-brand-light":"#f3fcf6","Link/link-primary-hovered":"#54c08a","Link/link-primary-pressed":"#88d8ad","Text/text-default":"#161616","Text/text-display":"#1f2a37","Text/text-primary-paragraph":"#384250","Text/text-secondary-paragraph":"#6c737f","Text/text-oncolor-primary":"#ffffff","Text/text-success":"#067647","Text/text-warning":"#b54708","Text/text-error":"#b42318","Text/text-info":"#175cd3","Global/text-default-disabled":"#9da4ae","Global/text-default-oncolor-disabled":"#ffffff66","Global/input-text-disabled":"#9da4ae","Background/background-white":"#ffffff","Background/background-card":"#ffffff","Background/background-menu":"#ffffff","Background/background-notification-white":"#ffffff","Background/background-neutral-25":"#fcfcfd","Background/background-neutral-50":"#f9fafb","Background/background-neutral-200":"#e5e7eb","Background/background-neutral-400":"#9da4ae","Background/background-neutral-800":"#1f2a37","Global/background-disabled":"#e5e7eb","Global/background-inverse-disabled":"#f3f4f6","Background/background-success":"#079455","Background/background-success-25":"#f6fef9","Background/background-warning":"#dc6803","Background/background-warning-25":"#fffcf5","Background/background-warning-50":"#fffaeb","Background/background-error":"#d92d20","Background/background-error-25":"#fffbfa","Background/background-info":"#1570ef","Background/background-info-25":"#f5faff","Border/border-neutral-primary":"#d2d6db","Border/border-neutral-secondary":"#e5e7eb","Border/border-black":"#161616","Border/border-white":"#ffffff","Border/border-white-40":"#ffffff66","Border/border-secondary":"#e5e7eb","Border/border-success-light":"#abefc6","Border/border-warning-light":"#fedf89","Border/border-error-light":"#fecdca","Border/border-info-light":"#b2ddff","Border/border-disabled":"#d2d6db","Global/border-disabled":"#9da4ae","Button/button-background-neutral-default":"#f9fafb","Button/button-background-neutral-hovered":"#f3f4f6","Button/button-background-neutral-pressed":"#e5e7eb","Button/button-background-neutral-selected":"#e5e7eb","Button/button-background-neutral-focused":"#f3f4f6","Button/button-background-black-default":"#0d121c","Button/button-background-black-hovered":"#1f2a37","Button/button-background-black-pressed":"#4d5761","Button/button-background-black-selected":"#384250","Button/button-background-black-focused":"#0d121c","Button/button-background-oncolor-default":"#ffffff","Button/button-background-oncolor-hovered":"#ffffffcc","Button/button-background-oncolor-pressed":"#ffffff99","Button/button-background-oncolor-selected":"#ffffffb2","Button/button-background-oncolor-focused":"#ffffff","Button/button-background-transparent-hovered":"#ffffff33","Button/button-background-transparent-pressed":"#ffffff66","Button/button-background-transparent-selected":"#ffffff4d","Button/button-background-disabled-on-color":"#ffffff33","Button/button-label-transparent-hovered-on-color":"#54c08a","Button/button-label-transparent-pressed-on-color":"#88d8ad","Button/button-label-transparent-selected-on-color":"#54c08a","Button/button-background-danger-primary-default":"#d92d20","Button/button-background-danger-primary-hovered":"#b42318","Button/button-background-danger-primary-pressed":"#7a271a","Button/button-background-danger-primary-selected":"#912018","Button/button-background-danger-primary-focused":"#d92d20","Button/button-background-danger-secondary-default":"#fef3f2","Button/button-background-danger-secondary-hovered":"#fee4e2","Button/button-background-danger-secondary-pressed":"#fecdca","Button/button-background-danger-secondary-focused":"#fef3f2","Button/button-label-danger-primary-default-oncolor":"#fecdca","Button/button-label-danger-primary-hovered-oncolor":"#fda29b","Button/button-label-danger-primary-pressed-oncolor":"#f97066","Form/field-background-default":"#ffffff","Form/field-background-darker":"#f3f4f6","Form/field-background-lighter":"#fcfcfd","Form/field-background-pressed":"#f3f4f6","Form/field-border-default":"#9da4ae","Form/field-border-hovered":"#384250","Form/field-border-pressed":"#0d121c","Form/field-border-error":"#b42318","Form/field-text-label":"#161616","Form/field-text-placeholder":"#6c737f","Form/field-text-filled":"#161616","Form/field-text-focused":"#384250","Form/field-text-hovered":"#161616","Form/field-text-pressed":"#384250","Form/field-text-readonly":"#161616","Icon/icon-default":"#161616","Icon/icon-oncolor":"#ffffff","Icon/icon-warning":"#b54708","Icon/background-success-light":"#ecfdf3","Icon/background-warning-light":"#fffaeb","Icon/background-error-light":"#fef3f2","Icon/background-info-light":"#eff8ff","Global/icon-default-oncolor-disabled":"#ffffff66","Tag/tag-text-neutral":"#1f2a37","Tag/tag-background-neutral":"#4d5761","Tag/tag-background-neutral-light":"#f9fafb","Tag/tag-border-neutral":"#4d5761","Tag/tag-text-success":"#085d3a","Tag/tag-background-success":"#067647","Tag/tag-background-success-light":"#ecfdf3","Tag/tag-border-success":"#067647","Tag/tag-border-success-light":"#abefc6","Tag/tag-icon-success":"#085d3a","Tag/tag-text-warning":"#93370d","Tag/tag-background-warning":"#b54708","Tag/tag-background-warning-light":"#fffaeb","Tag/tag-border-warning":"#b54708","Tag/tag-border-warning-light":"#fedf89","Tag/tag-icon-warning":"#93370d","Tag/tag-text-error":"#912018","Tag/tag-background-error":"#d92d20","Tag/tag-background-error-light":"#fef3f2","Tag/tag-border-error":"#b42318","Tag/tag-border-error-light":"#fecdca","Tag/tag-icon-error":"#912018","Tag/tag-text-info":"#1849a9","Tag/tag-background-info":"#1570ef","Tag/tag-background-info-light":"#eff8ff","Tag/tag-border-info":"#175cd3","Tag/tag-border-info-light":"#b2ddff","Tag/tag-icon-info":"#1849a9","Tag/tag-background-on-color":"#ffffff33","Tag/tag-border-on-color":"#ffffff99","Tag/tag-dot":"#ffffff99","Alpha/alpha-white-100":"#ffffff","Alpha/alpha-white-10":"#ffffff1a","Alpha/alpha-black-10":"#0000001a","Colors/Base/white":"#ffffff","Colors/Neutral/25":"#fcfcfd","Colors/Neutral/100":"#f3f4f6","Colors/Neutral/300":"#d2d6db","Colors/Neutral/400":"#9da4ae","Colors/Neutral/950":"#0d121c","Colors/SA-Flag/600":"#1b8354","Colors/Foreground/fg-brand-primary (600)":"#1b8354","Colors/Background/bg-primary":"#ffffff","Colors/Background/bg-secondary":"#f9fafb","Colors/Background/bg-quaternary":"#eaecf0","Colors/Background/bg-brand-primary_alt":"#f3fcf6","Component colors/Utility/Gray/utility-gray-50":"#f9fafb","Component colors/Utility/Gray/utility-gray-200":"#eaecf0","Component colors/Utility/Gray/utility-gray-700":"#344054","Component colors/Components/Buttons/Secondary/button-secondary-bg":"#ffffff","Component colors/Components/Buttons/Secondary/button-secondary-border":"#d0d5dd","Text/text-secondary":"#384250","Text/text-tertiary":"#4d5761","Text/text-white":"#ffffff","Text 2/text-primary_on-color":"#ffffff","Text 2/text-secondary_on-color":"#ffffffb2","Text 2/text-tertiary_on-color":"#ffffff99","Text 2/text-tertiary":"#4d5761","Text 2/text-brand-primary":"#14573a","Text 2/text-brand-secondary":"#1b8354","Text 2/text-brand-tertiary":"#25935f","Text 2/text-warning-primary":"#b54708","Text 2/text-success-primary":"#067647","Text 2/text-info-primary":"#175cd3","Border/border-primary":"#d2d6db","Border 2/border-primary":"#d2d6db","Background/background-body":"#f9fafb","Background/background-neutral-100":"#f3f4f6","Background/background-info-50":"#eff8ff","Icon/icon-primary":"#1b8354","Icon/icon-success":"#067647","Table/table-cell-border":"#d2d6db","Table/table-text-head":"#384250","Table/table-background-header":"#f3f4f6","Controls/control-border":"#6c737f","Controls/control-primary-checked":"#1b8354","Controls/control-neutral-checked":"#0d121c","Controls/control-ripple-effect":"#f3f4f6","Controls/control-pressed":"#d2d6db","Controls/control-primary-pressed":"#104631","Controls/control-neutral-pressed":"#6c737f","Controls/control-primary-focused":"#1b8354","Controls/control-neutral-focused":"#0d121c","Colors/Base/black":"#000000","Colors/SA-Flag/800":"#14573a","Colors/SA-Flag/900":"#104631","Colors/Gray neutral/400":"#9da4ae","Colors/Gray neutral/600":"#4d5761","Colors/Gray neutral/700":"#384250","Colors/Error/50":"#fef3f2","Colors/Error/200":"#fecdca","Colors/Error/400":"#f97066","Colors/Error/600":"#d92d20","Colors/Error/900":"#7a271a","Background/background-black":"#161616","Background/background-primary":"#1b8354","Border/border-background-white":"#f3f4f6","Text/text-placeholder":"#6c737f","Text/text-error-primary":"#b42318","Text/text-primary_on-color":"#ffffff","Icon/Bg-icon-brand-light":"#f3fcf6","Alpha/alpha-white-50":"#ffffff80","Alpha/alpha-white-70":"#ffffffb2","Button/button-background-transparent-default":"#ffffff00","Button/button-background-transparent-focused":"#ffffff00"},"dark":{},"roles":{"brand":["Button/button-background-primary-default","Button/button-background-primary-hovered","Button/button-background-primary-pressed","Button/button-background-primary-selected","Text/text-primary","Background/background-primary-50","Background/background-primary-400","Background/background-SA-Flag"],"border":["Border/border-neutral-primary","Border/border-neutral-secondary","Border/border-black","Border/border-white","Border/border-white-40","Border/border-secondary","Border/border-success-light","Border/border-warning-light","Border/border-error-light","Border/border-info-light","Border/border-disabled","Global/border-disabled","Form/field-border-default","Form/field-border-hovered","Form/field-border-pressed","Form/field-border-error"],"semantic":{"success":["Background/background-success","Background/background-success-25","Text/text-success","Border/border-success-light","Icon/background-success-light"],"warning":["Background/background-warning","Background/background-warning-25","Background/background-warning-50","Text/text-warning","Border/border-warning-light","Icon/icon-warning","Icon/background-warning-light"],"error":["Background/background-error","Background/background-error-25","Text/text-error","Border/border-error-light","Icon/background-error-light","Button/button-background-danger-primary-default","Form/field-border-error"],"info":["Background/background-info","Background/background-info-25","Text/text-info","Border/border-info-light","Icon/background-info-light","Tag/tag-text-info","Tag/tag-background-info","Tag/tag-background-info-light","Tag/tag-border-info","Tag/tag-border-info-light","Tag/tag-icon-info"]}}},"typography":{"families":{"latin":["IBM Plex Sans Arabic"],"arabic":["IBM Plex Sans Arabic"]},"weights":[400,500,600,700],"ramp":[{"name":"Display xl","size":60,"lineHeight":72,"letterSpacing":-2,"weight":600,"script":"both"},{"name":"Display lg","size":48,"lineHeight":60,"letterSpacing":-2,"weight":600,"script":"both"},{"name":"Display sm","size":30,"lineHeight":38,"letterSpacing":0,"weight":700,"script":"both"},{"name":"Display xs","size":24,"lineHeight":32,"letterSpacing":0,"weight":600,"script":"both"},{"name":"Text xl","size":20,"lineHeight":30,"letterSpacing":0,"weight":600,"script":"both"},{"name":"Text lg","size":18,"lineHeight":28,"letterSpacing":0,"weight":700,"script":"both"},{"name":"Text md","size":16,"lineHeight":24,"letterSpacing":0,"weight":400,"script":"both"},{"name":"Text sm","size":14,"lineHeight":20,"letterSpacing":0,"weight":400,"script":"both"},{"name":"Text xs","size":12,"lineHeight":18,"letterSpacing":0,"weight":500,"script":"both"},{"name":"Text 2xs","size":10,"lineHeight":14,"letterSpacing":0,"weight":600,"script":"both"}]},"spacing":{"base":2,"scale":[0,2,4,6,8,12,16,20,24,32,40,48,64,80,96,128,160,192,224,256,320,384,480,640,720,768,1024,1280,1440,1600,1920],"rhythm":[24,32,40,48,64,80,96,128]},"radius":{"scale":[0,2,4,6,8,16,24],"pill":9999},"border":{"widths":[1,2]},"elevation":{"levels":{"Shadows/shadow-xs":"0 1px 2px 0 #1018280d","Shadows/shadow-sm":"0 1px 2px 0 #1018280d, 0 1px 3px 0 #1018280d","Shadows/shadow-md":"0 2px 4px -2px #1018280f, 0 4px 8px -2px #1018281a","Shadows/shadow-lg":"0 4px 6px -2px #10182808, 0 12px 16px -4px #10182814","Shadows/shadow-xl":"0 8px 8px -4px #10182808, 0 20px 24px -4px #10182814","Shadows/shadow-2xl":"0 24px 48px -12px #1018282e","Shadows/shadow-3xl":"0 32px 64px -12px #10182824"},"backdropBlur":{"backdrop-blur-sm":8,"backdrop-blur-md":16,"backdrop-blur-lg":24,"backdrop-blur-xl":40}},"breakpoints":{"list":[{"name":"mobile","min":0,"container":null,"gutter":16},{"name":"desktop","min":768,"container":1280,"gutter":32}],"widths":{"xxs":320,"xs":384,"sm":480,"md":560,"lg":640,"xl":768,"2xl":1024,"3xl":1280,"4xl":1440,"5xl":1600,"6xl":1920,"paragraph-max-width":720}},"icons":{"set":"DGA Platforms Code icon set","sizes":[],"strokeWidth":null,"deferred":true},"motion":{"durations":[],"easings":[]},"numerals":null,"a11y":{"minTargetPx":{"desktop":24,"mobile":24}},"dgaVersion":"1.0.3"};
   var COMPONENTS = {"synced":"2026-08-18","source":{"standard":"DGA Platforms Code","publisher":"SDGA / Digital Government Authority, Saudi Arabia","profile":"https://www.figma.com/@sdga","manifest":"See sources.json"},"components":[{"name":"Button","figmaNodeId":"1:1183","variants":["primary","neutral","black","oncolor","transparent","danger-primary","danger-secondary"],"sizes":[{"name":"lg","height":null,"paddingInline":16,"iconGap":4,"fontSize":16,"radius":4},{"name":"md","height":null,"paddingInline":12,"iconGap":4,"fontSize":14,"radius":4},{"name":"sm","height":null,"paddingInline":8,"iconGap":4,"fontSize":12,"radius":4}],"states":["default","hovered","pressed","selected","focused","disabled"],"anatomy":"Optional leading icon, label, optional trailing icon. Gap is 4 at every size — only the inline padding and type step change. Corner is radius-sm (4) throughout, not the size-dependent radius some systems use.","identifiers":{"roles":["button"],"tags":["button","a"],"classHints":[]},"appliesTo":["desktop","mobile"]},{"name":"Text input","figmaNodeId":"954:19434","variants":["default","darker","lighter"],"sizes":[{"name":"default","height":null,"paddingInlineStart":8,"paddingInlineEnd":16,"iconGap":8,"labelGap":8,"fontSize":16,"radius":4}],"states":["default","hovered","pressed","focused","filled","readonly","error","disabled"],"anatomy":"Label above field with an 8 gap; field carries a 1px border (border colour changes per state), radius-sm (4). Placeholder uses text-secondary-paragraph, filled text uses text-default. Error state swaps the border to field-border-error.","identifiers":{"roles":["textbox"],"tags":["input","textarea"],"classHints":[]},"appliesTo":["desktop","mobile"]},{"name":"Card","figmaNodeId":"8940:22264","variants":["default"],"sizes":[{"name":"lg","height":null,"gap":24,"fontSize":18,"radius":16}],"states":["default","disabled"],"anatomy":"background-card on radius-lg (16), internal gap 24, title at Text lg/Bold (18/28). Elevation is Shadows/shadow-md when raised.","identifiers":{"roles":["article","group"],"tags":["article","section","div"],"classHints":["card"]},"appliesTo":["desktop","mobile"]},{"name":"Inline alert / Notification","figmaNodeId":"1730:46041","variants":["info","success","warning","error"],"sizes":[{"name":"default","height":null,"padding":16,"paddingInline":24,"gap":16,"radius":8}],"states":["default"],"anatomy":"Icon, then title at Text md/Semibold with body at Text sm/Regular separated by text-content-gap 8, then an optional button group with buttons-group-gap 8. Each variant pairs its background-<role>-25 surface with its border-<role>-light edge and text-<role> label — the three always move together.","identifiers":{"roles":["alert","status"],"tags":["div"],"classHints":["alert","notification","toast"]},"appliesTo":["desktop","mobile"]},{"name":"Table","figmaNodeId":"2:5 (Foundations/Effect styles)","variants":["default"],"sizes":[{"name":"default","height":null,"cellPaddingInline":16,"cellPaddingBlock":8,"cellGap":8,"fontSize":14,"radius":8}],"states":["default","header"],"anatomy":"Header row on table-background-header #f3f4f6 with table-text-head #384250; cells separated by table-cell-border #d2d6db. Cell padding is 16 inline / 8 block with an 8 gap between cell contents.","identifiers":{"roles":["table"],"tags":["table"],"classHints":["table"]},"appliesTo":["desktop","mobile"]},{"name":"UI Shell — Tab Bar","figmaNodeId":"8332:23832","appliesTo":["mobile"],"variants":["1-5 tabs","no selection","on-color","RTL"],"sizes":[{"name":"default","width":375,"height":84,"itemWidth":46,"itemWidthRtl":54,"itemHeight":70,"itemGap":4,"fontSize":12}],"states":["normal","pressed","selected"],"anatomy":"Bottom bar 84 tall across a 375 viewport. Each tab item is 46x70 (54 wide in RTL — the item widens rather than the label truncating), icon over a 12/18 label, tab-button-gap 4. Supports 1-5 tabs plus a no-selection state, each with an on-color variant. Badge indicators are 12x12 small, 16x16 large, 30x16 with max digits.","identifiers":{"roles":["tablist","navigation"],"tags":["nav"],"classHints":["tabbar","bottom-nav"]}},{"name":"UI Shell — Navigation Bar","figmaNodeId":"8335:15199","appliesTo":["mobile"],"variants":[],"sizes":[],"states":[],"anatomy":"Mobile top bar. Present in the library and recorded so an auditor knows it exists; measurements not yet extracted.","identifiers":{"roles":["banner","navigation"],"tags":["header","nav"],"classHints":["navbar","appbar"]},"incomplete":true}]};
 
@@ -176,6 +176,10 @@ function probe(OPTS_IN = {}) {
     easing: tally(),
     iconSize: tally(),
     strokeWidth: tally(),
+    // size|line-height|tracking as one key, because T4 asks whether a ramp STEP was
+    // used — a 14px body with 72px display leading passes any test that looks at
+    // leading alone, and that is what the old check did despite documenting a triple.
+    typePair: tally(),
   };
 
   /* ------------------------------------------------------------- traversal */
@@ -243,6 +247,111 @@ function probe(OPTS_IN = {}) {
   let mirroredIconSuspects = 0;
   let rtlElements = 0;
   let ltrElements = 0;
+  let decorativeBordersSkipped = 0;
+  let inlineTargetsExempt = 0;
+  let spacedTargetsExempt = 0;
+
+  /**
+   * Is this border carrying information needed to identify a control or its state?
+   * WCAG 1.4.11 covers that; it does not cover decoration. Controls, things with a
+   * widget role, and elements a control lives inside all qualify. A plain div whose
+   * only job is a hairline does not.
+   */
+  const COMPONENTISH = 'input,select,textarea,button,a[href],summary,[role=button],[role=link],[role=tab],[role=checkbox],[role=radio],[role=switch],[role=combobox],[role=listbox],[role=menuitem],[role=textbox],[role=searchbox],[role=slider],[role=spinbutton],[contenteditable="true"]';
+  function isComponentBoundary(el) {
+    if (el.matches && el.matches(COMPONENTISH)) return true;
+    // A wrapper drawn around a control — the bordered shell of a search field, say —
+    // is carrying that control's boundary.
+    try {
+      if (el.querySelector && el.querySelector(COMPONENTISH)) {
+        const r = el.getBoundingClientRect();
+        if (r.height <= 96) return true; // a control shell, not a page section
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  /**
+   * The value as AUTHORED, not as resolved. Walks the cascade for the winning
+   * declaration so `auto` and percentages can be told apart from real lengths.
+   * Returns null when nothing authored it.
+   */
+  const authoredCache = new Map();
+  function authoredValue(el, prop) {
+    if (el.style && el.style.getPropertyValue(prop)) return el.style.getPropertyValue(prop).trim();
+    const key = el.tagName + '|' + (el.getAttribute('class') || '') + '|' + prop;
+    if (authoredCache.has(key)) return authoredCache.get(key);
+    let found = null;
+    try {
+      for (const sheet of document.styleSheets) {
+        let rules;
+        try { rules = sheet.cssRules; } catch (e) { continue; }
+        for (const r of rules) {
+          if (!r.style || !r.selectorText) continue;
+          const v = r.style.getPropertyValue(prop);
+          if (!v) continue;
+          try { if (el.matches(r.selectorText)) found = v.trim(); } catch (e) {}
+        }
+      }
+    } catch (e) {}
+    if (authoredCache.size < 400) authoredCache.set(key, found);
+    return found;
+  }
+
+  /**
+   * WCAG 2.2 spacing exception: an undersized target passes if a MIN_TARGET-wide
+   * circle centred on it does not intersect the equivalent circle of any other
+   * target. Small controls with room around them are reachable; small controls
+   * crowded together are not, and that is the distinction the SC draws.
+   */
+  let targetRects = null;
+  function spacingExceptionMet(el, rect) {
+    if (targetRects === null) {
+      targetRects = [];
+      for (const t of document.querySelectorAll(INTERACTIVE)) {
+        const r = t.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) targetRects.push({ el: t, cx: r.left + r.width / 2, cy: r.top + r.height / 2 });
+      }
+    }
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    for (const t of targetRects) {
+      if (t.el === el) continue;
+      const d = Math.hypot(t.cx - cx, t.cy - cy);
+      if (d < MIN_TARGET) return false; // the two circles overlap
+    }
+    return true;
+  }
+
+  /**
+   * A shadow reduced to comparable numbers: [x, y, blur, spread, r, g, b, a] per
+   * layer, inset flagged. Both `#1018280d` and `rgba(16,24,40,0.05)` land on the
+   * same values, which is the whole point — the ledger writes one and the browser
+   * reports the other.
+   */
+  function normaliseShadow(value) {
+    return String(value)
+      .split(/,(?![^(]*\))/)
+      .map((layer) => {
+        const inset = /\binset\b/.test(layer);
+        let rest = layer.replace(/\binset\b/, '');
+        let colour = null;
+        const fn = rest.match(/(rgba?|hsla?|oklch|color)\([^)]*\)/i);
+        if (fn) { colour = fn[0]; rest = rest.replace(fn[0], ''); }
+        else {
+          const hexM = rest.match(/#[0-9a-f]{3,8}\b/i);
+          if (hexM) { colour = hexM[0]; rest = rest.replace(hexM[0], ''); }
+        }
+        const lens = (rest.match(/-?\d*\.?\d+(px|rem|em)?/g) || [])
+          .map((n) => Math.round(parseFloat(n) * 100) / 100)
+          .filter((n) => Number.isFinite(n));
+        while (lens.length < 4) lens.push(0);
+        const c = colour ? parseColor(colour) : null;
+        const rgba = c ? [Math.round(c.r), Math.round(c.g), Math.round(c.b), Math.round(c.a * 100) / 100] : [0, 0, 0, 1];
+        return (inset ? 'inset ' : '') + lens.slice(0, 4).join(' ') + ' / ' + rgba.join(' ');
+      })
+      .join(', ');
+  }
 
   // Declared family name -> the file it actually loads. Built before the walk
   // because both T1 and R3 need to resolve an alias before judging it: a site
@@ -305,6 +414,9 @@ function probe(OPTS_IN = {}) {
       T.fontWeight.add(cs.fontWeight, el);
       T.lineHeight.add(cs.lineHeight === 'normal' ? 'normal' : px(cs.lineHeight), el);
       T.letterSpacing.add(cs.letterSpacing === 'normal' ? '0' : px(cs.letterSpacing), el);
+      T.typePair.add(
+        [px(cs.fontSize), cs.lineHeight === 'normal' ? 'normal' : px(cs.lineHeight),
+         cs.letterSpacing === 'normal' ? 0 : px(cs.letterSpacing)].join('|'), el);
 
       /* A1 — text contrast */
       const size = px(cs.fontSize) || 16;
@@ -359,16 +471,25 @@ function probe(OPTS_IN = {}) {
         const c = parseColor(cs[bc[i]]);
         if (c && c.a > 0) {
           T.borderColor.add(hex(c), el);
-          /* A2 — non-text contrast of the boundary against what is behind it */
-          const { color: behind, imageBehind } = effectiveBackground(el.parentElement || el);
-          if (!imageBehind) {
-            nonTextChecked++;
-            const eff = c.a < 1 ? over(c, behind) : c;
-            const r = Math.round(contrast(eff, behind) * 100) / 100;
-            if (r >= 3.0) nonTextPassing++;
-            else if (nonTextFindings.length < 40) {
-              nonTextFindings.push({ selector: selectorFor(el), border: hex(eff), against: hex(behind), ratio: r, required: 3.0 });
+          /* A2 — non-text contrast.
+             WCAG 1.4.11 covers visual information needed to IDENTIFY user interface
+             components and states, plus graphical objects. It does not cover
+             decoration. Checking every border on the page turned faint dividers and
+             card outlines into conformance failures, which they are not — on one real
+             audit that put the check at 1 of 44 and capped the band on hairlines. */
+          if (isComponentBoundary(el)) {
+            const { color: behind, imageBehind } = effectiveBackground(el.parentElement || el);
+            if (!imageBehind) {
+              nonTextChecked++;
+              const eff = c.a < 1 ? over(c, behind) : c;
+              const r = Math.round(contrast(eff, behind) * 100) / 100;
+              if (r >= 3.0) nonTextPassing++;
+              else if (nonTextFindings.length < 40) {
+                nonTextFindings.push({ selector: selectorFor(el), border: hex(eff), against: hex(behind), ratio: r, required: 3.0 });
+              }
             }
+          } else {
+            decorativeBordersSkipped++;
           }
         }
         break; // one border per element is enough for the tally
@@ -384,11 +505,25 @@ function probe(OPTS_IN = {}) {
         break;
       }
     }
-    if (cs.boxShadow && cs.boxShadow !== 'none') T.shadow.add(cs.boxShadow.slice(0, 120), el);
+    // Shadows are tallied in a NORMALISED form, not as the browser's string. The
+    // ledger stores `0 1px 2px 0 #1018280d` and Chrome serialises the same shadow
+    // as `rgba(16, 24, 40, 0.05) 0px 1px 2px 0px`; comparing those as text, or by
+    // scraping numbers out of them, can never match — the hex reads as one integer
+    // and rgba() as four. E3 was structurally unpassable until this.
+    if (cs.boxShadow && cs.boxShadow !== 'none') T.shadow.add(normaliseShadow(cs.boxShadow), el, { raw: cs.boxShadow.slice(0, 120) });
 
     /* spacing */
-    for (const p of ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft']) {
+    for (const p of ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft']) {
       const v = px(cs[p]);
+      if (v && v > 0) T.spacing.add(v, el);
+    }
+    // Margins only when the AUTHORED value is a length. getComputedStyle resolves
+    // `auto` and percentages to pixels, so a centring margin arrived as a decision
+    // nobody made — that is where "1231.47px is off the DGA scale" came from.
+    for (const p of ['margin-top', 'margin-right', 'margin-bottom', 'margin-left']) {
+      const authored = authoredValue(el, p);
+      if (authored === null || /auto|%|calc/i.test(authored)) continue;
+      const v = px(authored);
       if (v && v > 0) T.spacing.add(v, el);
     }
     for (const p of ['rowGap', 'columnGap']) {
@@ -436,12 +571,32 @@ function probe(OPTS_IN = {}) {
     if (dir === 'rtl') rtlElements++;
     else ltrElements++;
 
-    /* A4 — target size */
+    /* A4 — target size, with the exceptions WCAG 2.2 actually grants.
+       2.5.8 exempts a target that is INLINE in a sentence or block of text, and one
+       with enough SPACING that a 24px circle centred on it touches no other target.
+       Counting every link meant body and footer prose links were reported as
+       failures they are not, which buried the genuinely small controls. */
     if (el.matches && el.matches(INTERACTIVE)) {
+      // The inline exception is for a link sitting IN A SENTENCE. Three things all
+      // have to hold, and the loose version of this wrongly exempted standalone
+      // icon links: `inline-block` is a discrete box rather than running text, and a
+      // target with no text of its own is not part of a sentence at all.
+      const ownLabel = (el.textContent || '').trim();
+      const inlineFlow = cs.display === 'inline' || cs.display === 'contents';
+      const inProse = (() => {
+        const p = el.parentElement;
+        if (!p || !ownLabel) return false;
+        if (!/^(P|LI|TD|TH|SPAN|EM|STRONG|BLOCKQUOTE|FIGCAPTION|DD|DT|LABEL|SMALL)$/.test(p.tagName)) return false;
+        const parentText = (p.textContent || '').trim().length;
+        return parentText > ownLabel.length + 20; // real prose around it
+      })();
+      if (inlineFlow && inProse) { inlineTargetsExempt++; continue; }
+
       interactiveCount++;
       const w = rect.width;
       const h = rect.height;
       if (w >= MIN_TARGET && h >= MIN_TARGET) interactivePassingTarget++;
+      else if (spacingExceptionMet(el, rect)) { spacedTargetsExempt++; interactivePassingTarget++; }
       else if (targetFindings.length < 40) {
         targetFindings.push({
           selector: selectorFor(el),
@@ -470,6 +625,11 @@ function probe(OPTS_IN = {}) {
     focusVisibleRules: 0,
     outlineNoneRules: 0,
     rtlOverrideRules: 0,
+    // vendor CSS is measured but not scored — reported so a reader can see the split
+    vendorLogicalDecls: 0,
+    vendorPhysicalDecls: 0,
+    vendorSheets: 0,
+    firstPartySheets: 0,
   };
   const LOGICAL = /^(margin|padding|inset|border)-(inline|block)(-(start|end))?$|^(inset|margin|padding)-(inline|block)$|^border-(inline|block)-(start|end)-(width|color|style)$/;
   const PHYSICAL = /^(margin|padding)-(left|right)$|^(left|right)$|^border-(left|right)-(width|color|style)$|^border-(left|right)$|^float$|^clear$/;
@@ -510,11 +670,37 @@ function probe(OPTS_IN = {}) {
       }
     }
   }
+  // First-party versus vendor. R2 asks whether the TEAM wrote logical properties;
+  // counting Bootstrap's thousands of physical declarations measures their framework
+  // choice instead, and no site built on such a framework could ever score well no
+  // matter how carefully its own CSS was written.
+  const VENDOR = /(bootstrap|foundation|bulma|tailwind|materialize|semantic-ui|font-?awesome|slick|swiper|owl\.?carousel|jquery|select2|datatables|fullcalendar|aos|animate(\.min)?\.css|normalize|reset|primeng|primereact|antd|mui|chakra)/i;
+  const isVendor = (href) => {
+    if (!href) return false;
+    try {
+      const u = new URL(href, location.href);
+      if (u.origin !== location.origin) return true;   // a CDN is not your code
+      return VENDOR.test(u.pathname);
+    } catch (e) { return false; }
+  };
   for (const sheet of document.styleSheets) {
+    const vendor = isVendor(sheet.href);
+    const before = { l: cssStats.logicalDecls, p: cssStats.physicalDecls };
     try {
       walkRules(sheet.cssRules, false);
     } catch (e) {
       cssStats.inaccessibleSheets++;
+      continue;
+    }
+    const added = { l: cssStats.logicalDecls - before.l, p: cssStats.physicalDecls - before.p };
+    if (vendor) {
+      cssStats.vendorLogicalDecls += added.l;
+      cssStats.vendorPhysicalDecls += added.p;
+      cssStats.logicalDecls = before.l;
+      cssStats.physicalDecls = before.p;
+      cssStats.vendorSheets++;
+    } else {
+      cssStats.firstPartySheets++;
     }
   }
 
@@ -641,8 +827,18 @@ function probe(OPTS_IN = {}) {
       indeterminate: textRunsIndeterminate,
       findings: contrastFindings,
     },
-    nonTextContrast: { checked: nonTextChecked, passing: nonTextPassing, findings: nonTextFindings },
-    targets: { interactive: interactiveCount, passing: interactivePassingTarget, minTargetPx: MIN_TARGET, findings: targetFindings },
+    nonTextContrast: {
+      checked: nonTextChecked, passing: nonTextPassing, findings: nonTextFindings,
+      // decorative borders are outside 1.4.11 and are skipped, not failed
+      decorativeSkipped: decorativeBordersSkipped,
+    },
+    targets: {
+      interactive: interactiveCount, passing: interactivePassingTarget,
+      minTargetPx: MIN_TARGET, findings: targetFindings,
+      // WCAG 2.2 exceptions applied, reported so the number stays legible: inline
+      // targets left the denominator, spaced ones counted as passing.
+      inlineExempt: inlineTargetsExempt, spacingExempt: spacedTargetsExempt,
+    },
     focus: focusProbe,
     rtl: {
       rtlElements,
@@ -865,14 +1061,61 @@ function score({ rubric, tokens, captures = [], judged = {}, options = {} }) {
     const total = sum(rows);
     const tokenShadows = Object.entries(levels || {});
     if (!total || !tokenShadows.length) return { ratio: null, matched: 0, total, offenders: [] };
+    // The probe reports shadows already normalised to "x y blur spread / r g b a".
+    // The ledger stores CSS text, so normalise that the same way before comparing.
+    // Scraping numbers out of the raw strings — as this did — read `#1018280d` as
+    // the integer 1018280 while the browser gave four rgba components, so the arrays
+    // were never even the same length and E3 could not pass on any page, ever.
+    const normLedger = (css) =>
+      String(css)
+        .split(/,(?![^(]*\))/)
+        .map((layer) => {
+          const inset = /\binset\b/.test(layer);
+          let rest = layer.replace(/\binset\b/, '');
+          let colour = null;
+          const fn = rest.match(/(rgba?|hsla?)\([^)]*\)/i);
+          if (fn) { colour = fn[0]; rest = rest.replace(fn[0], ''); }
+          else {
+            const h = rest.match(/#[0-9a-f]{3,8}\b/i);
+            if (h) { colour = h[0]; rest = rest.replace(h[0], ''); }
+          }
+          const lens = (rest.match(/-?\d*\.?\d+(px|rem|em)?/g) || [])
+            .map((n) => Math.round(parseFloat(n) * 100) / 100)
+            .filter((n) => Number.isFinite(n));
+          while (lens.length < 4) lens.push(0);
+          let rgba = [0, 0, 0, 1];
+          if (colour) {
+            const hx = colour.match(/^#([0-9a-f]{6})([0-9a-f]{2})?$/i);
+            if (hx) {
+              const n = parseInt(hx[1], 16);
+              rgba = [(n >> 16) & 255, (n >> 8) & 255, n & 255, hx[2] ? Math.round((parseInt(hx[2], 16) / 255) * 100) / 100 : 1];
+            } else {
+              const m = colour.match(/\(([^)]+)\)/);
+              if (m) {
+                const p = m[1].split(/[,\s/]+/).filter(Boolean).map(Number);
+                rgba = [p[0] | 0, p[1] | 0, p[2] | 0, p.length > 3 ? Math.round(p[3] * 100) / 100 : 1];
+              }
+            }
+          }
+          return (inset ? 'inset ' : '') + lens.slice(0, 4).join(' ') + ' / ' + rgba.join(' ');
+        })
+        .join(', ');
+
+    // The probe now reports shadows already normalised ("x y blur spread / r g b a").
+    // Captures taken before that change carry the browser's raw string, so normalise
+    // anything that is not already in the normalised shape.
+    const isNormalised = (s) => / \/ /.test(String(s));
     const nums = (s) => (String(s).match(/-?\d*\.?\d+/g) || []).map(Number);
     let matched = 0;
     const offenders = [];
     for (const r of rows) {
-      const a = nums(r.value);
+      const observed = isNormalised(r.value) ? r.value : normLedger(r.value);
+      const a = nums(observed);
       const hit = tokenShadows.some(([, v]) => {
-        const b = nums(v);
-        if (a.length !== b.length) return false;
+        const nv = normLedger(v);
+        if (observed === nv) return true;           // normalised forms agree exactly
+        const b = nums(nv);
+        if (a.length !== b.length) return false;    // fall back to a tolerant compare
         return a.every((n, i) => Math.abs(n - b[i]) <= 1.5);
       });
       if (hit) matched += r.count;
@@ -975,15 +1218,51 @@ function score({ rubric, tokens, captures = [], judged = {}, options = {} }) {
       if (r.value === 'normal') continue;
       if ([...legalLH].some((l) => near(Number(r.value), l, 1))) lhMatched += r.count;
     }
-    auto.T4 = { ratio: lhTotal ? lhMatched / lhTotal : null, matched: lhMatched, total: lhTotal, offenders: [] };
-    if (lhTotal && lhMatched / lhTotal < 0.9) {
-      finding('T4', 'minor', 'Line heights do not match the DGA ramp', {
-        found: `${lhTotal - lhMatched} of ${lhTotal} text runs`,
-        expected: [...legalLH].sort((a, b) => a - b).join(', ') + ' px',
-        where: lhRows.filter((r) => r.value !== 'normal' && ![...legalLH].some((l) => near(Number(r.value), l, 1))).slice(0, 5).flatMap((r) => r.samples),
-        fix: 'Set the ramp step’s paired leading rather than a global multiplier — Arabic needs the extra room and a multiplier will not give it.',
-        note: `Ramp sizes present: ${[...sizes].sort((a, b) => a - b).join(', ')}`,
-      });
+    // A ramp step is a size AND its paired leading AND its tracking. Testing leading
+    // against a flat list let a 14px body carry 72px display leading and pass, which
+    // is exactly the mismatch this check exists to catch. Where the probe reports the
+    // triple, match on it; fall back to the old leading-only test for older captures.
+    const pairRows = mergedTally('typePair');
+    if (sum(pairRows) > 0) {
+      const pairTotal = sum(pairRows);
+      let pairMatched = 0;
+      const pairOff = [];
+      for (const r of pairRows) {
+        const [szS, lhS, lsS] = String(r.value).split('|');
+        const sz = Number(szS);
+        const step = ramp.find((s) => near(s.size, sz, 0.6));
+        const lhOk = step
+          ? (lhS === 'normal' ? false : near(Number(lhS), step.lineHeight, 1))
+          : false;
+        const lsOk = step ? near(Number(lsS || 0), step.letterSpacing ?? 0, 0.3) : false;
+        if (step && lhOk && lsOk) pairMatched += r.count;
+        else pairOff.push({ value: r.value, count: r.count, samples: r.samples, size: sz, step });
+      }
+      auto.T4 = { ratio: pairTotal ? pairMatched / pairTotal : null, matched: pairMatched, total: pairTotal, offenders: pairOff };
+      pairOff.sort((a, b) => b.count - a.count);
+      for (const o of pairOff.slice(0, 6)) {
+        const [sz, lh, ls] = String(o.value).split('|');
+        finding('T4', o.count >= 20 ? 'major' : 'minor', `Type step ${sz}px is not paired with its ramp leading`, {
+          found: `${sz}px / ${lh} leading / ${ls} tracking`,
+          expected: o.step
+            ? `${o.step.name}: ${o.step.size}px / ${o.step.lineHeight} / ${o.step.letterSpacing ?? 0}`
+            : `${sz}px is not a ramp size at all`,
+          occurrences: o.count,
+          where: o.samples,
+          fix: 'Set the ramp step’s paired leading rather than a global multiplier — Arabic needs the extra room and a multiplier will not give it.',
+        });
+      }
+    } else {
+      auto.T4 = { ratio: lhTotal ? lhMatched / lhTotal : null, matched: lhMatched, total: lhTotal, offenders: [] };
+      if (lhTotal && lhMatched / lhTotal < 0.9) {
+        finding('T4', 'minor', 'Line heights do not match the DGA ramp', {
+          found: `${lhTotal - lhMatched} of ${lhTotal} text runs`,
+          expected: [...legalLH].sort((a, b) => a - b).join(', ') + ' px',
+          where: lhRows.filter((r) => r.value !== 'normal' && ![...legalLH].some((l) => near(Number(r.value), l, 1))).slice(0, 5).flatMap((r) => r.samples),
+          fix: 'Set the ramp step’s paired leading rather than a global multiplier — Arabic needs the extra room and a multiplier will not give it.',
+          note: `Ramp sizes present: ${[...sizes].sort((a, b) => a - b).join(', ')}`,
+        });
+      }
     }
   }
 
@@ -1133,7 +1412,8 @@ function score({ rubric, tokens, captures = [], judged = {}, options = {} }) {
       auto.R2 = { ratio: tot ? css.logical / tot : null, detail: css };
       if (tot && css.physical > 0) {
         finding('R2', css.physical > css.logical ? 'major' : 'minor', `${css.physical} directional declarations are physical, not logical`, {
-          found: `${css.physical} physical vs ${css.logical} logical`,
+          found: `${css.physical} physical vs ${css.logical} logical in first-party CSS` +
+          (css.vendorSheets ? ` (plus ${css.vendorPhysical} physical in ${css.vendorSheets} vendor stylesheet${css.vendorSheets > 1 ? 's' : ''}, not scored)` : ''),
           expected: 'inline/block logical properties throughout',
           where: [...new Set(css.samples.map((s) => `${s.selector} { ${s.property} }`))].slice(0, 8),
           fix: 'margin-inline-start over margin-left. Physical properties are why an RTL layout needs a second stylesheet, and then diverges from the first.',

@@ -205,14 +205,61 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
     const total = sum(rows);
     const tokenShadows = Object.entries(levels || {});
     if (!total || !tokenShadows.length) return { ratio: null, matched: 0, total, offenders: [] };
+    // The probe reports shadows already normalised to "x y blur spread / r g b a".
+    // The ledger stores CSS text, so normalise that the same way before comparing.
+    // Scraping numbers out of the raw strings — as this did — read `#1018280d` as
+    // the integer 1018280 while the browser gave four rgba components, so the arrays
+    // were never even the same length and E3 could not pass on any page, ever.
+    const normLedger = (css) =>
+      String(css)
+        .split(/,(?![^(]*\))/)
+        .map((layer) => {
+          const inset = /\binset\b/.test(layer);
+          let rest = layer.replace(/\binset\b/, '');
+          let colour = null;
+          const fn = rest.match(/(rgba?|hsla?)\([^)]*\)/i);
+          if (fn) { colour = fn[0]; rest = rest.replace(fn[0], ''); }
+          else {
+            const h = rest.match(/#[0-9a-f]{3,8}\b/i);
+            if (h) { colour = h[0]; rest = rest.replace(h[0], ''); }
+          }
+          const lens = (rest.match(/-?\d*\.?\d+(px|rem|em)?/g) || [])
+            .map((n) => Math.round(parseFloat(n) * 100) / 100)
+            .filter((n) => Number.isFinite(n));
+          while (lens.length < 4) lens.push(0);
+          let rgba = [0, 0, 0, 1];
+          if (colour) {
+            const hx = colour.match(/^#([0-9a-f]{6})([0-9a-f]{2})?$/i);
+            if (hx) {
+              const n = parseInt(hx[1], 16);
+              rgba = [(n >> 16) & 255, (n >> 8) & 255, n & 255, hx[2] ? Math.round((parseInt(hx[2], 16) / 255) * 100) / 100 : 1];
+            } else {
+              const m = colour.match(/\(([^)]+)\)/);
+              if (m) {
+                const p = m[1].split(/[,\s/]+/).filter(Boolean).map(Number);
+                rgba = [p[0] | 0, p[1] | 0, p[2] | 0, p.length > 3 ? Math.round(p[3] * 100) / 100 : 1];
+              }
+            }
+          }
+          return (inset ? 'inset ' : '') + lens.slice(0, 4).join(' ') + ' / ' + rgba.join(' ');
+        })
+        .join(', ');
+
+    // The probe now reports shadows already normalised ("x y blur spread / r g b a").
+    // Captures taken before that change carry the browser's raw string, so normalise
+    // anything that is not already in the normalised shape.
+    const isNormalised = (s) => / \/ /.test(String(s));
     const nums = (s) => (String(s).match(/-?\d*\.?\d+/g) || []).map(Number);
     let matched = 0;
     const offenders = [];
     for (const r of rows) {
-      const a = nums(r.value);
+      const observed = isNormalised(r.value) ? r.value : normLedger(r.value);
+      const a = nums(observed);
       const hit = tokenShadows.some(([, v]) => {
-        const b = nums(v);
-        if (a.length !== b.length) return false;
+        const nv = normLedger(v);
+        if (observed === nv) return true;           // normalised forms agree exactly
+        const b = nums(nv);
+        if (a.length !== b.length) return false;    // fall back to a tolerant compare
         return a.every((n, i) => Math.abs(n - b[i]) <= 1.5);
       });
       if (hit) matched += r.count;
@@ -315,15 +362,51 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
       if (r.value === 'normal') continue;
       if ([...legalLH].some((l) => near(Number(r.value), l, 1))) lhMatched += r.count;
     }
-    auto.T4 = { ratio: lhTotal ? lhMatched / lhTotal : null, matched: lhMatched, total: lhTotal, offenders: [] };
-    if (lhTotal && lhMatched / lhTotal < 0.9) {
-      finding('T4', 'minor', 'Line heights do not match the DGA ramp', {
-        found: `${lhTotal - lhMatched} of ${lhTotal} text runs`,
-        expected: [...legalLH].sort((a, b) => a - b).join(', ') + ' px',
-        where: lhRows.filter((r) => r.value !== 'normal' && ![...legalLH].some((l) => near(Number(r.value), l, 1))).slice(0, 5).flatMap((r) => r.samples),
-        fix: 'Set the ramp step’s paired leading rather than a global multiplier — Arabic needs the extra room and a multiplier will not give it.',
-        note: `Ramp sizes present: ${[...sizes].sort((a, b) => a - b).join(', ')}`,
-      });
+    // A ramp step is a size AND its paired leading AND its tracking. Testing leading
+    // against a flat list let a 14px body carry 72px display leading and pass, which
+    // is exactly the mismatch this check exists to catch. Where the probe reports the
+    // triple, match on it; fall back to the old leading-only test for older captures.
+    const pairRows = mergedTally('typePair');
+    if (sum(pairRows) > 0) {
+      const pairTotal = sum(pairRows);
+      let pairMatched = 0;
+      const pairOff = [];
+      for (const r of pairRows) {
+        const [szS, lhS, lsS] = String(r.value).split('|');
+        const sz = Number(szS);
+        const step = ramp.find((s) => near(s.size, sz, 0.6));
+        const lhOk = step
+          ? (lhS === 'normal' ? false : near(Number(lhS), step.lineHeight, 1))
+          : false;
+        const lsOk = step ? near(Number(lsS || 0), step.letterSpacing ?? 0, 0.3) : false;
+        if (step && lhOk && lsOk) pairMatched += r.count;
+        else pairOff.push({ value: r.value, count: r.count, samples: r.samples, size: sz, step });
+      }
+      auto.T4 = { ratio: pairTotal ? pairMatched / pairTotal : null, matched: pairMatched, total: pairTotal, offenders: pairOff };
+      pairOff.sort((a, b) => b.count - a.count);
+      for (const o of pairOff.slice(0, 6)) {
+        const [sz, lh, ls] = String(o.value).split('|');
+        finding('T4', o.count >= 20 ? 'major' : 'minor', `Type step ${sz}px is not paired with its ramp leading`, {
+          found: `${sz}px / ${lh} leading / ${ls} tracking`,
+          expected: o.step
+            ? `${o.step.name}: ${o.step.size}px / ${o.step.lineHeight} / ${o.step.letterSpacing ?? 0}`
+            : `${sz}px is not a ramp size at all`,
+          occurrences: o.count,
+          where: o.samples,
+          fix: 'Set the ramp step’s paired leading rather than a global multiplier — Arabic needs the extra room and a multiplier will not give it.',
+        });
+      }
+    } else {
+      auto.T4 = { ratio: lhTotal ? lhMatched / lhTotal : null, matched: lhMatched, total: lhTotal, offenders: [] };
+      if (lhTotal && lhMatched / lhTotal < 0.9) {
+        finding('T4', 'minor', 'Line heights do not match the DGA ramp', {
+          found: `${lhTotal - lhMatched} of ${lhTotal} text runs`,
+          expected: [...legalLH].sort((a, b) => a - b).join(', ') + ' px',
+          where: lhRows.filter((r) => r.value !== 'normal' && ![...legalLH].some((l) => near(Number(r.value), l, 1))).slice(0, 5).flatMap((r) => r.samples),
+          fix: 'Set the ramp step’s paired leading rather than a global multiplier — Arabic needs the extra room and a multiplier will not give it.',
+          note: `Ramp sizes present: ${[...sizes].sort((a, b) => a - b).join(', ')}`,
+        });
+      }
     }
   }
 
@@ -473,7 +556,8 @@ export function score({ rubric, tokens, captures = [], judged = {}, options = {}
       auto.R2 = { ratio: tot ? css.logical / tot : null, detail: css };
       if (tot && css.physical > 0) {
         finding('R2', css.physical > css.logical ? 'major' : 'minor', `${css.physical} directional declarations are physical, not logical`, {
-          found: `${css.physical} physical vs ${css.logical} logical`,
+          found: `${css.physical} physical vs ${css.logical} logical in first-party CSS` +
+          (css.vendorSheets ? ` (plus ${css.vendorPhysical} physical in ${css.vendorSheets} vendor stylesheet${css.vendorSheets > 1 ? 's' : ''}, not scored)` : ''),
           expected: 'inline/block logical properties throughout',
           where: [...new Set(css.samples.map((s) => `${s.selector} { ${s.property} }`))].slice(0, 8),
           fix: 'margin-inline-start over margin-left. Physical properties are why an RTL layout needs a second stylesheet, and then diverges from the first.',

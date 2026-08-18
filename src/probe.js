@@ -156,6 +156,10 @@ export function probe(OPTS_IN = {}) {
     easing: tally(),
     iconSize: tally(),
     strokeWidth: tally(),
+    // size|line-height|tracking as one key, because T4 asks whether a ramp STEP was
+    // used — a 14px body with 72px display leading passes any test that looks at
+    // leading alone, and that is what the old check did despite documenting a triple.
+    typePair: tally(),
   };
 
   /* ------------------------------------------------------------- traversal */
@@ -223,6 +227,111 @@ export function probe(OPTS_IN = {}) {
   let mirroredIconSuspects = 0;
   let rtlElements = 0;
   let ltrElements = 0;
+  let decorativeBordersSkipped = 0;
+  let inlineTargetsExempt = 0;
+  let spacedTargetsExempt = 0;
+
+  /**
+   * Is this border carrying information needed to identify a control or its state?
+   * WCAG 1.4.11 covers that; it does not cover decoration. Controls, things with a
+   * widget role, and elements a control lives inside all qualify. A plain div whose
+   * only job is a hairline does not.
+   */
+  const COMPONENTISH = 'input,select,textarea,button,a[href],summary,[role=button],[role=link],[role=tab],[role=checkbox],[role=radio],[role=switch],[role=combobox],[role=listbox],[role=menuitem],[role=textbox],[role=searchbox],[role=slider],[role=spinbutton],[contenteditable="true"]';
+  function isComponentBoundary(el) {
+    if (el.matches && el.matches(COMPONENTISH)) return true;
+    // A wrapper drawn around a control — the bordered shell of a search field, say —
+    // is carrying that control's boundary.
+    try {
+      if (el.querySelector && el.querySelector(COMPONENTISH)) {
+        const r = el.getBoundingClientRect();
+        if (r.height <= 96) return true; // a control shell, not a page section
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  /**
+   * The value as AUTHORED, not as resolved. Walks the cascade for the winning
+   * declaration so `auto` and percentages can be told apart from real lengths.
+   * Returns null when nothing authored it.
+   */
+  const authoredCache = new Map();
+  function authoredValue(el, prop) {
+    if (el.style && el.style.getPropertyValue(prop)) return el.style.getPropertyValue(prop).trim();
+    const key = el.tagName + '|' + (el.getAttribute('class') || '') + '|' + prop;
+    if (authoredCache.has(key)) return authoredCache.get(key);
+    let found = null;
+    try {
+      for (const sheet of document.styleSheets) {
+        let rules;
+        try { rules = sheet.cssRules; } catch (e) { continue; }
+        for (const r of rules) {
+          if (!r.style || !r.selectorText) continue;
+          const v = r.style.getPropertyValue(prop);
+          if (!v) continue;
+          try { if (el.matches(r.selectorText)) found = v.trim(); } catch (e) {}
+        }
+      }
+    } catch (e) {}
+    if (authoredCache.size < 400) authoredCache.set(key, found);
+    return found;
+  }
+
+  /**
+   * WCAG 2.2 spacing exception: an undersized target passes if a MIN_TARGET-wide
+   * circle centred on it does not intersect the equivalent circle of any other
+   * target. Small controls with room around them are reachable; small controls
+   * crowded together are not, and that is the distinction the SC draws.
+   */
+  let targetRects = null;
+  function spacingExceptionMet(el, rect) {
+    if (targetRects === null) {
+      targetRects = [];
+      for (const t of document.querySelectorAll(INTERACTIVE)) {
+        const r = t.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) targetRects.push({ el: t, cx: r.left + r.width / 2, cy: r.top + r.height / 2 });
+      }
+    }
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    for (const t of targetRects) {
+      if (t.el === el) continue;
+      const d = Math.hypot(t.cx - cx, t.cy - cy);
+      if (d < MIN_TARGET) return false; // the two circles overlap
+    }
+    return true;
+  }
+
+  /**
+   * A shadow reduced to comparable numbers: [x, y, blur, spread, r, g, b, a] per
+   * layer, inset flagged. Both `#1018280d` and `rgba(16,24,40,0.05)` land on the
+   * same values, which is the whole point — the ledger writes one and the browser
+   * reports the other.
+   */
+  function normaliseShadow(value) {
+    return String(value)
+      .split(/,(?![^(]*\))/)
+      .map((layer) => {
+        const inset = /\binset\b/.test(layer);
+        let rest = layer.replace(/\binset\b/, '');
+        let colour = null;
+        const fn = rest.match(/(rgba?|hsla?|oklch|color)\([^)]*\)/i);
+        if (fn) { colour = fn[0]; rest = rest.replace(fn[0], ''); }
+        else {
+          const hexM = rest.match(/#[0-9a-f]{3,8}\b/i);
+          if (hexM) { colour = hexM[0]; rest = rest.replace(hexM[0], ''); }
+        }
+        const lens = (rest.match(/-?\d*\.?\d+(px|rem|em)?/g) || [])
+          .map((n) => Math.round(parseFloat(n) * 100) / 100)
+          .filter((n) => Number.isFinite(n));
+        while (lens.length < 4) lens.push(0);
+        const c = colour ? parseColor(colour) : null;
+        const rgba = c ? [Math.round(c.r), Math.round(c.g), Math.round(c.b), Math.round(c.a * 100) / 100] : [0, 0, 0, 1];
+        return (inset ? 'inset ' : '') + lens.slice(0, 4).join(' ') + ' / ' + rgba.join(' ');
+      })
+      .join(', ');
+  }
 
   // Declared family name -> the file it actually loads. Built before the walk
   // because both T1 and R3 need to resolve an alias before judging it: a site
@@ -285,6 +394,9 @@ export function probe(OPTS_IN = {}) {
       T.fontWeight.add(cs.fontWeight, el);
       T.lineHeight.add(cs.lineHeight === 'normal' ? 'normal' : px(cs.lineHeight), el);
       T.letterSpacing.add(cs.letterSpacing === 'normal' ? '0' : px(cs.letterSpacing), el);
+      T.typePair.add(
+        [px(cs.fontSize), cs.lineHeight === 'normal' ? 'normal' : px(cs.lineHeight),
+         cs.letterSpacing === 'normal' ? 0 : px(cs.letterSpacing)].join('|'), el);
 
       /* A1 — text contrast */
       const size = px(cs.fontSize) || 16;
@@ -339,16 +451,25 @@ export function probe(OPTS_IN = {}) {
         const c = parseColor(cs[bc[i]]);
         if (c && c.a > 0) {
           T.borderColor.add(hex(c), el);
-          /* A2 — non-text contrast of the boundary against what is behind it */
-          const { color: behind, imageBehind } = effectiveBackground(el.parentElement || el);
-          if (!imageBehind) {
-            nonTextChecked++;
-            const eff = c.a < 1 ? over(c, behind) : c;
-            const r = Math.round(contrast(eff, behind) * 100) / 100;
-            if (r >= 3.0) nonTextPassing++;
-            else if (nonTextFindings.length < 40) {
-              nonTextFindings.push({ selector: selectorFor(el), border: hex(eff), against: hex(behind), ratio: r, required: 3.0 });
+          /* A2 — non-text contrast.
+             WCAG 1.4.11 covers visual information needed to IDENTIFY user interface
+             components and states, plus graphical objects. It does not cover
+             decoration. Checking every border on the page turned faint dividers and
+             card outlines into conformance failures, which they are not — on one real
+             audit that put the check at 1 of 44 and capped the band on hairlines. */
+          if (isComponentBoundary(el)) {
+            const { color: behind, imageBehind } = effectiveBackground(el.parentElement || el);
+            if (!imageBehind) {
+              nonTextChecked++;
+              const eff = c.a < 1 ? over(c, behind) : c;
+              const r = Math.round(contrast(eff, behind) * 100) / 100;
+              if (r >= 3.0) nonTextPassing++;
+              else if (nonTextFindings.length < 40) {
+                nonTextFindings.push({ selector: selectorFor(el), border: hex(eff), against: hex(behind), ratio: r, required: 3.0 });
+              }
             }
+          } else {
+            decorativeBordersSkipped++;
           }
         }
         break; // one border per element is enough for the tally
@@ -364,11 +485,25 @@ export function probe(OPTS_IN = {}) {
         break;
       }
     }
-    if (cs.boxShadow && cs.boxShadow !== 'none') T.shadow.add(cs.boxShadow.slice(0, 120), el);
+    // Shadows are tallied in a NORMALISED form, not as the browser's string. The
+    // ledger stores `0 1px 2px 0 #1018280d` and Chrome serialises the same shadow
+    // as `rgba(16, 24, 40, 0.05) 0px 1px 2px 0px`; comparing those as text, or by
+    // scraping numbers out of them, can never match — the hex reads as one integer
+    // and rgba() as four. E3 was structurally unpassable until this.
+    if (cs.boxShadow && cs.boxShadow !== 'none') T.shadow.add(normaliseShadow(cs.boxShadow), el, { raw: cs.boxShadow.slice(0, 120) });
 
     /* spacing */
-    for (const p of ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'marginTop', 'marginRight', 'marginBottom', 'marginLeft']) {
+    for (const p of ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft']) {
       const v = px(cs[p]);
+      if (v && v > 0) T.spacing.add(v, el);
+    }
+    // Margins only when the AUTHORED value is a length. getComputedStyle resolves
+    // `auto` and percentages to pixels, so a centring margin arrived as a decision
+    // nobody made — that is where "1231.47px is off the DGA scale" came from.
+    for (const p of ['margin-top', 'margin-right', 'margin-bottom', 'margin-left']) {
+      const authored = authoredValue(el, p);
+      if (authored === null || /auto|%|calc/i.test(authored)) continue;
+      const v = px(authored);
       if (v && v > 0) T.spacing.add(v, el);
     }
     for (const p of ['rowGap', 'columnGap']) {
@@ -416,12 +551,32 @@ export function probe(OPTS_IN = {}) {
     if (dir === 'rtl') rtlElements++;
     else ltrElements++;
 
-    /* A4 — target size */
+    /* A4 — target size, with the exceptions WCAG 2.2 actually grants.
+       2.5.8 exempts a target that is INLINE in a sentence or block of text, and one
+       with enough SPACING that a 24px circle centred on it touches no other target.
+       Counting every link meant body and footer prose links were reported as
+       failures they are not, which buried the genuinely small controls. */
     if (el.matches && el.matches(INTERACTIVE)) {
+      // The inline exception is for a link sitting IN A SENTENCE. Three things all
+      // have to hold, and the loose version of this wrongly exempted standalone
+      // icon links: `inline-block` is a discrete box rather than running text, and a
+      // target with no text of its own is not part of a sentence at all.
+      const ownLabel = (el.textContent || '').trim();
+      const inlineFlow = cs.display === 'inline' || cs.display === 'contents';
+      const inProse = (() => {
+        const p = el.parentElement;
+        if (!p || !ownLabel) return false;
+        if (!/^(P|LI|TD|TH|SPAN|EM|STRONG|BLOCKQUOTE|FIGCAPTION|DD|DT|LABEL|SMALL)$/.test(p.tagName)) return false;
+        const parentText = (p.textContent || '').trim().length;
+        return parentText > ownLabel.length + 20; // real prose around it
+      })();
+      if (inlineFlow && inProse) { inlineTargetsExempt++; continue; }
+
       interactiveCount++;
       const w = rect.width;
       const h = rect.height;
       if (w >= MIN_TARGET && h >= MIN_TARGET) interactivePassingTarget++;
+      else if (spacingExceptionMet(el, rect)) { spacedTargetsExempt++; interactivePassingTarget++; }
       else if (targetFindings.length < 40) {
         targetFindings.push({
           selector: selectorFor(el),
@@ -450,6 +605,11 @@ export function probe(OPTS_IN = {}) {
     focusVisibleRules: 0,
     outlineNoneRules: 0,
     rtlOverrideRules: 0,
+    // vendor CSS is measured but not scored — reported so a reader can see the split
+    vendorLogicalDecls: 0,
+    vendorPhysicalDecls: 0,
+    vendorSheets: 0,
+    firstPartySheets: 0,
   };
   const LOGICAL = /^(margin|padding|inset|border)-(inline|block)(-(start|end))?$|^(inset|margin|padding)-(inline|block)$|^border-(inline|block)-(start|end)-(width|color|style)$/;
   const PHYSICAL = /^(margin|padding)-(left|right)$|^(left|right)$|^border-(left|right)-(width|color|style)$|^border-(left|right)$|^float$|^clear$/;
@@ -490,11 +650,37 @@ export function probe(OPTS_IN = {}) {
       }
     }
   }
+  // First-party versus vendor. R2 asks whether the TEAM wrote logical properties;
+  // counting Bootstrap's thousands of physical declarations measures their framework
+  // choice instead, and no site built on such a framework could ever score well no
+  // matter how carefully its own CSS was written.
+  const VENDOR = /(bootstrap|foundation|bulma|tailwind|materialize|semantic-ui|font-?awesome|slick|swiper|owl\.?carousel|jquery|select2|datatables|fullcalendar|aos|animate(\.min)?\.css|normalize|reset|primeng|primereact|antd|mui|chakra)/i;
+  const isVendor = (href) => {
+    if (!href) return false;
+    try {
+      const u = new URL(href, location.href);
+      if (u.origin !== location.origin) return true;   // a CDN is not your code
+      return VENDOR.test(u.pathname);
+    } catch (e) { return false; }
+  };
   for (const sheet of document.styleSheets) {
+    const vendor = isVendor(sheet.href);
+    const before = { l: cssStats.logicalDecls, p: cssStats.physicalDecls };
     try {
       walkRules(sheet.cssRules, false);
     } catch (e) {
       cssStats.inaccessibleSheets++;
+      continue;
+    }
+    const added = { l: cssStats.logicalDecls - before.l, p: cssStats.physicalDecls - before.p };
+    if (vendor) {
+      cssStats.vendorLogicalDecls += added.l;
+      cssStats.vendorPhysicalDecls += added.p;
+      cssStats.logicalDecls = before.l;
+      cssStats.physicalDecls = before.p;
+      cssStats.vendorSheets++;
+    } else {
+      cssStats.firstPartySheets++;
     }
   }
 
@@ -621,8 +807,18 @@ export function probe(OPTS_IN = {}) {
       indeterminate: textRunsIndeterminate,
       findings: contrastFindings,
     },
-    nonTextContrast: { checked: nonTextChecked, passing: nonTextPassing, findings: nonTextFindings },
-    targets: { interactive: interactiveCount, passing: interactivePassingTarget, minTargetPx: MIN_TARGET, findings: targetFindings },
+    nonTextContrast: {
+      checked: nonTextChecked, passing: nonTextPassing, findings: nonTextFindings,
+      // decorative borders are outside 1.4.11 and are skipped, not failed
+      decorativeSkipped: decorativeBordersSkipped,
+    },
+    targets: {
+      interactive: interactiveCount, passing: interactivePassingTarget,
+      minTargetPx: MIN_TARGET, findings: targetFindings,
+      // WCAG 2.2 exceptions applied, reported so the number stays legible: inline
+      // targets left the denominator, spaced ones counted as passing.
+      inlineExempt: inlineTargetsExempt, spacingExempt: spacedTargetsExempt,
+    },
     focus: focusProbe,
     rtl: {
       rtlElements,
