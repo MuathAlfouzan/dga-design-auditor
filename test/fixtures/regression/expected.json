@@ -1,16 +1,16 @@
 {
-  "$comment": "Baseline verdict recorded by the original Node engine on a real government portal, before the pure-core extraction. The captures beside this file are that page with its identity removed — URLs, titles, selectors, text content and custom properties all replaced. None of that feeds the maths, which is why the verdict is unchanged; that it is unchanged is itself evidence the scrub touched nothing load-bearing. NOTE on the one deliberate re-baseline: earned moved 55.81 -> 55.80 when judged ratios began being computed FROM their counts (31/38 = 0.815789) instead of the rounded value restated beside them (0.816). Nothing measured changed. NOTE on A3: this capture predates the :focus-visible seeding fix, so its '80 of 80' finding is a known false positive of the old probe. It is pinned deliberately — captures without a `seeded` flag keep their original treatment, which is what makes this fixture a stable test of the scoring maths rather than of the probe. NOTE on the second deliberate re-baseline: 64.89 -> 65.20 when R2 (CSS logical properties) and M2 (prefers-reduced-motion) moved OUT of the 100 into the `extended` block, because DGA publishes neither and Figma cannot express either. Nothing measured changed and no finding changed — the two checks simply stopped counting toward a compliance score they had no authority behind. The arithmetic reconciles exactly: earned 55.80 - 0.99 (R2) - 2.00 (M2) = 52.81, available 86 - 3 - 2 = 81, and 52.82/81 = 65.20. NOTE on the band rename: \"partial\" -> \"moderate\" when the bands became ADOPTION levels rather than compliance verdicts. DGA publishes no passing score — it publishes a checklist and confirms conformance by formal review — so the tool no longer prints a compliance word it has no authority to print. The thresholds (90/75/60) and every number are unchanged; only the vocabulary moved, and the gate moved to verdict.readiness against DGA's own mandatory tier.",
-  "score": 65.2,
+  "$comment": "Baseline verdict recorded by the original Node engine on a real government portal, before the pure-core extraction. The captures beside this file are that page with its identity removed — URLs, titles, selectors, text content and custom properties all replaced. None of that feeds the maths, which is why the verdict is unchanged; that it is unchanged is itself evidence the scrub touched nothing load-bearing. NOTE on the one deliberate re-baseline: earned moved 55.81 -> 55.80 when judged ratios began being computed FROM their counts (31/38 = 0.815789) instead of the rounded value restated beside them (0.816). Nothing measured changed. NOTE on A3: this capture predates the :focus-visible seeding fix, so its '80 of 80' finding is a known false positive of the old probe. It is pinned deliberately — captures without a `seeded` flag keep their original treatment, which is what makes this fixture a stable test of the scoring maths rather than of the probe. NOTE on the second deliberate re-baseline: 64.89 -> 65.20 when R2 (CSS logical properties) and M2 (prefers-reduced-motion) moved OUT of the 100 into the `extended` block, because DGA publishes neither and Figma cannot express either. Nothing measured changed and no finding changed — the two checks simply stopped counting toward a compliance score they had no authority behind. The arithmetic reconciles exactly: earned 55.80 - 0.99 (R2) - 2.00 (M2) = 52.81, available 86 - 3 - 2 = 81, and 52.82/81 = 65.20. NOTE on the band rename: \"partial\" -> \"moderate\" when the bands became ADOPTION levels rather than compliance verdicts. DGA publishes no passing score — it publishes a checklist and confirms conformance by formal review — so the tool no longer prints a compliance word it has no authority to print. The thresholds (90/75/60) and every number are unchanged; only the vocabulary moved, and the gate moved to verdict.readiness against DGA's own mandatory tier. NOTE on the third deliberate re-baseline: 65.20 -> 65.40 when Display md (36/44) and Display 2xl (72/90) were merged into the type ramp from rules/typography.md. The ledger had been extracted by walking COMPONENT pages, so ramp steps no component used were never captured. Exactly one finding disappeared — 'T2|minor|Font size 36px is off the DGA scale' — and every other signature is byte-identical, which is the evidence that this was a false positive against a legitimate DGA type step rather than an engine change. typography 9.71 -> 9.87, findings 53 -> 52.",
+  "score": 65.4,
   "checksPassed": 7,
   "checksCounted": 21,
-  "earned": 52.82,
+  "earned": 52.98,
   "available": 81,
   "band": "moderate",
   "cappedFrom": null,
   "failedBlockers": [
     "A2"
   ],
-  "findingCount": 53,
+  "findingCount": 52,
   "findingSignatures": [
     "A1|minor|30 text runs sit on an image or gradient and could not be measured",
     "A2|blocker|Boundary contrast 1.05:1 is below 3:1",
@@ -62,13 +62,12 @@
     "S3|minor|Section spacing 91.92px is off the DGA scale",
     "T1|major|Font family \"IBM Plex Sans\" is not in the DGA set",
     "T2|minor|Font size 32px is off the DGA scale",
-    "T2|minor|Font size 36px is off the DGA scale",
     "T2|minor|Font size 40px is off the DGA scale",
     "T4|minor|Line heights do not match the DGA ramp"
   ],
   "perCategory": [
     "color:10.18/12",
-    "typography:9.71/16",
+    "typography:9.87/16",
     "spacing:7.15/12",
     "shape:4.79/8",
     "components:10.24/18",

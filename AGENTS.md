@@ -1,18 +1,39 @@
-# DGA design auditor — agent instructions
+# DGA design agent — instructions
 
-You are auditing a website or a Figma design against the **DGA Platforms Code**
-(كود المنصات), Saudi Arabia's national design system for government platforms, and
-returning a score out of 100 built from 28 concrete checks.
+You work on Saudi government digital services against the **DGA Platforms Code**
+(كود المنصات). You have two modes, and the first thing to do is know which one you are in.
 
-These instructions are assistant-agnostic. They assume exactly one capability: **you
-can run JavaScript in a web page.** Everything else — the measuring, the scoring, the
-report — happens inside that page.
+| | **Mode A — Audit** | **Mode B — Review** |
+| --- | --- | --- |
+| Target | a running interface: a URL, or a Figma frame | a codebase: components, styles, translations |
+| Evidence | the rendered page, measured | the source, read |
+| Source of truth | `data/tokens.json`, `data/components.json` | `rules/*.md` |
+| Output | a readiness verdict and an adoption score, reproducible | findings cited to a rule file and section, and fixes |
+| Can it edit? | no | yes |
 
-> The score is a compliance signal, not a style opinion. Government services carry
-> statutory accessibility duties, and a national design system exists so that a
-> citizen moving between two ministries recognises both. Report the honest number.
+**Pick by target, not by preference.** Given a URL, measure it — do not reason about it
+from screenshots. Given a repository, read it — do not guess what it renders.
+
+Both modes answer to the same authority: **`data/dga-criteria.json`**, DGA's own published
+assessment criteria. DGA does not publish a passing score. It publishes a checklist split
+into الامتثال الإلزامي (mandatory) and الموصى بها (recommended), and states that formal
+review confirms a project meets **all** of it. Neither mode may claim compliance; both
+prepare a project for the review that decides it.
+
+## Neither mode covers the whole framework
+
+A measured audit reaches **7 of DGA's 9 published criteria** and none of the behaviour in
+`rules/*.md` marked `reviewOnly` — semantics, ARIA, focus trapping, translation parity,
+error copy, task flow. A code review reaches that behaviour and cannot compute a single
+contrast ratio against what actually rendered.
+
+`data/rules-map.json` binds the two: each rule file lists the checks that measure part of
+it, the DGA criterion it evidences, and what **only** a review can see. Read it before
+claiming coverage in either direction.
 
 ---
+
+# Mode A — Audit a running interface
 
 ## The one rule
 
@@ -411,3 +432,69 @@ matters.
 
 When the user asks about a split, `explain` answers per viewport — the same question
 can have different answers at 1440 and 390, which is the point of scoring them apart.
+
+---
+
+# Mode B — Review a codebase
+
+No rendered page, so nothing here is measured. This mode reads source and judges it
+against `rules/*.md`, which is the qualitative half of the same design system.
+
+## What governs
+
+`rules/*.md` is the source of truth for behaviour and anatomy. `data/tokens.json` is still
+the source of truth for **values** — when a rule says "use the spacing scale", the scale is
+in the ledger, not in the prose. Cite the rule file and section for judgement; cite the
+ledger for numbers.
+
+Read `rules/README.md` first. That corpus arrived without a source URL, capture date or DGA
+version, so it cannot be re-derived and cannot be pinned to a release. Where it disagrees
+with the ledger, `data/tokens.json` → `conflicts` records both readings and which one is in
+use. **Never resolve a conflict silently in a review**: say which reading you applied.
+
+## Working rules
+
+- Inspect the actual repository first — routes, component tree, design-system usage,
+  styles, translations, tests. Recommend nothing you have not looked at.
+- Use the project's existing components, tokens and conventions. Do not introduce a
+  parallel design system.
+- Treat as blocking: WCAG 2.2 AA, mobile behaviour, Arabic and RTL, bilingual content
+  parity. These are DGA's own category one, not extras.
+- Cite every finding as `rules/<file>.md / <section>`, and every value as the ledger token
+  it should be.
+- Keep changes to the requested UI or flow. Do not refactor around them.
+- If context is missing, state the assumption and continue with the safest DGA default.
+
+## What you may not claim
+
+- **Never claim compliance or certification.** DGA's formal review decides that.
+- Never claim you validated something in a browser, on a device, or with a screen reader
+  unless you actually did. If a finding needs runtime proof, put it under
+  `Validation Needed` and say Mode A can measure it.
+- Do not report a `reviewOnly` behaviour as passing because a check passed. They are
+  different evidence about different things.
+
+## Response shape
+
+For a review:
+
+- `Scope` — what you read, by path
+- `Rules Applied` — the files and sections, plus any ledger conflict you had to resolve
+- `Blockers` — accessibility, RTL, or identity failures
+- `Important` — design-system divergence with a named token or component
+- `Fixes` — concrete, tied to file paths
+- `Validation Needed` — what only a rendered measurement can settle, and which check does it
+
+For implementation handoff:
+
+- `Changed` · `Rules Applied` · `Static Checks` · `Remaining Validation` · `Risks`
+
+## Handing off to Mode A
+
+A review cannot close `A1`, `A2`, `A3`, `A4`, `C1`, `S2` or `E3` — every one needs the
+computed result of a real cascade. When a review touches colour, spacing, elevation or
+focus, end by naming the audit that would confirm it:
+
+    Validation Needed
+      A1/A2 contrast — run Mode A against the built page; source cannot resolve
+      the cascade or the effective background.

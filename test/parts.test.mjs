@@ -57,7 +57,7 @@ for (const part of rubric.parts) {
 
 /* ---- the rollup must not move the number --------------------------------- */
 const v = score({ rubric, tokens, captures, judged, options });
-eq('overall is unchanged by the rollup', v.score, 65.2);
+eq('overall is unchanged by the rollup', v.score, 65.4);
 const partPoints = v.parts.reduce((a, p) => a + p.earned, 0);
 ok('part points reconcile with the verdict total', Math.abs(partPoints - v.earned) <= 0.02,
   `parts ${partPoints.toFixed(2)} vs earned ${v.earned} — each part is rounded once, so a cent of drift is expected and more is not`);

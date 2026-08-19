@@ -1,0 +1,273 @@
+{
+  "$comment": "Binds the prose rule corpus (rules/) to the measured checks (data/rubric.json) and to DGA's own published criteria (data/dga-criteria.json), so both modes of the agent speak one vocabulary. The load-bearing field is `reviewOnly`: what that rule area contains which NO check can measure from a rendered page. That column is why the code-review mode exists, and it is what a web audit must never claim to have covered.",
+  "schema": "dga-rules-map/1",
+  "source": "rules/README.md",
+  "importedAt": "2026-08-19",
+  "files": [
+    {
+      "file": "rules/foundations.md",
+      "covers": [
+        "colour system",
+        "elevation",
+        "iconography",
+        "layout and spacing",
+        "contrast minimums"
+      ],
+      "checks": [
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "E1",
+        "E2",
+        "E3",
+        "I1",
+        "S1",
+        "S2",
+        "S3",
+        "A1",
+        "A2"
+      ],
+      "criteria": [
+        "type-colour",
+        "design-system",
+        "layout-spacing",
+        "accessibility-wcag"
+      ],
+      "reviewOnly": [
+        "palette structure intent (neutral base, accent restraint)",
+        "gradient usage",
+        "backdrop-blur restraint",
+        "grid column counts per breakpoint"
+      ]
+    },
+    {
+      "file": "rules/typography.md",
+      "covers": [
+        "typeface",
+        "weights",
+        "type scale",
+        "line length",
+        "text contrast guidance"
+      ],
+      "checks": [
+        "T1",
+        "T2",
+        "T3",
+        "T4",
+        "A1"
+      ],
+      "criteria": [
+        "type-colour",
+        "accessibility-wcag"
+      ],
+      "reviewOnly": [
+        "Display vs Text style discipline — using Display for body copy is a violation no measurement can see, because the sizes are legal either way"
+      ]
+    },
+    {
+      "file": "rules/ui-shell.md",
+      "covers": [
+        "navigation header",
+        "navigation drawer",
+        "footer",
+        "brand logo placement"
+      ],
+      "checks": [
+        "P1",
+        "P2",
+        "P3",
+        "I2"
+      ],
+      "criteria": [
+        "design-system",
+        "design-consistency"
+      ],
+      "reviewOnly": [
+        "landmark structure",
+        "skip links",
+        "drawer focus trapping",
+        "logo presence and placement"
+      ]
+    },
+    {
+      "file": "rules/actions-components.md",
+      "covers": [
+        "buttons",
+        "floating button",
+        "dropdown",
+        "link",
+        "chip"
+      ],
+      "checks": [
+        "P1",
+        "P2",
+        "P3",
+        "A4"
+      ],
+      "criteria": [
+        "design-system",
+        "mobile-usability"
+      ],
+      "reviewOnly": [
+        "<button> vs <div> semantics",
+        "label describes the action",
+        "emphasis hierarchy",
+        "action grouping and placement"
+      ]
+    },
+    {
+      "file": "rules/content-display.md",
+      "covers": [
+        "accordion",
+        "card",
+        "carousel",
+        "digital stamp",
+        "divider",
+        "quote"
+      ],
+      "checks": [
+        "P1",
+        "P2",
+        "P3",
+        "E1",
+        "E3"
+      ],
+      "criteria": [
+        "design-system",
+        "design-consistency"
+      ],
+      "reviewOnly": [
+        "accordion keyboard and aria-expanded behaviour",
+        "carousel pause control",
+        "heading order inside cards"
+      ]
+    },
+    {
+      "file": "rules/data-display.md",
+      "covers": [
+        "avatar",
+        "metric card",
+        "table",
+        "content switcher",
+        "charts",
+        "structured list"
+      ],
+      "checks": [
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "criteria": [
+        "design-system"
+      ],
+      "reviewOnly": [
+        "table header scope and caption",
+        "chart alternative text and data table fallback",
+        "sortable column semantics"
+      ]
+    },
+    {
+      "file": "rules/feedback.md",
+      "covers": [
+        "notifications",
+        "modal",
+        "tooltip",
+        "rating",
+        "selection"
+      ],
+      "checks": [
+        "P1",
+        "P2",
+        "P3",
+        "C3"
+      ],
+      "criteria": [
+        "design-system",
+        "usability-accessibility"
+      ],
+      "reviewOnly": [
+        "modal focus trap and restore",
+        "live-region announcement of notifications",
+        "error copy that explains the fix",
+        "never colour alone for status"
+      ]
+    },
+    {
+      "file": "rules/loading-and-status.md",
+      "covers": [
+        "spinner",
+        "progress bar",
+        "radial stepper",
+        "skeleton"
+      ],
+      "checks": [
+        "P1",
+        "P2"
+      ],
+      "criteria": [
+        "design-system",
+        "ux-interaction"
+      ],
+      "reviewOnly": [
+        "aria-busy and aria-live on async regions",
+        "skeletons hidden from assistive tech",
+        "perceived performance and load-time behaviour"
+      ]
+    },
+    {
+      "file": "rules/navigational.md",
+      "covers": [
+        "breadcrumbs",
+        "slide-out menu",
+        "menu",
+        "pagination",
+        "tabs"
+      ],
+      "checks": [
+        "P1",
+        "P2",
+        "P3",
+        "A3"
+      ],
+      "criteria": [
+        "design-system",
+        "accessibility-wcag"
+      ],
+      "reviewOnly": [
+        "aria-current on the active item",
+        "roving tabindex",
+        "three-clicks-to-service reachability",
+        "decorative separators hidden"
+      ]
+    },
+    {
+      "file": "rules/search-and-filters.md",
+      "covers": [
+        "search box",
+        "tags",
+        "filtration"
+      ],
+      "checks": [
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "criteria": [
+        "design-system",
+        "usability-accessibility"
+      ],
+      "reviewOnly": [
+        "search result announcement",
+        "empty and no-results states",
+        "filter clearing and state persistence"
+      ]
+    }
+  ],
+  "$notCoveredByAnyRuleFile": [
+    "R1 and R3 — direction, mirroring, Arabic typography and numerals. The corpus asserts Arabic is first-class but states no measurable rule; these remain W3C i18n requirements in the rubric.",
+    "R2 and M2 — CSS logical properties and prefers-reduced-motion. Absent from the corpus as they are absent from DGA's Figma, which is why they score outside the 100.",
+    "M1 — motion tokens. The corpus has no motion section, matching the ledger, which found no duration or easing tokens published. Nobody has this."
+  ],
+  "$reviewOnlyIsThePoint": "Every entry above has a reviewOnly list, and none of it is reachable by measuring a rendered page. A web audit covers 7 of DGA's 9 published criteria and none of these behaviours. Saying so is a requirement of both modes, not a disclaimer."
+}

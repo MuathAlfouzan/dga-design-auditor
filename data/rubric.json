@@ -411,7 +411,7 @@
           "applies_to": "both",
           "method": "judged",
           "scoring": "fraction",
-          "measure": "Share of icons identifiable as DGA set members at a scale size. Mixed icon libraries on one page fail proportionally.",
+          "measure": "Share of rendered icon sizes matching the DGA size scale (10/14/16/18/20/24/28/32). SIZE ONLY. The family cannot be checked from a rendered page — Hugeicons renders as anonymous inline SVG with nothing identifying the set — and no stroke width is published by either the Figma extract or the rule corpus. The description names three things; this measures one, and the gap is the point of saying so.",
           "blocker": false,
           "fix": "Standardise on the DGA icon set. Two icon families on one screen is visible even to users who cannot name why.",
           "provenance": "ledger",
