@@ -59,15 +59,28 @@ ledger, ~107 KB, no dependencies and no network calls of its own. Get it into th
 by whichever of these your environment allows, cheapest first:
 
 ```js
-// a) fetch from a CDN — cheapest when the page's CSP permits it
-await fetch('https://unpkg.com/dga-design-auditor/dist/dga-rate.js')
+// a) open the CDN URL AT A PINNED COMMIT in the tab, stash the source, then navigate.
+//    This is the path that works on real government targets, which block every
+//    cross-origin request — so there is nothing to fetch once you are on the page.
+//      https://cdn.jsdelivr.net/gh/MuathAlfouzan/dga-design-auditor@<sha>/dist/dga-rate.js
+window.name = document.body.innerText;   // on the CDN page
+(0, eval)(window.name);                  // after navigating to the target
+
+// b) a plain fetch, when the page's CSP actually permits it
+await fetch('https://cdn.jsdelivr.net/gh/MuathAlfouzan/dga-design-auditor@<sha>/dist/dga-rate.js')
   .then(r => r.text()).then(eval);
 
-// b) paste the file contents directly as the script you execute
-//    (use this when connect-src blocks the fetch — most government sites do)
-
-// c) the user runs it themselves from a bookmarklet or DevTools console
+// c) paste the file contents directly as the script you execute
+// d) the user runs it themselves from a bookmarklet or DevTools console
 ```
+
+⚠ **Pin the commit SHA; never use `@main`.** jsDelivr caches branch refs hard — it served
+a stale 113 KB bundle during development and the debugging went looking for the bug in the
+engine. Confirm the build landed by testing for a string introduced by the current commit,
+not by checking that bytes arrived.
+
+There is no npm package. Any instruction to fetch `unpkg.com/dga-design-auditor` is wrong
+and will 404.
 
 Confirm it landed: `typeof window.__dga === 'object'`.
 
@@ -128,7 +141,7 @@ person reading the scorecard — and the judged checks are 27 of the 100 points.
 | `P1` | Do buttons, inputs, cards, tabs, tables, nav, modals match a DGA component by anatomy — or are they bespoke rebuilds? |
 | `P2` | Are the variants, sizes and hover/active/disabled/**focus** states the ones the system defines? |
 | `P3` | Do internal padding, icon–label gap and min-height match the spec within 1px? |
-| `I1` | One icon family, at scale sizes, at the specified stroke weight. |
+| `I1` | **Size only.** Count icons sitting on the DGA size scale (10/14/16/18/20/24/28/32). Do NOT judge the family or stroke weight: Hugeicons renders as anonymous inline SVG, and no stroke width is published by the Figma extract or the rule corpus. |
 | `I2` | **Blocker, binary.** Official marks: approved variant, at or above minimum size, clear space intact, not recoloured or cropped. |
 
 **Every ratio must come from a count you can state** — "11 of 18 instances" — never a
@@ -241,24 +254,29 @@ Screenshots are **not** inlined by default. On real audits they were 97% of the 
 size — a 1.5 MB full-page PNG plus the same images again inside the page. Capture them
 only when a finding needs visual proof, and downscale to ~900 px JPEG first.
 
-### Always lead with two numbers
+### Lead with the verdict, never with the number
 
-The weighted score **and** how many of the checks were met. One without the other
-misleads: 90/100 with 12 of 23 checks met is a very different page from 90/100 with 21
-of 23.
+DGA publishes no passing score. The headline is `verdict.readiness` over its mandatory
+tier; the percentage is adoption and comes second, with how many checks were met beside it
+— 90% with 12 of 23 met is a very different page from 90% with 21 of 23.
 
-| Band | Score |
+| Adoption level | Score |
 | --- | --- |
-| Compliant | 90–100 |
-| Substantially compliant | 75–89 |
-| Partial | 60–74 |
-| Non-compliant | < 60 |
+| Full adoption | 90–100 |
+| High adoption | 75–89 |
+| Moderate adoption | 60–74 |
+| Limited adoption | < 60 |
 
-A failed blocker — off-palette brand colour, mark misuse, text or non-text contrast —
-holds the band at **Partial** however high the number climbs. The number is never
-adjusted; the band carries the gate, and the report names what capped it. Blockers are
-held to **full** compliance, not 90%: one text run below 4.5:1 means the page does not
-conform, however good the other ninety-nine are.
+These describe **how much of the interface is built from the DGA system**, not whether it
+complies. Reporting them as a compliance verdict claims an authority DGA reserves for its
+own formal review.
+
+**Blockers no longer cap the band.** A failed blocker — off-palette brand colour, mark
+misuse, text or non-text contrast — makes the DGA criterion it belongs to `open`, which is
+what decides readiness. The number already priced the failure; capping for it as well
+charged twice for one fault. Blockers are still held to **full** compliance, not 90%: one
+text run below 4.5:1 means the page does not conform, however good the other ninety-nine
+are. Only thin evidence caps the adoption level, and the report names it when it does.
 
 ---
 
