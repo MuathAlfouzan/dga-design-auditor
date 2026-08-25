@@ -33,6 +33,8 @@ const tokens = strip(JSON.parse(read('data/tokens.json')));
 const components = strip(JSON.parse(read('data/components.json')));
 const benchmarks = strip(JSON.parse(read('data/benchmarks.json')));
 const criteria = JSON.parse(read('data/dga-criteria.json'));
+const checklist = JSON.parse(read('data/dga-checklist.json'));
+const checklistMap = JSON.parse(read('data/checklist-map.json'));
 
 // Modules are authored as ESM for Node and the tests; the bundle runs as a
 // classic script, so the export keywords come off. Nothing else changes.
@@ -68,6 +70,8 @@ const bundle = `/*!
   var COMPONENTS = ${JSON.stringify(components)};
   var BENCHMARKS = ${JSON.stringify(benchmarks)};
   var CRITERIA = ${JSON.stringify(criteria)};
+  var CHECKLIST = ${JSON.stringify(checklist)};
+  var CHECKLIST_MAP = ${JSON.stringify(checklistMap)};
 
 ${probe}
 
@@ -99,6 +103,7 @@ ${render}
     components: COMPONENTS,
     benchmarks: BENCHMARKS,
     criteria: CRITERIA,
+    checklist: CHECKLIST,
 
     /** Probe this viewport, add it to the set, and score everything captured so far. */
     audit: function (opts) {
@@ -107,7 +112,8 @@ ${render}
       var capture = probe({ label: label, minTargetPx: minTargetFor(window.innerWidth), forceCascade: opts.forceCascade === true });
       api.captures.push(capture);
       var args = {
-        rubric: RUBRIC, tokens: TOKENS, criteria: CRITERIA, benchmarks: BENCHMARKS, captures: api.captures,
+        rubric: RUBRIC, tokens: TOKENS, criteria: CRITERIA, checklist: CHECKLIST, checklistMap: CHECKLIST_MAP,
+        benchmarks: BENCHMARKS, captures: api.captures,
         judged: opts.judged || {},
         options: {
           targetType: 'site',

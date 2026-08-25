@@ -227,7 +227,12 @@ check('all 19 tallies present', R.tallyKeys === 19, `got ${R.tallyKeys}`);
 /* the surface */
 check('scored a real number', typeof R.score === 'number' && R.score >= 0 && R.score <= 100, `score=${R.score}`);
 check('renderer produced a page', R.htmlLen > 20000, `${R.htmlLen} chars`);
-check('inline report produced', R.inlineLen > 100 && R.inlineLen < 4000, `${R.inlineLen} chars`);
+// Upper bound re-baselined 4000 -> 4500 when the DGA checklist header became the lead of
+// every report: four permanent lines carrying the status counts, what the tool can and
+// cannot answer, and the accessibility figures that sit outside DGA's instrument. The
+// bound exists to keep a chat report scannable, not to freeze its content — but it is
+// raised deliberately and once, not whenever it is inconvenient.
+check('inline report stays scannable', R.inlineLen > 100 && R.inlineLen < 4500, `${R.inlineLen} chars`);
 
 /* the split is the default: web and mobile scored separately, never blended */
 check('audit() returns a split by default', R.split.schema === 'dga-score-split/1', R.split.schema);

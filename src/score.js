@@ -67,7 +67,7 @@ function nearestToken(hexValue, palette) {
 
 /* ------------------------------------------------------------------ main */
 
-export function score({ rubric, tokens, criteria = null, benchmarks = null, captures = [], judged = {}, options = {} }) {
+export function score({ rubric, tokens, criteria = null, checklist = null, checklistMap = null, benchmarks = null, captures = [], judged = {}, options = {} }) {
   const {
     targetType = 'site',
     targetName = '(unnamed target)',
@@ -1002,8 +1002,10 @@ export function score({ rubric, tokens, criteria = null, benchmarks = null, capt
   if (silentWeight > maxSilent) capTo(`${round2(silentWeight)} points could not be measured at all`);
   const provisional = coveragePct < minCoverage || silentWeight > maxSilent;
 
-  // DGA own gate, decided on its published mandatory tier rather than on the number.
+  // Superseded, kept for one release so nothing downstream breaks at once.
   const assessed = criteria ? assessCriteria(criteria, categories) : null;
+  // DGA's actual instrument: its own 58-row checklist, answered as far as measurement goes.
+  const filled = (checklist && checklistMap) ? assessChecklist(checklist, checklistMap, categories) : null;
 
   // R2 and M2 still produce real observations, but they are not compliance failures.
   // Stamping the scope onto each finding is what stops a renderer presenting an
@@ -1034,6 +1036,7 @@ export function score({ rubric, tokens, criteria = null, benchmarks = null, capt
     checksTotal: rubric.categories.reduce((a, c) => a + c.checks.length, 0),
     band: { id: band.id, label: band.label },
     adoption: { score: finalScore, level: band.label, basis: 'share of the interface built from the DGA system, occurrence-weighted' },
+    checklist: filled,
     criteria: assessed,
     readiness: assessed ? assessed.readiness : null,
     cappedFrom,
@@ -1189,6 +1192,121 @@ export function assessCriteria(criteria, categories) {
       published: rows.length,
       needsHumanReview: manual.map((r) => r.id),
       note: "Task completion, load times, error messaging, help resources and feedback mechanisms cannot be read off a rendered page. This tool covers part of the DGA framework, not all of it.",
+    },
+  };
+}
+
+/* ------------------------------------------------------------- checklist */
+
+/**
+ * Fill in DGA's OWN compliance checklist, using DGA's own status vocabulary.
+ *
+ * This replaces a gate built on nine criteria inferred from prose. The real instrument has
+ * fifty-eight, 44 المعايير الأساسية and 14 المعايير الثانوية, and DGA's process is to set
+ * حالة التنفيذ on each row and submit the file. So the useful output is not a score — it is
+ * that file, answered as far as measurement can answer it and honestly blank everywhere
+ * else, with the reference URL attached so a person knows where to go.
+ *
+ * Today that is 9 rows of 44 essential. Saying so is the point: the previous model claimed
+ * seven of nine, which was the same coverage inflated about two and a half times by
+ * inventing the denominator.
+ *
+ * The four status strings are DGA's, verbatim, from the data validation on column E. They
+ * are never paraphrased and never translated.
+ */
+export function assessChecklist(checklist, map, categories) {
+  const S = map.statuses;
+  const rows = categories.flatMap((c) => c.checks);
+  const byId = new Map(rows.map((k) => [k.id, k]));
+  const byNumber = new Map((checklist.criteria || []).map((c) => [c.n, c]));
+
+  const answer = (entry) => {
+    const crit = byNumber.get(entry.n) || {};
+    const base = {
+      n: entry.n, tier: entry.tier, ar: crit.ar || null, en: crit.en || null,
+      ref: entry.ref || null, checks: entry.checks, kind: entry.kind,
+    };
+    if (entry.kind === 'manual' || entry.kind === 'derived') {
+      return { ...base, status: null, needsReview: entry.kind === 'manual', why: entry.why };
+    }
+
+    const mine = entry.checks.map((id) => byId.get(id)).filter(Boolean);
+    const graded = mine.filter((k) => k.status === 'pass' || k.status === 'fail');
+    const gaps = mine.filter((k) => k.status !== 'pass' && k.status !== 'fail' && k.naKind !== 'absent');
+    const absent = mine.filter((k) => k.naKind === 'absent');
+
+    // A gap never yields a status. An unlooked-at check could be hiding the failure that
+    // would change the answer, and DGA is being handed this file as a statement of fact.
+    if (gaps.length) {
+      return { ...base, status: null, needsReview: true,
+        why: 'could not be measured: ' + gaps.map((k) => k.id).join(', '), evidence: null };
+    }
+    if (!graded.length) {
+      return absent.length
+        ? { ...base, status: S.na, needsReview: false, why: 'nothing of this kind is present on the target' }
+        : { ...base, status: null, needsReview: true, why: 'no evidence available' };
+    }
+
+    const passed = graded.filter((k) => k.status === 'pass');
+    const evidence = graded.map((k) => k.id + ' ' + (k.measured ? k.measured.matched + '/' + k.measured.total : k.ratio)).join(' · ');
+
+    let status;
+    if (passed.length === graded.length) status = S.full;
+    else if (passed.length) status = S.partial;
+    else status = S.notApplied;
+
+    // A row whose mapping is only PARTIAL evidence must never read as fully applied:
+    // token adherence is evidence of visual consistency, not the whole of it.
+    const capped = entry.kind === 'partial' && status === S.full;
+    return {
+      ...base,
+      status: capped ? S.partial : status,
+      needsReview: entry.kind === 'partial',
+      why: capped ? 'evidence is partial — confirm by review before submitting as ' + S.full : (entry.why || null),
+      evidence,
+    };
+  };
+
+  const answered = (map.entries || []).map(answer);
+
+  // #1 is derived, by DGA's own rule quoted in the checklist: it becomes تطبيق كلي only
+  // when every essential criterion is تطبيق كلي.
+  const essential = answered.filter((r) => r.tier === 'essential' && r.n !== 1);
+  const rollup = answered.find((r) => r.n === 1);
+  if (rollup) {
+    const allFull = essential.length > 0 && essential.every((r) => r.status === S.full);
+    rollup.status = allFull ? S.full : null;
+    rollup.needsReview = !allFull;
+    rollup.why = allFull
+      ? 'every essential criterion is ' + S.full
+      : 'derived: becomes ' + S.full + ' only when every essential criterion is ' + S.full;
+  }
+
+  const count = (list, st) => list.filter((r) => r.status === st).length;
+  const summary = (list) => ({
+    total: list.length,
+    full: count(list, S.full), partial: count(list, S.partial),
+    notApplied: count(list, S.notApplied), na: count(list, S.na),
+    needsReview: list.filter((r) => r.needsReview).length,
+    answered: list.filter((r) => r.status !== null).length,
+  });
+
+  return {
+    source: checklist.source, statuses: S,
+    essential: summary(answered.filter((r) => r.tier === 'essential')),
+    secondary: summary(answered.filter((r) => r.tier === 'secondary')),
+    rows: answered,
+    automated: {
+      answerable: (map.entries || []).filter((e) => e.kind !== 'manual').length,
+      total: (map.entries || []).length,
+      note: 'Rows this tool cannot answer are left blank and flagged, each with the DGA reference. They are not failures — they are questions for a person.',
+    },
+    accessibility: {
+      note: 'Not in DGA\'s checklist. It contains no WCAG, contrast, keyboard or ARIA criterion, so these are reported apart and never counted in the totals above. DGA\'s AssessmentCriteria page does name إمكانية الوصول as assessment category one; the two DGA artefacts disagree.',
+      checks: ['A1', 'A2', 'A3', 'A4'].map((id) => {
+        const k = byId.get(id);
+        return k ? { id, status: k.status, ratio: k.ratio ?? null, measuredBy: k.measuredBy || 'observed' } : { id, status: 'missing' };
+      }),
     },
   };
 }
@@ -1405,7 +1523,7 @@ export function explain(verdict, { part = null, check = null, maxFindings = 6 } 
  * groups and calls it twice, so every existing guarantee, including the
  * regression fixture, holds unchanged.
  */
-export function scoreByViewport({ rubric, tokens, criteria = null, benchmarks = null, captures = [], judged = {}, options = {} }) {
+export function scoreByViewport({ rubric, tokens, criteria = null, checklist = null, checklistMap = null, benchmarks = null, captures = [], judged = {}, options = {} }) {
   // The split point is the ledger's own desktop breakpoint, not a number picked
   // here — if DGA moves it, this moves with it.
   const bps = (tokens.breakpoints && tokens.breakpoints.list) || [];
@@ -1443,7 +1561,7 @@ export function scoreByViewport({ rubric, tokens, criteria = null, benchmarks = 
       captures: caps.map((c) => ({ label: c.label, width: c.viewport?.width ?? null })),
       // benchmarkViewport is the group's own id, so a mobile reading is never compared
       // against a desktop reference.
-      verdict: score({ rubric, tokens, criteria, benchmarks, captures: caps, judged, options: { ...options, benchmarkViewport: g.id } }),
+      verdict: score({ rubric, tokens, criteria, checklist, checklistMap, benchmarks, captures: caps, judged, options: { ...options, benchmarkViewport: g.id } }),
     };
   });
 
@@ -1504,8 +1622,27 @@ export function inlineReport(v, { maxFindings = 3 } = {}) {
   const L = [];
   // DGA publishes no passing score, so the headline is its question, not a number
   // dressed as a verdict: are the mandatory criteria met?
+  // DGA's own instrument comes first. The readiness line below is the superseded model.
+  const cl = v.checklist;
+  if (cl) {
+    const e = cl.essential, S = cl.statuses;
+    L.push(`**${v.target.name} — DGA checklist: ${e.answered} of ${e.total} essential criteria answered**`);
+    L.push(`> ${S.full} **${e.full}** · ${S.partial} **${e.partial}** · ${S.notApplied} **${e.notApplied}** · ${S.na} **${e.na}**` +
+      ` · **${e.needsReview}** need review, each with its DGA reference.`);
+    // The secondary line only earns its space when there is something in it.
+    L.push((cl.secondary.answered ? `> Secondary tier: ${cl.secondary.answered} of ${cl.secondary.total} answered. ` : '> ') +
+      `This tool can answer **${cl.automated.answerable} of ${cl.automated.total}** rows; the rest are questions for a person, not failures.`);
+    const acc = cl.accessibility.checks.filter((a) => a.ratio != null)
+      .map((a) => `\`${a.id}\` ${a.ratio}${a.measuredBy === 'cascade-analysis' ? ' (predicted)' : ''}`).join(' · ');
+    if (acc) L.push(`> **Not in DGA's checklist** — WCAG 2.2 AA: ${acc}. Reported apart and never counted above.`);
+    L.push('');
+  }
+
+  // The readiness block is the SUPERSEDED model. It stays on the verdict object for one
+  // release, but printing it alongside the checklist gives a reader two competing verdicts
+  // over the same page — and the older one counts against a framework DGA does not use.
   const rd = v.readiness;
-  if (rd) {
+  if (rd && !cl) {
     const mark = rd.state === "ready" ? "✓" : rd.state === "unconfirmed" ? "?" : "✗";
     L.push(`**${v.target.name} — ${mark} ${rd.label}** · DGA mandatory criteria ${rd.met} of ${rd.total} met`);
     if (rd.open.length) L.push(`> Open: ${rd.open.map((o) => `**${o.ar}** (${o.blocking.join(", ")})`).join(" · ")}`);

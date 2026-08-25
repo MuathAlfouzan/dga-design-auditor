@@ -10,65 +10,116 @@
     "تضمن المراجعة الرسمية أن مشروعك يفي بجميع المعايير — formal review ensures your project meets ALL the criteria",
     "قم بتضمين قائمة التحقق عند تقديم مشروعك — include the checklist when you submit your project"
   ],
-
   "categories": [
-    { "id": "accessibility", "ar": "إمكانية الوصول", "en": "Accessibility",
-      "summary": "Conformance to WCAG for users with disabilities, and compatibility with assistive technology." },
-    { "id": "consistency", "ar": "الاتساق", "en": "Consistency",
-      "summary": "Unified use of design tokens — colour, typography, spacing — to hold a coherent identity." },
-    { "id": "design", "ar": "التصميم", "en": "Design",
-      "summary": "Visual consistency with the design tokens and UI kit, and responsive behaviour across devices." },
-    { "id": "usability", "ar": "سهولة الاستخدام", "en": "Usability",
-      "summary": "Clarity, intuitiveness and logical flow, including load times and task completion." }
+    {
+      "id": "accessibility",
+      "ar": "إمكانية الوصول",
+      "en": "Accessibility",
+      "summary": "Conformance to WCAG for users with disabilities, and compatibility with assistive technology."
+    },
+    {
+      "id": "consistency",
+      "ar": "الاتساق",
+      "en": "Consistency",
+      "summary": "Unified use of design tokens — colour, typography, spacing — to hold a coherent identity."
+    },
+    {
+      "id": "design",
+      "ar": "التصميم",
+      "en": "Design",
+      "summary": "Visual consistency with the design tokens and UI kit, and responsive behaviour across devices."
+    },
+    {
+      "id": "usability",
+      "ar": "سهولة الاستخدام",
+      "en": "Usability",
+      "summary": "Clarity, intuitiveness and logical flow, including load times and task completion."
+    }
   ],
-
   "tiers": [
-    { "id": "mandatory", "ar": "الامتثال الإلزامي", "en": "Mandatory", "gates": true },
-    { "id": "recommended", "ar": "المعايير الموصى بها", "en": "Recommended", "gates": false }
+    {
+      "id": "mandatory",
+      "ar": "الامتثال الإلزامي",
+      "en": "Mandatory",
+      "gates": true
+    },
+    {
+      "id": "recommended",
+      "ar": "المعايير الموصى بها",
+      "en": "Recommended",
+      "gates": false
+    }
   ],
-
   "criteria": [
-    { "id": "design-system", "tier": "mandatory", "category": "design",
+    {
+      "id": "design-system",
+      "tier": "mandatory",
+      "category": "design",
       "ar": "الامتثال لنظام التصميم",
-      "en": "Implement version 1.0 of the unified design system (Platforms Code) correctly." },
-
-    { "id": "type-colour", "tier": "mandatory", "category": "consistency",
+      "en": "Implement version 1.0 of the unified design system (Platforms Code) correctly."
+    },
+    {
+      "id": "type-colour",
+      "tier": "mandatory",
+      "category": "consistency",
       "ar": "معايير الخطوط و الألوان",
-      "en": "Implement the approved primary text colours and functional colours in line with the unified design system." },
-
-    { "id": "layout-spacing", "tier": "mandatory", "category": "design",
+      "en": "Implement the approved primary text colours and functional colours in line with the unified design system."
+    },
+    {
+      "id": "layout-spacing",
+      "tier": "mandatory",
+      "category": "design",
       "ar": "التخطيط و التباعد",
-      "en": "Follow the defined layout and spacing guidelines, including grid frame dimensions, a mobile-first methodology, and the spacing grid." },
-
-    { "id": "mobile-usability", "tier": "mandatory", "category": "usability",
+      "en": "Follow the defined layout and spacing guidelines, including grid frame dimensions, a mobile-first methodology, and the spacing grid."
+    },
+    {
+      "id": "mobile-usability",
+      "tier": "mandatory",
+      "category": "usability",
       "ar": "قابلية الاستخدام من خلال الجوال",
-      "en": "Ensure the application or website is fully usable on mobile devices, accounting for touch interactions, viewport size, and reaching navigation on small screens." },
-
-    { "id": "accessibility-wcag", "tier": "mandatory", "category": "accessibility",
+      "en": "Ensure the application or website is fully usable on mobile devices, accounting for touch interactions, viewport size, and reaching navigation on small screens."
+    },
+    {
+      "id": "accessibility-wcag",
+      "tier": "mandatory",
+      "category": "accessibility",
       "ar": "إمكانية الوصول (فئة تقييم)",
       "en": "Conformance to WCAG, assessed as an evaluation category in its own right.",
       "$placement": "DGA lists إمكانية الوصول as one of four assessment CATEGORIES rather than inside the four الأساسي items. It is treated as gating here because the design system's own accessibility page adopts WCAG by name — «إرشادات الوصول إلى محتوى الويب (WCAG)» — and requires «توفير تباين بين النص والخلفية» and keyboard access to all interactive elements, and because WCAG AA carries a statutory duty for Saudi government services. This is the one placement decision in this file that is a reading rather than a quotation; it is called out so it can be challenged.",
-      "supportedBy": "https://design.dga.gov.sa/thoughts/AccessibilityEase" },
-
-    { "id": "design-consistency", "tier": "recommended", "category": "design",
+      "supportedBy": "https://design.dga.gov.sa/thoughts/AccessibilityEase"
+    },
+    {
+      "id": "design-consistency",
+      "tier": "recommended",
+      "category": "design",
       "ar": "اتساق التصميم والمعايير",
-      "en": "Use approved icons, follow the custom-icon guidelines and consistent visual design elements, and implement components according to the design system." },
-
-    { "id": "ux-interaction", "tier": "recommended", "category": "usability",
+      "en": "Use approved icons, follow the custom-icon guidelines and consistent visual design elements, and implement components according to the design system."
+    },
+    {
+      "id": "ux-interaction",
+      "tier": "recommended",
+      "category": "usability",
       "ar": "تجربة المستخدم وتصميم التفاعل",
       "en": "Effective interaction design, intuitive navigation, efficient task completion, clearly explained errors, immediate feedback and predictable interface behaviour.",
-      "automatable": false },
-
-    { "id": "content-strategy", "tier": "recommended", "category": "usability",
+      "automatable": false
+    },
+    {
+      "id": "content-strategy",
+      "tier": "recommended",
+      "category": "usability",
       "ar": "استراتيجية المحتوى والترجمة",
       "en": "A sitemap supporting navigation and content discovery, an Arabic-first content strategy, and clear concise language for the intended audience.",
-      "automatable": "partial" },
-
-    { "id": "usability-accessibility", "tier": "recommended", "category": "usability",
+      "automatable": "partial"
+    },
+    {
+      "id": "usability-accessibility",
+      "tier": "recommended",
+      "category": "usability",
       "ar": "سهولة الاستخدام وإمكانية الوصول",
       "en": "Effective search, accessible help resources, user feedback mechanisms, visible privacy notice, and consistent error handling across the platform.",
-      "automatable": false }
+      "automatable": false
+    }
   ],
-
-  "$notAutomatable": "ux-interaction, usability-accessibility and most of content-strategy cannot be measured by reading a rendered page. Task completion, load times, error messaging, help resources and feedback mechanisms need human review against DGA's downloadable checklist. Any report from this tool must say so rather than implying it covers the whole framework."
+  "$notAutomatable": "ux-interaction, usability-accessibility and most of content-strategy cannot be measured by reading a rendered page. Task completion, load times, error messaging, help resources and feedback mechanisms need human review against DGA's downloadable checklist. Any report from this tool must say so rather than implying it covers the whole framework.",
+  "$superseded": "SUPERSEDED by data/dga-checklist.json, which is DGA's official instrument: 58 criteria against the nine inferred here. This file is kept as the record of what design.dga.gov.sa/AssessmentCriteria says in prose, and of the disagreement it has with the checklist — the page names إمكانية الوصول as assessment category one while the checklist contains no accessibility criterion at all. The gate no longer runs on this file."
 }

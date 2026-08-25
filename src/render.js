@@ -135,6 +135,34 @@ const shotsHtml = shots.length
 </section>`
   : '';
 
+/* ------------------------------------------------------- DGA checklist */
+
+// DGA's actual instrument. The readiness panel below it is the superseded model, kept
+// for one release. Rows this tool cannot answer are left blank on purpose and carry the
+// reference URL — they are questions for a person, not failures.
+const cl = S.checklist;
+const CL_ROWS = cl ? cl.rows.filter((r) => r.status !== null || r.tier === 'essential') : [];
+const checklistHtml = cl
+  ? `<section class="block">
+  <h2>DGA compliance checklist</h2>
+  <p class="lede">DGA's own instrument: ${cl.essential.total} <span dir="auto">معايير أساسية</span> and ${cl.secondary.total} <span dir="auto">معايير ثانوية</span>, filled in using DGA's own status values. <strong>${cl.essential.answered} of ${cl.essential.total}</strong> essential rows could be answered from measurement; <strong>${cl.essential.needsReview}</strong> need a person, each linked to the guideline that defines it.</p>
+  <p class="cap"><span class="stamp">${esc(cl.statuses.full)}</span><strong>${cl.essential.full}</strong>
+     &nbsp; <span class="stamp w">${esc(cl.statuses.partial)}</span><strong>${cl.essential.partial}</strong>
+     &nbsp; <span class="stamp f">${esc(cl.statuses.notApplied)}</span><strong>${cl.essential.notApplied}</strong>
+     &nbsp; <span class="stamp">${esc(cl.statuses.na)}</span><strong>${cl.essential.na}</strong></p>
+  <div class="scroll-x"><table>
+    <thead><tr><th>#</th><th>Criterion</th><th>حالة التنفيذ</th><th>Evidence</th></tr></thead>
+    <tbody>${CL_ROWS.map((r) => `<tr>
+      <td class="n">${r.n ?? ''}</td>
+      <td dir="auto"><strong>${esc((r.ar || r.en || '').slice(0, 90))}</strong>${r.ref ? `<br><a href="${esc(r.ref)}" style="font-size:.75rem">${esc(r.ref.replace('https://design.dga.gov.sa/', ''))}</a>` : ''}</td>
+      <td dir="auto">${r.status ? `<b>${esc(r.status)}</b>` : '<span style="color:var(--warn)">needs review</span>'}</td>
+      <td style="font-size:.78rem">${esc((r.evidence || r.why || '').slice(0, 90))}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>
+  <p class="lede" style="margin-top:1rem"><strong>Not in DGA's checklist.</strong> ${esc(cl.accessibility.note)} ${cl.accessibility.checks.filter((a) => a.ratio != null).map((a) => `<code>${a.id}</code> ${a.ratio}`).join(' · ')}</p>
+</section>`
+  : '';
+
 /* ------------------------------------------------------- DGA readiness */
 
 // The headline is DGA own question. DGA publishes no passing score — it publishes a
@@ -429,6 +457,8 @@ const html = `<title>${esc(S.target?.name || 'Design')} Compliance Audit</title>
     <p class="lede">Nine categories, ${S.checksTotal} checks. Each category shows points earned against points available for this target — a check that cannot apply leaves the denominator rather than counting as a failure. Open a row for the individual checks.</p>
     <div class="scroll-x">${categoryRows}</div>
   </section>
+
+  ${checklistHtml}
 
   ${readinessHtml}
 

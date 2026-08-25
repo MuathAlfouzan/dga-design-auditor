@@ -1,0 +1,565 @@
+{
+  "$comment": "Binds every one of DGA’s 58 checklist criteria to the checks that can evidence it, or marks it manual with the reason no measurement settles it. The manual entries are the honest part: 49 of 58 rows cannot be answered from a rendered page today, and each carries DGA’s own reference URL so a human can go and judge it.",
+  "schema": "dga-checklist-map/1",
+  "checklist": "data/dga-checklist.json",
+  "statuses": {
+    "full": "تطبيق كلي",
+    "partial": "تطبيق جزئي",
+    "notApplied": "غير مطبق",
+    "na": "N/A لاينطبق"
+  },
+  "$statusSource": "Data validation on column E of the supplied workbook. These four strings are DGA’s, verbatim, and must not be paraphrased.",
+  "$noButtonCriterion": "The checklist has no Button row. Buttons appear only inside #36 (interaction design), so the heaviest component finding this tool produces — buttons off radius-sm — belongs to no criterion of its own.",
+  "$accessibility": "A1, A2 and A3 map to NO criterion: the checklist contains no contrast, focus, keyboard or ARIA item, and inventing one would put words in DGA's mouth. A4 is the single exception and it is not an exception to the rule — criterion #28 explicitly names touch interactions on small screens, and target size is direct evidence for that. A4 is therefore used as evidence for a MOBILE USABILITY criterion, not smuggled in as an accessibility criterion. All four are additionally reported in their own section, which is informational and never counted in the checklist totals. DGA's AssessmentCriteria page does name إمكانية الوصول as assessment category one, so DGA's two artefacts disagree; that is recorded, not resolved.",
+  "entries": [
+    {
+      "n": 1,
+      "tier": "essential",
+      "en": "Ensure the Unified Design System (Platforms Code) version 1.0 is correctly implemented",
+      "ref": "https://design.dga.gov.sa/",
+      "kind": "derived",
+      "checks": [],
+      "why": "Derived by DGA’s own rule, quoted in the checklist: this becomes تطبيق كلي only when every essential criterion is تطبيق كلي."
+    },
+    {
+      "n": 2,
+      "tier": "essential",
+      "en": "Implement approved primary text colors, and functional colors in line with the Unified Design System (Platform",
+      "ref": "https://design.dga.gov.sa/guidelines/foundations/color-system",
+      "kind": "measured",
+      "checks": [
+        "C1",
+        "C2",
+        "C3",
+        "C4"
+      ],
+      "why": null
+    },
+    {
+      "n": 3,
+      "tier": "essential",
+      "en": "Adhere to Typography guidelines by using approved fonts, appropriate font weights for headings, and responsive",
+      "ref": "https://design.dga.gov.sa/guidelines/foundations/typography",
+      "kind": "measured",
+      "checks": [
+        "T1",
+        "T2",
+        "T3",
+        "T4"
+      ],
+      "why": null
+    },
+    {
+      "n": 4,
+      "tier": "essential",
+      "en": "Follow the specified layout and spacing guidelines, including wireframe dimensions, a mobile-first approach, a",
+      "ref": "https://design.dga.gov.sa/guidelines/foundations/layout-and-spacing",
+      "kind": "measured",
+      "checks": [
+        "S1",
+        "S2",
+        "S3"
+      ],
+      "why": null
+    },
+    {
+      "n": 5,
+      "tier": "essential",
+      "en": "Design for responsiveness, ensuring the layout adapts effectively to different screen sizes and orientations",
+      "ref": "https://design.dga.gov.sa/guidelines/foundations/layout-and-spacing",
+      "kind": "partial",
+      "checks": [
+        "S2"
+      ],
+      "why": "S2 reads container and gutter at the two captured viewports; DGA asks about adaptation across sizes AND orientations, which one pair of widths only partly answers."
+    },
+    {
+      "n": 6,
+      "tier": "essential",
+      "en": "Implement the Dropdown component according to Unified Design System (Platforms Code) specifications",
+      "ref": "https://design.dga.gov.sa/guidelines/components/actions/dropdown",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 7,
+      "tier": "essential",
+      "en": "Ensure the Link component follows the specifications in the Unified Design System (Platforms Code)",
+      "ref": "https://design.dga.gov.sa/guidelines/components/actions/link",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 8,
+      "tier": "essential",
+      "en": "Implement the Accordion component as per the guidelines in the Unified Design System (Platforms Code)",
+      "ref": "https://design.dga.gov.sa/guidelines/components/content-display/accordion",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 9,
+      "tier": "essential",
+      "en": "Follow the Unified Design System (Platforms Code) guidelines for the List component",
+      "ref": "https://design.dga.gov.sa/guidelines/components/navigational/menu",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 10,
+      "tier": "essential",
+      "en": "Implement the Table component following the Unified Design System (Platforms Code) specifications",
+      "ref": "https://design.dga.gov.sa/guidelines/components/data-display/table",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 11,
+      "tier": "essential",
+      "en": "Ensure the Content Switcher component adheres to the Unified Design System (Platforms Code) guidelines",
+      "ref": "https://design.dga.gov.sa/guidelines/components/data-display/content-switcher",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 12,
+      "tier": "essential",
+      "en": "Follow the Unified Design System (Platforms Code) specifications for the Notification component",
+      "ref": "https://design.dga.gov.sa/guidelines/components/feedback/notification",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 13,
+      "tier": "essential",
+      "en": "Implement the Modal component as per the Unified Design System (Platforms Code) guidelines",
+      "ref": "https://design.dga.gov.sa/guidelines/components/feedback/modal",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 14,
+      "tier": "essential",
+      "en": "Ensure the Tooltip component meets the specifications of the Unified Design System (Platforms Code)",
+      "ref": "https://design.dga.gov.sa/guidelines/components/feedback/tooltip",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 15,
+      "tier": "essential",
+      "en": "Implement the Checkbox component according to the Unified Design System (Platforms Code) specifications",
+      "ref": "https://design.dga.gov.sa/guidelines/components/forms-and-inputs/checkbox",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 16,
+      "tier": "essential",
+      "en": "Ensure the DatePicker component adheres to the Unified Design System (Platforms Code) guidelines",
+      "ref": "https://design.dga.gov.sa/guidelines/components/forms-and-inputs/datepicker",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 17,
+      "tier": "essential",
+      "en": "Adhere to the Unified Design System (Platforms Code) for the Inputs component",
+      "ref": "https://design.dga.gov.sa/guidelines/components/forms-and-inputs/input",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 18,
+      "tier": "essential",
+      "en": "Implement the File Uploader component per the Unified Design System (Platforms Code) guidelines",
+      "ref": "https://design.dga.gov.sa/guidelines/components/forms-and-inputs/file-uploader",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 19,
+      "tier": "essential",
+      "en": "Follow the Unified Design System (Platforms Code) for the Radio component implementation",
+      "ref": "https://design.dga.gov.sa/guidelines/components/forms-and-inputs/radio",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 20,
+      "tier": "essential",
+      "en": "Implement the Switch component according to the Unified Design System (Platforms Code) guidelines",
+      "ref": "https://design.dga.gov.sa/guidelines/components/forms-and-inputs/switch",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 21,
+      "tier": "essential",
+      "en": "Follow the specifications of the Unified Design System (Platforms Code) for the Text Area component",
+      "ref": "https://design.dga.gov.sa/guidelines/components/forms-and-inputs/textarea",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 22,
+      "tier": "essential",
+      "en": "Implement the Tabs component as per the Unified Design System (Platforms Code) guidelines",
+      "ref": "https://design.dga.gov.sa/guidelines/components/navigational/tabs",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 23,
+      "tier": "essential",
+      "en": "Ensure the Tags component is in line with the Unified Design System (Platforms Code) specifications",
+      "ref": "https://design.dga.gov.sa/guidelines/components/search-and-filters/tags",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 24,
+      "tier": "essential",
+      "en": "Implement the Footer component as per the Unified Design System (Platforms Code) guidelines",
+      "ref": "https://design.dga.gov.sa/guidelines/components/ui-shell/footer",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 25,
+      "tier": "essential",
+      "en": "Adhere to Unified Design System (Platforms Code) specifications when implementing the Card component",
+      "ref": "https://design.dga.gov.sa/guidelines/components/content-display/card",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 26,
+      "tier": "essential",
+      "en": "Implement the Top Navigation Bar component according to the Unified Design System (Platforms Code) guidelines",
+      "ref": "https://design.dga.gov.sa/guidelines/components/ui-shell/navigation-header",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 27,
+      "tier": "essential",
+      "en": "Adhere to the Unified Design System (Platforms Code) for the Breadcrumbs component",
+      "ref": "https://design.dga.gov.sa/guidelines/components/navigational/breadcrumbs",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 28,
+      "tier": "essential",
+      "en": "Ensure the application/website is fully usable on mobile devices, considering factors such as touch interactio",
+      "ref": "https://design.dga.gov.sa/guidelines/foundations/layout-and-spacing",
+      "kind": "measured",
+      "checks": [
+        "A4"
+      ],
+      "why": null
+    },
+    {
+      "n": 29,
+      "tier": "essential",
+      "en": "Ensure the use of approved icons, adherence to custom icon design guidelines, and compliance with icon placeme",
+      "ref": "https://design.dga.gov.sa/guidelines/foundations/iconography",
+      "kind": "measured",
+      "checks": [
+        "I1"
+      ],
+      "why": null
+    },
+    {
+      "n": 30,
+      "tier": "essential",
+      "en": "Ensure the creation of a sitemap and information architecture that supports user navigation and content discov",
+      "ref": null,
+      "kind": "manual",
+      "checks": [],
+      "why": "Service quality: not derivable from what rendered. Needs human review, or Mode B reading the source."
+    },
+    {
+      "n": 31,
+      "tier": "essential",
+      "en": "Ensure the Avatar component is implemented according to the Unified Design System (Platforms Code) standards",
+      "ref": "https://design.dga.gov.sa/guidelines/components/data-display/avatar",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 32,
+      "tier": "essential",
+      "en": "Follow the Unified Design System (Platforms Code) for the implementation of the Rating component",
+      "ref": "https://design.dga.gov.sa/guidelines/components/feedback/rating",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 33,
+      "tier": "essential",
+      "en": "Ensure that the homepage template is correctly implemented in the platform's code.",
+      "ref": "https://www.figma.com/community/file/1412792257811427893/home-page-template-platforms-code",
+      "kind": "manual",
+      "checks": [],
+      "why": "Template conformance cannot be read from a rendered page — it is a question about which DGA template the page was built from."
+    },
+    {
+      "n": 34,
+      "tier": "essential",
+      "en": "Ensure that the service page template is correctly implemented in the platform's code.",
+      "ref": "https://www.figma.com/community/file/1412793544739851831/service-page-template-platforms-code",
+      "kind": "manual",
+      "checks": [],
+      "why": "Template conformance cannot be read from a rendered page — it is a question about which DGA template the page was built from."
+    },
+    {
+      "n": 35,
+      "tier": "essential",
+      "en": "Ensure that the search template is correctly implemented in the platform's code.",
+      "ref": "https://www.figma.com/community/file/1443910261055730190/search-page-template-platforms-code",
+      "kind": "manual",
+      "checks": [],
+      "why": "Template conformance cannot be read from a rendered page — it is a question about which DGA template the page was built from."
+    },
+    {
+      "n": 36,
+      "tier": "essential",
+      "en": "Evaluate the effectiveness of interaction design in facilitating user tasks, including button responses, gestu",
+      "ref": null,
+      "kind": "manual",
+      "checks": [],
+      "why": "Service quality: not derivable from what rendered. Needs human review, or Mode B reading the source."
+    },
+    {
+      "n": 37,
+      "tier": "essential",
+      "en": "Ensure the content strategy prioritizes an Arabic-first approach, and ensure the use of other languages per DG",
+      "ref": null,
+      "kind": "measured",
+      "checks": [
+        "R1",
+        "R3"
+      ],
+      "why": null
+    },
+    {
+      "n": 38,
+      "tier": "essential",
+      "en": "Ensure errors are clearly explained with instructions on how to correct them, and feedback for user actions sh",
+      "ref": null,
+      "kind": "manual",
+      "checks": [],
+      "why": "Service quality: not derivable from what rendered. Needs human review, or Mode B reading the source."
+    },
+    {
+      "n": 39,
+      "tier": "essential",
+      "en": "Ensure the effectiveness and efficiency of the search functionality, if applicable, including relevance of sea",
+      "ref": null,
+      "kind": "manual",
+      "checks": [],
+      "why": "Service quality: not derivable from what rendered. Needs human review, or Mode B reading the source."
+    },
+    {
+      "n": 40,
+      "tier": "essential",
+      "en": "Evaluate mechanisms for users to provide feedback on the application/website, and how this feedback is acknowl",
+      "ref": null,
+      "kind": "manual",
+      "checks": [],
+      "why": "Service quality: not derivable from what rendered. Needs human review, or Mode B reading the source."
+    },
+    {
+      "n": 41,
+      "tier": "essential",
+      "en": "Ensure the visibility and clarity of privacy and security notices, ensuring that they are understandable and a",
+      "ref": null,
+      "kind": "manual",
+      "checks": [],
+      "why": "Service quality: not derivable from what rendered. Needs human review, or Mode B reading the source."
+    },
+    {
+      "n": 42,
+      "tier": "essential",
+      "en": "Ensure that the visual design elements (eg, color schemes, fonts, layout structures) are consistent across the",
+      "ref": null,
+      "kind": "partial",
+      "checks": [
+        "C1",
+        "T1",
+        "S1"
+      ],
+      "why": "C1, T1 and S1 measure token adherence, which is evidence of visual consistency but not the whole of it — DGA also means layout structures reading as one system."
+    },
+    {
+      "n": 43,
+      "tier": "essential",
+      "en": "Ensure consistency in the terminology used across the platform to prevent confusion and aid in user understand",
+      "ref": null,
+      "kind": "manual",
+      "checks": [],
+      "why": "Service quality: not derivable from what rendered. Needs human review, or Mode B reading the source."
+    },
+    {
+      "n": 44,
+      "tier": "essential",
+      "en": "Ensure a consistent approach in how errors are handled and displayed across the application/website to ensure ",
+      "ref": null,
+      "kind": "manual",
+      "checks": [],
+      "why": "Service quality: not derivable from what rendered. Needs human review, or Mode B reading the source."
+    },
+    {
+      "n": 45,
+      "tier": "secondary",
+      "en": "Follow the Unified Design System (Platforms Code) for the Side Navigation Menu component",
+      "ref": "https://design.dga.gov.sa/guidelines/components/ui-shell/navigation-drawer",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 46,
+      "tier": "secondary",
+      "en": "Follow the Unified Design System (Platforms Code) for the Pagination component",
+      "ref": "https://design.dga.gov.sa/guidelines/components/navigational/pagination",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 47,
+      "tier": "secondary",
+      "en": "Ensure the Loading component is implemented per the Unified Design System (Platforms Code) guidelines",
+      "ref": "https://design.dga.gov.sa/guidelines/components/loading-and-status/loading",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 48,
+      "tier": "secondary",
+      "en": "Ensure the Steps component is in line with the Unified Design System (Platforms Code) specifications",
+      "ref": "https://design.dga.gov.sa/guidelines/components/forms-and-inputs/steps",
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 49,
+      "tier": "secondary",
+      "en": "Ensure the design establishes a clear visual hierarchy, directing the user's attention to important elements f",
+      "ref": null,
+      "kind": "manual",
+      "checks": [],
+      "why": "Service quality: not derivable from what rendered. Needs human review, or Mode B reading the source."
+    },
+    {
+      "n": 50,
+      "tier": "secondary",
+      "en": "Ensure the navigation is intuitive, including logical grouping and labeling of sections and links",
+      "ref": null,
+      "kind": "manual",
+      "checks": [],
+      "why": "Service quality: not derivable from what rendered. Needs human review, or Mode B reading the source."
+    },
+    {
+      "n": 60,
+      "tier": "secondary",
+      "en": "Ensure common tasks can be completed efficiently with minimal steps and intuitive interactions",
+      "ref": null,
+      "kind": "manual",
+      "checks": [],
+      "why": "Per-component conformance. P1/P2/P3 measure the share of ALL component instances on the page, so they cannot speak to this component on its own. Needs per-component measurement, or human review against the reference."
+    },
+    {
+      "n": 61,
+      "tier": "secondary",
+      "en": "Ensure available help resources and documentation are easily accessible, clear, and useful in assisting users ",
+      "ref": null,
+      "kind": "manual",
+      "checks": [],
+      "why": "Service quality: not derivable from what rendered. Needs human review, or Mode B reading the source."
+    },
+    {
+      "n": 62,
+      "tier": "secondary",
+      "en": "Ensure the language used in the interface is clear, concise, and appropriate for the intended audience, and as",
+      "ref": null,
+      "kind": "manual",
+      "checks": [],
+      "why": "Service quality: not derivable from what rendered. Needs human review, or Mode B reading the source."
+    },
+    {
+      "n": 63,
+      "tier": "secondary",
+      "en": "Evaluate whether the user interface behaves in a predictable manner, reducing user confusion and errors",
+      "ref": null,
+      "kind": "manual",
+      "checks": [],
+      "why": "Service quality: not derivable from what rendered. Needs human review, or Mode B reading the source."
+    },
+    {
+      "n": 64,
+      "tier": "secondary",
+      "en": "Ensure the interaction patterns (eg, gestures, clicks, navigation) are consistent, making the system intuitive",
+      "ref": null,
+      "kind": "manual",
+      "checks": [],
+      "why": "Service quality: not derivable from what rendered. Needs human review, or Mode B reading the source."
+    },
+    {
+      "n": 65,
+      "tier": "secondary",
+      "en": "Ensure the content (text, images, videos) is presented in a uniform style and tone appropriate for the target ",
+      "ref": null,
+      "kind": "manual",
+      "checks": [],
+      "why": "Service quality: not derivable from what rendered. Needs human review, or Mode B reading the source."
+    },
+    {
+      "n": 66,
+      "tier": "secondary",
+      "en": "Ensure that feedback provided to users for their actions is consistent in style and timing across the applicat",
+      "ref": null,
+      "kind": "manual",
+      "checks": [],
+      "why": "Service quality: not derivable from what rendered. Needs human review, or Mode B reading the source."
+    },
+    {
+      "n": 67,
+      "tier": "secondary",
+      "en": "Ensure a consistent approach in how errors are handled and displayed across the application/website to ensure ",
+      "ref": null,
+      "kind": "manual",
+      "checks": [],
+      "why": "Service quality: not derivable from what rendered. Needs human review, or Mode B reading the source."
+    }
+  ]
+}
