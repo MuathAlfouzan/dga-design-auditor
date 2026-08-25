@@ -381,25 +381,56 @@ export function probe(OPTS_IN = {}) {
    * declaration so `auto` and percentages can be told apart from real lengths.
    * Returns null when nothing authored it.
    */
+  /**
+   * Rules INDEXED BY PROPERTY, built once.
+   *
+   * This used to rescan every stylesheet on every lookup. On a page carrying the full DGA
+   * library that is 53,242 rules, and the spacing pass alone asks about ten properties for
+   * every element — hundreds of millions of comparisons, and the probe simply never
+   * returned. It failed worst on sites that ship the whole design system, which is exactly
+   * the population this tool most wants to measure.
+   *
+   * One pass builds prop -> [{ sel, value }], so a lookup only ever sees the rules that
+   * declare the property being asked about.
+   */
+  let RULE_INDEX = null;
+  function ruleIndex() {
+    if (RULE_INDEX) return RULE_INDEX;
+    RULE_INDEX = new Map();
+    const walk = (list) => {
+      for (const r of list) {
+        try { if (r.cssRules) walk(r.cssRules); } catch (e) {}
+        if (!r.style || !r.selectorText) continue;
+        for (let i = 0; i < r.style.length; i++) {
+          const prop = r.style[i];
+          const v = r.style.getPropertyValue(prop);
+          if (!v) continue;
+          let bucket = RULE_INDEX.get(prop);
+          if (!bucket) RULE_INDEX.set(prop, (bucket = []));
+          bucket.push({ sel: r.selectorText, value: v.trim() });
+        }
+      }
+    };
+    for (const sheet of document.styleSheets) {
+      try { walk(sheet.cssRules); } catch (e) { /* cross-origin sheet */ }
+    }
+    return RULE_INDEX;
+  }
+
   const authoredCache = new Map();
   function authoredValue(el, prop) {
     if (el.style && el.style.getPropertyValue(prop)) return el.style.getPropertyValue(prop).trim();
     const key = el.tagName + '|' + (el.getAttribute('class') || '') + '|' + prop;
     if (authoredCache.has(key)) return authoredCache.get(key);
     let found = null;
-    try {
-      for (const sheet of document.styleSheets) {
-        let rules;
-        try { rules = sheet.cssRules; } catch (e) { continue; }
-        for (const r of rules) {
-          if (!r.style || !r.selectorText) continue;
-          const v = r.style.getPropertyValue(prop);
-          if (!v) continue;
-          try { if (el.matches(r.selectorText)) found = v.trim(); } catch (e) {}
-        }
+    const bucket = ruleIndex().get(prop);
+    if (bucket) {
+      // Later declarations win, matching the order the browser resolved them in.
+      for (const r of bucket) {
+        try { if (el.matches(r.sel)) found = r.value; } catch (e) {}
       }
-    } catch (e) {}
-    if (authoredCache.size < 400) authoredCache.set(key, found);
+    }
+    if (authoredCache.size < 4000) authoredCache.set(key, found);
     return found;
   }
 
