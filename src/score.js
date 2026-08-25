@@ -635,6 +635,47 @@ export function score({ rubric, tokens, criteria = null, checklist = null, check
       });
     }
 
+    /* D1 — is the design system IMPLEMENTED, or merely resembled? */
+    if (targetType === 'site') {
+      const lib = captures.reduce((a, c) => {
+        const L = c.library || {};
+        a.elementCount += L.elementCount || 0;
+        for (const [t, n] of Object.entries(L.elements || {})) a.elements[t] = (a.elements[t] || 0) + n;
+        for (const t of L.tokensFound || []) a.tokens.add(t);
+        a.probed = Math.max(a.probed, L.tokensProbed || 0);
+        a.refs.push(...(L.packageRefs || []));
+        a.seen = a.seen || !!c.library;
+        return a;
+      }, { elementCount: 0, elements: {}, tokens: new Set(), probed: 0, refs: [], seen: false });
+
+      if (!lib.seen) {
+        // A capture from before this check existed cannot tell "no library" from "never
+        // looked" — and those are opposite answers to DGA's first criterion.
+        auto.D1 = { ratio: null, na: true, reason: 'capture predates library detection' };
+      } else {
+        const hasEls = lib.elementCount > 0;
+        const hasTokens = lib.tokens.size > 0;
+        // Both signals → implemented. One → partial: a library user can render a page with
+        // no custom elements, and a site can define a token name by coincidence. Neither →
+        // the site resembles the system rather than using it.
+        const ratio = hasEls && hasTokens ? 1 : (hasEls || hasTokens ? 0.5 : 0);
+        auto.D1 = {
+          ratio, matched: (hasEls ? 1 : 0) + (hasTokens ? 1 : 0), total: 2,
+          notes: hasEls || hasTokens
+            ? `${lib.elementCount} dga-* elements · ${lib.tokens.size} of ${lib.probed} library tokens on :root`
+            : 'no dga-* elements and none of the library root tokens — this target resembles the design system rather than using it',
+        };
+        if (ratio < 1) {
+          finding('D1', ratio === 0 ? 'major' : 'minor',
+            ratio === 0 ? 'Not built on the DGA component library' : 'Only partly built on the DGA component library', {
+              found: `${lib.elementCount} dga-* elements, ${lib.tokens.size}/${lib.probed} library tokens`,
+              expected: 'components from @platformscode/core, with its design tokens on :root',
+              fix: 'Install platformscode-new-react and build from the published components. Matching the tokens by hand reproduces the appearance and none of the guarantees.',
+            });
+        }
+      }
+    }
+
     if (targetType === 'site') {
       const f = captures.reduce((a, x) => {
         a.probed += x.focus?.probed || 0;
@@ -1250,9 +1291,14 @@ export function assessChecklist(checklist, map, categories) {
     const passed = graded.filter((k) => k.status === 'pass');
     const evidence = graded.map((k) => k.id + ' ' + (k.measured ? k.measured.matched + '/' + k.measured.total : k.ratio)).join(' · ');
 
+    // Pass/fail alone loses the middle. A criterion whose only check scores 0.5 is
+    // PARTIALLY applied, not unapplied — reporting غير مطبق there would tell DGA a site
+    // did nothing when it did half. So a non-zero ratio counts as partial even when no
+    // check clears its pass threshold; only genuine zeroes read as not applied.
+    const anyProgress = graded.some((k) => (k.ratio ?? 0) > 0);
     let status;
     if (passed.length === graded.length) status = S.full;
-    else if (passed.length) status = S.partial;
+    else if (passed.length || anyProgress) status = S.partial;
     else status = S.notApplied;
 
     // A row whose mapping is only PARTIAL evidence must never read as fully applied:
@@ -1272,7 +1318,10 @@ export function assessChecklist(checklist, map, categories) {
   // #1 is derived, by DGA's own rule quoted in the checklist: it becomes تطبيق كلي only
   // when every essential criterion is تطبيق كلي.
   const essential = answered.filter((r) => r.tier === 'essential' && r.n !== 1);
-  const rollup = answered.find((r) => r.n === 1);
+  // Only when #1 is still DERIVED. Once D1 measures it directly — detection answers
+  // "is the design system implemented" better than a rollup over rows this tool mostly
+  // cannot answer — this override would clobber a real measurement with a null.
+  const rollup = answered.find((r) => r.n === 1 && r.kind === 'derived');
   if (rollup) {
     const allFull = essential.length > 0 && essential.every((r) => r.status === S.full);
     rollup.status = allFull ? S.full : null;
@@ -1623,6 +1672,18 @@ export function inlineReport(v, { maxFindings = 3 } = {}) {
   // DGA publishes no passing score, so the headline is its question, not a number
   // dressed as a verdict: are the mandatory criteria met?
   // DGA's own instrument comes first. The readiness line below is the superseded model.
+  // Which population is this? Everything below the banner measures RESEMBLANCE unless
+  // the site is actually built on the library, and conflating the two is the error this
+  // whole report was making: printing a components score about a site that uses none.
+  const d1 = v.categories.flatMap((c) => c.checks).find((k) => k.id === 'D1');
+  if (d1 && d1.ratio != null) {
+    L.push(d1.ratio === 1
+      ? `> **Built on the DGA library** — ${d1.notes}.`
+      : d1.ratio > 0
+        ? `> **Partly built on the DGA library** — ${d1.notes}.`
+        : '> **Not built on the DGA library.** The checks below compare computed values against the token ledger, which is evidence of resemblance, not of implementation — and DGA criterion 1 asks about implementation.');
+  }
+
   const cl = v.checklist;
   if (cl) {
     const e = cl.essential, S = cl.statuses;

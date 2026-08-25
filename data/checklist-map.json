@@ -17,9 +17,11 @@
       "tier": "essential",
       "en": "Ensure the Unified Design System (Platforms Code) version 1.0 is correctly implemented",
       "ref": "https://design.dga.gov.sa/",
-      "kind": "derived",
-      "checks": [],
-      "why": "Derived by DGA’s own rule, quoted in the checklist: this becomes تطبيق كلي only when every essential criterion is تطبيق كلي."
+      "kind": "measured",
+      "checks": [
+        "D1"
+      ],
+      "why": "Answered directly by D1: whether the target is built on @platformscode/core. DGA also defines this row as a rollup — \"if every essential criterion is fully applied this becomes fully applied\" — but a rollup over rows this tool mostly cannot answer would report nothing. Detection answers the question the criterion actually asks."
     },
     {
       "n": 2,

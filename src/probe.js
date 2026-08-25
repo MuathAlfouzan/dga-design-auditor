@@ -838,6 +838,57 @@ export function probe(OPTS_IN = {}) {
     }
   }
 
+  /* ------------------------------------------------- DGA library detection */
+
+  /**
+   * Is this site actually BUILT on the DGA library, or does it merely resemble it?
+   *
+   * Everything else in this probe measures resemblance: whether computed values match a
+   * token ledger. That is evidence of similarity, not of implementation — and the
+   * checklist's first mandatory criterion asks about implementation. It has a direct
+   * answer, because DGA ships @platformscode/core as 70 custom elements and ~695 root
+   * custom properties.
+   *
+   * Measured while building this: design.dga.gov.sa carries 46 dga-* elements and the
+   * library tokens; dga.gov.sa carries neither. DGA's own website does not use DGA's own
+   * component library.
+   *
+   * THREE independent signals, because no single one is sound on its own. A page can
+   * define --radius-sm without ever having heard of DGA, and a library user can render a
+   * page that happens to use no custom elements. So the probe records all three and lets
+   * the scorer decide.
+   */
+  const library = (() => {
+    const out = { elements: {}, elementCount: 0, tokensFound: [], tokensProbed: 0, packageRefs: [], version: null };
+    try {
+      for (const el of document.querySelectorAll('*')) {
+        const t = el.tagName.toLowerCase();
+        if (t.startsWith('dga-')) { out.elements[t] = (out.elements[t] || 0) + 1; out.elementCount++; }
+      }
+
+      // Deliberately NOT --radius-sm or --spacing-4: those are plausible coincidences in
+      // any design system. These are compound names nobody coins independently.
+      const PROBE = [
+        '--colors-alpha-alpha-black-0', '--featuredicons-background-brand-light',
+        '--notification-alert-h-padding', '--button-background-black-default',
+        '--form-datecell-background-100', '--tag-background-error',
+        '--accordion-lg-header-gap', '--background-inverse-disabled',
+      ];
+      out.tokensProbed = PROBE.length;
+      const rs = getComputedStyle(document.documentElement);
+      for (const name of PROBE) {
+        const v = (rs.getPropertyValue(name) || '').trim();
+        if (v) out.tokensFound.push(name);
+      }
+
+      for (const n of document.querySelectorAll('script[src],link[href]')) {
+        const u = n.getAttribute('src') || n.getAttribute('href') || '';
+        if (/platformscode|dga-?core/i.test(u) && out.packageRefs.length < 6) out.packageRefs.push(u.slice(0, 160));
+      }
+    } catch (e) { /* detection is best-effort; absence is reported, never inferred */ }
+    return out;
+  })();
+
   /* --------------------------------------------------------- A3 focus ring */
 
   // Actually focus a sample of controls and diff the computed style. Reading the
@@ -1126,6 +1177,7 @@ export function probe(OPTS_IN = {}) {
       inlineExempt: inlineTargetsExempt, spacingExempt: spacedTargetsExempt,
     },
     focus: focusProbe,
+    library,
     rtl: {
       rtlElements,
       ltrElements,

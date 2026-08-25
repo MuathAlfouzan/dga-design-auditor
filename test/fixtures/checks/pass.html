@@ -14,7 +14,21 @@
   /* motion: durations and easing are absent from the ledger, so M1 is n/a by design;
      M2 needs only that a reduced-motion block exists */
 
-  :root { color-scheme: light; }
+  :root {
+    color-scheme: light;
+    /* The library's own root tokens. D1 asks whether this target is BUILT on
+       @platformscode/core rather than merely styled to resemble it, so the fixture that
+       represents full compliance has to actually carry the library's signals. These are
+       compound names nobody coins independently — that is why D1 probes for them and not
+       for --radius-sm, which any design system might invent. */
+    --colors-alpha-alpha-black-0: rgba(0,0,0,0);
+    --button-background-black-default: #161616;
+    --featuredicons-background-brand-light: #e7f3ec;
+    --notification-alert-h-padding: 16px;
+  }
+  /* display:contents so the custom elements are detectable without moving a single
+     measured value — every other check must read exactly as it did before. */
+  dga-icon, dga-button, dga-card { display: contents; }
   body {
     margin: 0; padding: 0;
     background: #ffffff;
@@ -96,14 +110,14 @@
 
     <section class="section stack">
       <h2 class="display-sm">Components</h2>
-      <div class="card stack">
+      <dga-card class="card stack">
         <h3 class="text-xl">A card at radius 16 with shadow-xs</h3>
         <p class="text-md">Body copy at the Text md step: 16 over 24, tracking 0.</p>
         <div class="row">
-          <button type="button" class="btn">إجراء أساسي</button>
+          <dga-button><button type="button" class="btn">إجراء أساسي</button></dga-button>
           <button type="button" class="btn">Secondary action</button>
         </div>
-      </div>
+      </dga-card>
 
       <div class="card raised stack">
         <label class="text-sm" for="q">حقل البحث</label>

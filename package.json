@@ -24,7 +24,7 @@
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "node test/selftest.mjs && node test/parity.mjs && node test/integrity.test.mjs && node test/probe.test.mjs && node test/updates.test.mjs && node test/parts.test.mjs && node test/checks.test.mjs && node test/locators.test.mjs && node test/criteria.test.mjs && node test/a11y.test.mjs && node test/axe.test.mjs && node test/rules.test.mjs && node test/checklist.test.mjs",
+    "test": "node test/selftest.mjs && node test/parity.mjs && node test/integrity.test.mjs && node test/probe.test.mjs && node test/updates.test.mjs && node test/parts.test.mjs && node test/checks.test.mjs && node test/locators.test.mjs && node test/criteria.test.mjs && node test/a11y.test.mjs && node test/axe.test.mjs && node test/rules.test.mjs && node test/checklist.test.mjs && node test/library.test.mjs",
     "test:score": "node test/selftest.mjs",
     "test:parity": "node test/parity.mjs",
     "test:integrity": "node test/integrity.test.mjs",
@@ -38,7 +38,8 @@
     "test:a11y": "node test/a11y.test.mjs",
     "test:axe": "node test/axe.test.mjs",
     "test:rules": "node test/rules.test.mjs",
-    "test:checklist": "node test/checklist.test.mjs"
+    "test:checklist": "node test/checklist.test.mjs",
+    "test:library": "node test/library.test.mjs"
   },
   "keywords": [
     "dga",

@@ -267,7 +267,8 @@
   "$notCoveredByAnyRuleFile": [
     "R1 and R3 — direction, mirroring, Arabic typography and numerals. The corpus asserts Arabic is first-class but states no measurable rule; these remain W3C i18n requirements in the rubric.",
     "R2 and M2 — CSS logical properties and prefers-reduced-motion. Absent from the corpus as they are absent from DGA's Figma, which is why they score outside the 100.",
-    "M1 — motion tokens. The corpus has no motion section, matching the ledger, which found no duration or easing tokens published. Nobody has this."
+    "M1 — motion tokens. The corpus has no motion section, matching the ledger, which found no duration or easing tokens published. Nobody has this.",
+    "D1 — design system implemented. The rule corpus describes the system's visual rules; it predates and never mentions the published library that D1 detects. Nothing in prose can answer whether a site imports @platformscode/core — that is a property of the build, read from the DOM. Mode B can see it far more directly, in package.json."
   ],
   "$reviewOnlyIsThePoint": "Every entry above has a reviewOnly list, and none of it is reachable by measuring a rendered page. A web audit covers 7 of DGA's 9 published criteria and none of these behaviours. Saying so is a requirement of both modes, not a disclaimer."
 }

@@ -111,6 +111,15 @@ function capture({ label, width, container, gutter, textRuns = 100, textPassing 
     nonTextContrast: { checked: 18, passing: 18, findings: [] },
     targets: { interactive: 24, passing: 24, findings: [] },
     focus: { probed: 20, visible: 20, missing: [] },
+    // A fully compliant target is one BUILT on the library, not one that resembles it —
+    // so the clean fixture carries both detection signals. Without this the fixture models
+    // a site that merely looks right, which is the confusion D1 exists to end.
+    library: {
+      elementCount: 12,
+      elements: { 'dga-button': 6, 'dga-card': 4, 'dga-icon': 2 },
+      tokensFound: ['--colors-alpha-alpha-black-0', '--button-background-black-default'],
+      tokensProbed: 8, packageRefs: [], version: null,
+    },
     rtl: { rtlElements: 0, ltrElements: 400, arabicRuns: 0, arabicRunsInArabicFace: 0, arabicIndicNumerals: 0, westernNumerals: 12, unmirroredDirectionalIcons: 0 },
     css: { rulesRead: 900, inaccessibleSheets: 0, logicalDecls: 140, physicalDecls: 0, physicalSamples: [], reducedMotionRules: 2, focusVisibleRules: 6, outlineNoneRules: 0, rtlOverrideRules: 0 },
   };
@@ -212,8 +221,8 @@ check('…with every mandatory DGA criterion met',
 check('clean target has no findings', (clean.json?.findings?.length ?? -1) === 0, `got ${clean.json?.findings?.length} — ${JSON.stringify(clean.json?.findings?.slice(0, 2))}`);
 check(
   'inapplicable checks leave the denominator',
-  clean.json?.available === 87 && clean.json?.checksCounted === 23,
-  `available ${clean.json?.available} (expected 87: core 95 less C4 dark 3, R1 3, R3 2), counted ${clean.json?.checksCounted} of ${clean.json?.checksTotal} (expected 23 core checks; R2 and M2 score in the extended block)`
+  clean.json?.available === 87 && clean.json?.checksCounted === 24,
+  `available ${clean.json?.available} (expected 87: core 95 less C4 dark 3, R1 3, R3 2 — D1's 3 points came FROM P1, 8 to 5, so the total is unmoved), counted ${clean.json?.checksCounted} of ${clean.json?.checksTotal} (expected 24 core checks including D1; R2 and M2 score in the extended block)`
 );
 
 /* 2 — the government gate. It used to cap the BAND; it now decides READINESS against

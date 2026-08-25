@@ -91,24 +91,25 @@ check('component rows stay manual — an aggregate cannot answer a per-component
   map.entries.filter((e) => /component/i.test(e.en || '')).every((e) => e.kind === 'manual'),
   'P1/P2/P3 measure the share of ALL instances; attaching that to the Dropdown row is an over-claim');
 
-/* ------------------------------------------------ #1 is DGA's own derivation */
+/* ------------------------------------------------ #1 is measured, not guessed */
 
-const derive = (statuses) => {
-  const fake = [{ id: 'x', checks: rubric.categories.flatMap((c) => c.checks).map((k) => ({
-    ...k, status: statuses, ratio: statuses === 'pass' ? 1 : 0,
-    measured: { matched: 1, total: 1 } })) }];
-  return assessChecklist(checklist, map, fake);
-};
-check('#1 is not تطبيق كلي while any essential row falls short',
-  cl.rows.find((r) => r.n === 1).status === null,
-  'DGA: هذا الشرط يعتمد على مدى تطبيق الشروط الاساسية');
+// DGA defines #1 as a rollup — "if every essential criterion is fully applied this becomes
+// fully applied". That rule is honoured for any entry still marked `derived`, but #1 itself
+// is now answered directly by D1: whether the site is built on @platformscode/core. A
+// rollup over rows this tool mostly cannot answer would report nothing at all, while
+// detection answers the question the criterion actually asks.
+const one = cl.rows.find((r) => r.n === 1);
+check('#1 is answered by detection, not by a rollup over unanswerable rows',
+  one.kind === 'measured' && one.checks.includes('D1'),
+  `kind=${one.kind} checks=${JSON.stringify(one.checks)}`);
 
-check('…and #1 reaches تطبيق كلي only when every essential row does',
-  (() => { const all = derive('pass');
-    const ess = all.rows.filter((r) => r.tier === 'essential' && r.n !== 1);
-    const one = all.rows.find((r) => r.n === 1);
-    return ess.every((r) => r.status === map.statuses.full) === (one.status === map.statuses.full); })(),
-  'the rollup must track the rows it rolls up');
+check('…and it carries a status rather than a blank',
+  one.status !== null || one.needsReview,
+  JSON.stringify(one));
+
+check('the rollup path still exists for anything genuinely derived',
+  /r\.kind === 'derived'/.test(readFileSync(join(REPO, 'src/score.js'), 'utf8')),
+  'removing it would silently drop DGA\'s own rule for any future derived entry');
 
 /* --------------------------------------------------------- accessibility apart */
 

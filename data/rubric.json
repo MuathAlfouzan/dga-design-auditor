@@ -342,8 +342,26 @@
       "weight": 18,
       "checks": [
         {
+          "id": "D1",
+          "weight": 3,
+          "title": "Design system implemented",
+          "description": "The target is built on the DGA component library, not merely styled to resemble it.",
+          "applies_to": "site",
+          "method": "auto",
+          "scoring": "fraction",
+          "measure": "Three independent signals from @platformscode/core: dga-* custom elements in the DOM, the library's distinctive root custom properties, and package references in loaded assets. Elements AND tokens → full; either alone → partial; neither → none. Deliberately avoids generic names like --radius-sm, which any design system might coin independently.",
+          "blocker": false,
+          "fix": "Install platformscode-new-react and build from the published components. Matching the tokens by hand reproduces the appearance and none of the guarantees — and it is what DGA's criterion 1 asks about.",
+          "provenance": "ledger",
+          "authority": "DGA compliance checklist criterion 1 — التأكد من تطبيق النسخة 1.0 من نظام التصميم الموحد",
+          "scope": "core",
+          "dgaCriterion": "design-system",
+          "dgaCategory": "design",
+          "dgaTier": "mandatory"
+        },
+        {
           "id": "P1",
-          "weight": 8,
+          "weight": 5,
           "title": "DS components, not rebuilds",
           "description": "Buttons, inputs, selects, cards, tabs, tables, navigation, modals and alerts correspond to DGA components rather than bespoke reimplementations.",
           "applies_to": "both",
