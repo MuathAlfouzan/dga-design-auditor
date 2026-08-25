@@ -1,0 +1,629 @@
+{
+  "$comment": "DGA's OFFICIAL compliance checklist, transcribed verbatim from the workbook the user supplied: 'معايير تطبيق كود المنصات ، Compliance Criteria.xlsx', sheet 'Checklist'. This supersedes data/dga-criteria.json, which was a good-faith reading of design.dga.gov.sa/AssessmentCriteria prose and inferred NINE criteria where the real instrument has FIFTY-EIGHT. Column E (حالة التنفيذ) is the compliance status the assessed party fills in and is deliberately not carried here — this file is the questions, not anyone's answers.",
+  "schema": "dga-checklist/1",
+  "source": {
+    "file": "معايير تطبيق كود المنصات ، Compliance Criteria.xlsx",
+    "sheet": "Checklist",
+    "title": "قائمة التحقق لتطبيق نظام التصميم الموحد (كود المنصات)",
+    "providedBy": "user, 2026-08-25",
+    "publisher": "Digital Government Authority (DGA)",
+    "relatedPage": "https://design.dga.gov.sa/AssessmentCriteria",
+    "submitTo": "DS-DGA@dga.gov.sa"
+  },
+  "columns": {
+    "A": "الاولوية",
+    "B": "رقم",
+    "C": "المعايير",
+    "D": "Criteria",
+    "E": "حالة التنفيذ",
+    "F": "المرجع",
+    "G": "توضيح إضافي",
+    "H": "رابط ملفات وصور داعمه",
+    "I": "ملاحظات"
+  },
+  "tiers": [
+    {
+      "id": "essential",
+      "ar": "المعايير الأساسية",
+      "en": "Essential criteria",
+      "gates": true,
+      "count": 44
+    },
+    {
+      "id": "secondary",
+      "ar": "المعايير الثانوية",
+      "en": "Secondary criteria",
+      "gates": false,
+      "count": 14
+    }
+  ],
+  "$findings": [
+    "ACCESSIBILITY IS NOT A CHECKLIST ITEM. Zero occurrences of WCAG, contrast, keyboard, ARIA, screen reader or إمكانية الوصول across all 58 criteria. The only two 'accessible' matches are incidental wording inside the privacy notice and help-resources items. The AssessmentCriteria PAGE lists إمكانية الوصول as assessment category one, defined as WCAG conformance — so DGA's own two artefacts disagree, and this is reported rather than resolved.",
+    "TIER LABELS DIFFER FROM THE PAGE. The checklist says المعايير الأساسية / المعايير الثانوية. dga-criteria.json recorded الامتثال الإلزامي / المعايير الموصى بها, taken from the page.",
+    "CRITERION 1 IS A ROLLUP, defined by DGA itself: 'هذا الشرط يعتمد على مدى تطبيق الشروط الاساسية' — if every essential criterion is fully applied, this one becomes fully applied.",
+    "THE SERVICE-LEVEL CRITERIA ARE ESSENTIAL, NOT RECOMMENDED. Sitemap (30), interaction design (36), Arabic-first content (37), error explanation (38), search (39), feedback mechanisms (40), privacy notices (41), visual consistency (42), terminology (43) and error handling (44) all sit in المعايير الأساسية. dga-criteria.json placed that whole family in the recommended tier, which understated the coverage gap.",
+    "NUMBERING GAP: the sequence runs 1–50 then jumps to 60–67, so 51–59 are absent. Either rows were removed before the file was shared or the numbering is not contiguous. Worth confirming with DGA before quoting a total."
+  ],
+  "criteria": [
+    {
+      "n": 1,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من تطبيق النسخة 1.0 من نظام التصميم الموحد (كود المنصات)",
+      "en": "Ensure the Unified Design System (Platforms Code) version 1.0 is correctly implemented",
+      "ref": "https://design.dga.gov.sa/",
+      "section": "",
+      "note": "هذا الشرط يعتمد على مدى تطبيق الشروط الاساسية. في حال تم تطبيق جميع الشروط الاساسية تطبيق كلي يتم تغيير حالة التنفيذ لهذا الشرط ب تطبيق كلي."
+    },
+    {
+      "n": 2,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من استخدام الألوان المعتمدة كما في نظام التصميم الموحد (كود المنصات)",
+      "en": "Implement approved primary text colors, and functional colors in line with the Unified Design System (Platforms Code)",
+      "ref": "https://design.dga.gov.sa/guidelines/foundations/color-system",
+      "section": "guidelines/foundations/color-system",
+      "note": null
+    },
+    {
+      "n": 3,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "تأكد من الالتزام باستخدام الخطوط المعتمدة، وأوزان الخطوط للعناوين، وإجراءات الخطوط سريعة الاستجابة",
+      "en": "Adhere to Typography guidelines by using approved fonts, appropriate font weights for headings, and responsive typography measures",
+      "ref": "https://design.dga.gov.sa/guidelines/foundations/typography",
+      "section": "guidelines/foundations/typography",
+      "note": null
+    },
+    {
+      "n": 4,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من تطبيق تخطيط الشبكة على الصفحة كما في نظام التصميم الموحد (كود المنصات)",
+      "en": "Follow the specified layout and spacing guidelines, including wireframe dimensions, a mobile-first approach, and a spacing grid",
+      "ref": "https://design.dga.gov.sa/guidelines/foundations/layout-and-spacing",
+      "section": "guidelines/foundations/layout-and-spacing",
+      "note": null
+    },
+    {
+      "n": 5,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من أن التصميم يتكيف بشكل فعال مع أحجام واتجاهات الشاشات المختلفة لتوفير تجربة سلسة عبر الأجهزة",
+      "en": "Design for responsiveness, ensuring the layout adapts effectively to different screen sizes and orientations",
+      "ref": "https://design.dga.gov.sa/guidelines/foundations/layout-and-spacing",
+      "section": "guidelines/foundations/layout-and-spacing",
+      "note": null
+    },
+    {
+      "n": 6,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "ضمان توافق عنصر القائمة المنسدلة مع معايير التصميم الموحد (كود المنصات)",
+      "en": "Implement the Dropdown component according to Unified Design System (Platforms Code) specifications",
+      "ref": "https://design.dga.gov.sa/guidelines/components/actions/dropdown",
+      "section": "guidelines/components/actions/dropdown",
+      "note": null
+    },
+    {
+      "n": 7,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التحقق من أن عنصر الرابط يتماشى مع نظام التصميم الموحد (كود المنصات)",
+      "en": "Ensure the Link component follows the specifications in the Unified Design System (Platforms Code)",
+      "ref": "https://design.dga.gov.sa/guidelines/components/actions/link",
+      "section": "guidelines/components/actions/link",
+      "note": null
+    },
+    {
+      "n": 8,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من استخدام عنصر الأكورديون وفقًا لمبادئ التصميم الموحد (كود المنصات)",
+      "en": "Implement the Accordion component as per the guidelines in the Unified Design System (Platforms Code)",
+      "ref": "https://design.dga.gov.sa/guidelines/components/content-display/accordion",
+      "section": "guidelines/components/content-display/accordion",
+      "note": null
+    },
+    {
+      "n": 9,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "ضمان توافق عنصر القائمة مع إرشادات التصميم الموحد (كود المنصات)",
+      "en": "Follow the Unified Design System (Platforms Code) guidelines for the List component",
+      "ref": "https://design.dga.gov.sa/guidelines/components/navigational/menu",
+      "section": "guidelines/components/navigational/menu",
+      "note": null
+    },
+    {
+      "n": 10,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التحقق من أن عنصر الجدول يتبع معايير التصميم الموحد (كود المنصات)",
+      "en": "Implement the Table component following the Unified Design System (Platforms Code) specifications",
+      "ref": "https://design.dga.gov.sa/guidelines/components/data-display/table",
+      "section": "guidelines/components/data-display/table",
+      "note": null
+    },
+    {
+      "n": 11,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من استخدام عنصر مبدل المحتوى بما يتماشى مع نظام التصميم الموحد (كود المنصات)",
+      "en": "Ensure the Content Switcher component adheres to the Unified Design System (Platforms Code) guidelines",
+      "ref": "https://design.dga.gov.sa/guidelines/components/data-display/content-switcher",
+      "section": "guidelines/components/data-display/content-switcher",
+      "note": null
+    },
+    {
+      "n": 12,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "ضمان أن عنصر الإشعارات يلتزم بمبادئ التصميم الموحد (كود المنصات)",
+      "en": "Follow the Unified Design System (Platforms Code) specifications for the Notification component",
+      "ref": "https://design.dga.gov.sa/guidelines/components/feedback/notification",
+      "section": "guidelines/components/feedback/notification",
+      "note": null
+    },
+    {
+      "n": 13,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من أن عنصر النوافذ المنبثقة يتماشى مع إرشادات التصميم الموحد (كود المنصات)",
+      "en": "Implement the Modal component as per the Unified Design System (Platforms Code) guidelines",
+      "ref": "https://design.dga.gov.sa/guidelines/components/feedback/modal",
+      "section": "guidelines/components/feedback/modal",
+      "note": null
+    },
+    {
+      "n": 14,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التحقق من أن عنصر التلميح يتبع معايير التصميم الموحد (كود المنصات)",
+      "en": "Ensure the Tooltip component meets the specifications of the Unified Design System (Platforms Code)",
+      "ref": "https://design.dga.gov.sa/guidelines/components/feedback/tooltip",
+      "section": "guidelines/components/feedback/tooltip",
+      "note": null
+    },
+    {
+      "n": 15,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من أن عنصر مربع الاختيار يتماشى مع النظام التصميمي الموحد (كود المنصات)",
+      "en": "Implement the Checkbox component according to the Unified Design System (Platforms Code) specifications",
+      "ref": "https://design.dga.gov.sa/guidelines/components/forms-and-inputs/checkbox",
+      "section": "guidelines/components/forms-and-inputs/checkbox",
+      "note": null
+    },
+    {
+      "n": 16,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "ضمان أن عنصر محدد التاريخ يتوافق مع إرشادات التصميم الموحد (كود المنصات)",
+      "en": "Ensure the DatePicker component adheres to the Unified Design System (Platforms Code) guidelines",
+      "ref": "https://design.dga.gov.sa/guidelines/components/forms-and-inputs/datepicker",
+      "section": "guidelines/components/forms-and-inputs/datepicker",
+      "note": null
+    },
+    {
+      "n": 17,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التحقق من أن عنصر المدخلات يتماشى مع معايير التصميم الموحد (كود المنصات)",
+      "en": "Adhere to the Unified Design System (Platforms Code) for the Inputs component",
+      "ref": "https://design.dga.gov.sa/guidelines/components/forms-and-inputs/input",
+      "section": "guidelines/components/forms-and-inputs/input",
+      "note": null
+    },
+    {
+      "n": 18,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من توافق عنصر تحميل الملف مع مبادئ التصميم الموحد (كود المنصات)",
+      "en": "Implement the File Uploader component per the Unified Design System (Platforms Code) guidelines",
+      "ref": "https://design.dga.gov.sa/guidelines/components/forms-and-inputs/file-uploader",
+      "section": "guidelines/components/forms-and-inputs/file-uploader",
+      "note": null
+    },
+    {
+      "n": 19,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "ضمان أن عنصر زر الاختيار يتبع النظام التصميمي الموحد (كود المنصات)",
+      "en": "Follow the Unified Design System (Platforms Code) for the Radio component implementation",
+      "ref": "https://design.dga.gov.sa/guidelines/components/forms-and-inputs/radio",
+      "section": "guidelines/components/forms-and-inputs/radio",
+      "note": null
+    },
+    {
+      "n": 20,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من أن عنصر زر التبديل يتماشى مع معايير التصميم الموحد (كود المنصات)",
+      "en": "Implement the Switch component according to the Unified Design System (Platforms Code) guidelines",
+      "ref": "https://design.dga.gov.sa/guidelines/components/forms-and-inputs/switch",
+      "section": "guidelines/components/forms-and-inputs/switch",
+      "note": null
+    },
+    {
+      "n": 21,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التحقق من استخدام عنصر منطقة النص وفقًا لمبادئ التصميم الموحد (كود المنصات)",
+      "en": "Follow the specifications of the Unified Design System (Platforms Code) for the Text Area component",
+      "ref": "https://design.dga.gov.sa/guidelines/components/forms-and-inputs/textarea",
+      "section": "guidelines/components/forms-and-inputs/textarea",
+      "note": null
+    },
+    {
+      "n": 22,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "ضمان أن عنصر علامات التبويب يتماشى مع إرشادات التصميم الموحد (كود المنصات)",
+      "en": "Implement the Tabs component as per the Unified Design System (Platforms Code) guidelines",
+      "ref": "https://design.dga.gov.sa/guidelines/components/navigational/tabs",
+      "section": "guidelines/components/navigational/tabs",
+      "note": null
+    },
+    {
+      "n": 23,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من أن عنصر العلامات يتبع النظام التصميمي الموحد (كود المنصات)",
+      "en": "Ensure the Tags component is in line with the Unified Design System (Platforms Code) specifications",
+      "ref": "https://design.dga.gov.sa/guidelines/components/search-and-filters/tags",
+      "section": "guidelines/components/search-and-filters/tags",
+      "note": null
+    },
+    {
+      "n": 24,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "ضمان استخدام عنصر التذييل بما يتماشى مع معايير التصميم الموحد (كود المنصات)",
+      "en": "Implement the Footer component as per the Unified Design System (Platforms Code) guidelines",
+      "ref": "https://design.dga.gov.sa/guidelines/components/ui-shell/footer",
+      "section": "guidelines/components/ui-shell/footer",
+      "note": null
+    },
+    {
+      "n": 25,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من استخدام عنصر البطاقة وفقاً لمعايير التصميم الموحد (كود المنصات)",
+      "en": "Adhere to Unified Design System (Platforms Code) specifications when implementing the Card component",
+      "ref": "https://design.dga.gov.sa/guidelines/components/content-display/card",
+      "section": "guidelines/components/content-display/card",
+      "note": null
+    },
+    {
+      "n": 26,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التحقق من استخدام عنصر شريط التنقل العلوي وفقاً لمعايير التصميم الموحد (كود المنصات)",
+      "en": "Implement the Top Navigation Bar component according to the Unified Design System (Platforms Code) guidelines",
+      "ref": "https://design.dga.gov.sa/guidelines/components/ui-shell/navigation-header",
+      "section": "guidelines/components/ui-shell/navigation-header",
+      "note": null
+    },
+    {
+      "n": 27,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من استخدام عنصر مسارات التنقل بما يتماشى مع نظام التصميم الموحد (كود المنصات)",
+      "en": "Adhere to the Unified Design System (Platforms Code) for the Breadcrumbs component",
+      "ref": "https://design.dga.gov.sa/guidelines/components/navigational/breadcrumbs",
+      "section": "guidelines/components/navigational/breadcrumbs",
+      "note": null
+    },
+    {
+      "n": 28,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من أن التطبيق/الموقع قابل للاستخدام بالكامل على الأجهزة المحمولة، مع الأخذ في الاعتبار عوامل مثل تفاعلات اللمس، وحجم إطار العرض، والوصول إلى التنقل على الشاشات الصغيرة",
+      "en": "Ensure the application/website is fully usable on mobile devices, considering factors such as touch interactions, viewport sizing, and navigational access on smaller screens",
+      "ref": "https://design.dga.gov.sa/guidelines/foundations/layout-and-spacing",
+      "section": "guidelines/foundations/layout-and-spacing",
+      "note": null
+    },
+    {
+      "n": 29,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "ضمان استخدام الأيقونات المعتمدة وفق نظام التصميم الموحد (كود المنصات)",
+      "en": "Ensure the use of approved icons, adherence to custom icon design guidelines, and compliance with icon placement and sizing as per the Iconography guideline",
+      "ref": "https://design.dga.gov.sa/guidelines/foundations/iconography",
+      "section": "guidelines/foundations/iconography",
+      "note": null
+    },
+    {
+      "n": 30,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التحقق من إنشاء خريطة الموقع وهندسة المعلومات لدعم تنقل المستخدم وسهولة اكتشاف المحتوى",
+      "en": "Ensure the creation of a sitemap and information architecture that supports user navigation and content discoverability",
+      "ref": null,
+      "section": null,
+      "note": null
+    },
+    {
+      "n": 31,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من توافق عنصر الصورة الرمزية مع نظام التصميم الموحد (كود المنصات)",
+      "en": "Ensure the Avatar component is implemented according to the Unified Design System (Platforms Code) standards",
+      "ref": "https://design.dga.gov.sa/guidelines/components/data-display/avatar",
+      "section": "guidelines/components/data-display/avatar",
+      "note": null
+    },
+    {
+      "n": 32,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التحقق من استخدام عنصر التقييم بما يتماشى مع نظام التصميم الموحد (كود المنصات)",
+      "en": "Follow the Unified Design System (Platforms Code) for the implementation of the Rating component",
+      "ref": "https://design.dga.gov.sa/guidelines/components/feedback/rating",
+      "section": "guidelines/components/feedback/rating",
+      "note": null
+    },
+    {
+      "n": 33,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من تطبيق قالب الصفحة الرئيسية بما يتناسب مع المنصة",
+      "en": "Ensure that the homepage template is correctly implemented in the platform's code.",
+      "ref": "https://www.figma.com/community/file/1412792257811427893/home-page-template-platforms-code",
+      "section": "https://www.figma.com/community/file/1412792257811427893/home-page-template-platforms-code",
+      "note": null
+    },
+    {
+      "n": 34,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من تطبيق قالب صفحة الخدمة",
+      "en": "Ensure that the service page template is correctly implemented in the platform's code.",
+      "ref": "https://www.figma.com/community/file/1412793544739851831/service-page-template-platforms-code",
+      "section": "https://www.figma.com/community/file/1412793544739851831/service-page-template-platforms-code",
+      "note": null
+    },
+    {
+      "n": 35,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من تطبيق قالب البحث",
+      "en": "Ensure that the search template is correctly implemented in the platform's code.",
+      "ref": "https://www.figma.com/community/file/1443910261055730190/search-page-template-platforms-code",
+      "section": "https://www.figma.com/community/file/1443910261055730190/search-page-template-platforms-code",
+      "note": null
+    },
+    {
+      "n": 36,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من فعالية تصميم التفاعل في تسهيل مهام المستخدم، بما في ذلك استجابات الأزرار، والتعرف على الإيماءات، والتعليقات.",
+      "en": "Evaluate the effectiveness of interaction design in facilitating user tasks, including button responses, gesture recognitions, and feedback",
+      "ref": null,
+      "section": null,
+      "note": null
+    },
+    {
+      "n": 37,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من أن استراتيجية المحتوى تعطي الأولوية لنهج اللغة العربية أولاً، وتضمن استخدام اللغات الاخرى وفقًا لمعايير الهيئة",
+      "en": "Ensure the content strategy prioritizes an Arabic-first approach, and ensure the use of other languages per DGA standards",
+      "ref": null,
+      "section": null,
+      "note": null
+    },
+    {
+      "n": 38,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من أن الأخطاء موضحة بوضوح من خلال تعليمات حول كيفية تصحيحها، ويجب أن تكون التعليقات الخاصة بإجراءات المستخدم فورية وغنية بالمعلومات",
+      "en": "Ensure errors are clearly explained with instructions on how to correct them, and feedback for user actions should be immediate and informative",
+      "ref": null,
+      "section": null,
+      "note": null
+    },
+    {
+      "n": 39,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من فعالية وكفاءة وظيفة البحث، إن أمكن، بما في ذلك مدى ملاءمة نتائج البحث وسرعتها",
+      "en": "Ensure the effectiveness and efficiency of the search functionality, if applicable, including relevance of search results and speed",
+      "ref": null,
+      "section": null,
+      "note": null
+    },
+    {
+      "n": 40,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من آليات تقييم المستخدمين لتقديم الملاحظات حول التطبيق/الموقع، وكيفية الاعتراف بهذه التعليقات واستخدامها من قبل المنظمة",
+      "en": "Evaluate mechanisms for users to provide feedback on the application/website, and how this feedback is acknowledged and utilized by the organization",
+      "ref": null,
+      "section": null,
+      "note": null
+    },
+    {
+      "n": 41,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من تقييم مدى رؤية ووضوح إشعارات الخصوصية والأمن، والتأكد من أنها مفهومة ويمكن لجميع المستخدمين الوصول إليها",
+      "en": "Ensure the visibility and clarity of privacy and security notices, ensuring that they are understandable and accessible to all users",
+      "ref": null,
+      "section": null,
+      "note": null
+    },
+    {
+      "n": 42,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من أن عناصر التصميم المرئي (مثل أنظمة الألوان والخطوط وهياكل التخطيط) متسقة عبر النظام الأساسي بأكمله",
+      "en": "Ensure that the visual design elements (eg, color schemes, fonts, layout structures) are consistent across the entire platform",
+      "ref": null,
+      "section": null,
+      "note": null
+    },
+    {
+      "n": 43,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من الاتساق في المصطلحات المستخدمة عبر النظام لمنع الارتباك والمساعدة في فهم المستخدم",
+      "en": "Ensure consistency in the terminology used across the platform to prevent confusion and aid in user understanding",
+      "ref": null,
+      "section": null,
+      "note": null
+    },
+    {
+      "n": 44,
+      "tier": "essential",
+      "tierAr": "المعايير الأساسية",
+      "ar": "التأكد من الحفاظ على نهج ثابت في كيفية التعامل مع الأخطاء وعرضها عبر التطبيق/الموقع لضمان تجربة مستخدم سلسة",
+      "en": "Ensure a consistent approach in how errors are handled and displayed across the application/website to ensure a smooth user experience",
+      "ref": null,
+      "section": null,
+      "note": null
+    },
+    {
+      "n": 45,
+      "tier": "secondary",
+      "tierAr": "المعايير الثانوية",
+      "ar": "ضمان توافق عنصر قائمة التنقل الجانبية مع نظام التصميم الموحد (كود المنصات)",
+      "en": "Follow the Unified Design System (Platforms Code) for the Side Navigation Menu component",
+      "ref": "https://design.dga.gov.sa/guidelines/components/ui-shell/navigation-drawer",
+      "section": "guidelines/components/ui-shell/navigation-drawer",
+      "note": null
+    },
+    {
+      "n": 46,
+      "tier": "secondary",
+      "tierAr": "المعايير الثانوية",
+      "ar": "التأكد من استخدام عنصر ترقيم الصفحات بما يتماشى مع نظام التصميم الموحد (كود المنصات)",
+      "en": "Follow the Unified Design System (Platforms Code) for the Pagination component",
+      "ref": "https://design.dga.gov.sa/guidelines/components/navigational/pagination",
+      "section": "guidelines/components/navigational/pagination",
+      "note": null
+    },
+    {
+      "n": 47,
+      "tier": "secondary",
+      "tierAr": "المعايير الثانوية",
+      "ar": "ضمان استخدام عنصر التحميل وفق نظام التصميم الموحد (كود المنصات)",
+      "en": "Ensure the Loading component is implemented per the Unified Design System (Platforms Code) guidelines",
+      "ref": "https://design.dga.gov.sa/guidelines/components/loading-and-status/loading",
+      "section": "guidelines/components/loading-and-status/loading",
+      "note": null
+    },
+    {
+      "n": 48,
+      "tier": "secondary",
+      "tierAr": "المعايير الثانوية",
+      "ar": "التأكد من توافق عنصر الخطوات مع معايير التصميم الموحد (كود المنصات)",
+      "en": "Ensure the Steps component is in line with the Unified Design System (Platforms Code) specifications",
+      "ref": "https://design.dga.gov.sa/guidelines/components/forms-and-inputs/steps",
+      "section": "guidelines/components/forms-and-inputs/steps",
+      "note": null
+    },
+    {
+      "n": 49,
+      "tier": "secondary",
+      "tierAr": "المعايير الثانوية",
+      "ar": "التأكد من أن التصميم ينشئ تسلسلاً مرئيًا واضحًا، يوجه انتباه المستخدم إلى العناصر المهمة أولاً.",
+      "en": "Ensure the design establishes a clear visual hierarchy, directing the user's attention to important elements first",
+      "ref": null,
+      "section": null,
+      "note": null
+    },
+    {
+      "n": 50,
+      "tier": "secondary",
+      "tierAr": "المعايير الثانوية",
+      "ar": "التأكد من ما إذا كان التنقل بديهيًا، بما في ذلك التجميع المنطقي ووضع العلامات على الأقسام والروابط.",
+      "en": "Ensure the navigation is intuitive, including logical grouping and labeling of sections and links",
+      "ref": null,
+      "section": null,
+      "note": null
+    },
+    {
+      "n": 60,
+      "tier": "secondary",
+      "tierAr": "المعايير الثانوية",
+      "ar": "التأكد من ما إذا كان من الممكن إكمال المهام الشائعة بكفاءة بأقل الخطوات والتفاعلات البديهية",
+      "en": "Ensure common tasks can be completed efficiently with minimal steps and intuitive interactions",
+      "ref": null,
+      "section": null,
+      "note": null
+    },
+    {
+      "n": 61,
+      "tier": "secondary",
+      "tierAr": "المعايير الثانوية",
+      "ar": "التأكد من مراجعة موارد المساعدة والوثائق المتوفرة لسهولة الوصول إليها والوضوح والفائدة في مساعدة المستخدمين على استخدام التطبيق/الموقع بشكل فعال",
+      "en": "Ensure available help resources and documentation are easily accessible, clear, and useful in assisting users to effectively use the application/website",
+      "ref": null,
+      "section": null,
+      "note": null
+    },
+    {
+      "n": 62,
+      "tier": "secondary",
+      "tierAr": "المعايير الثانوية",
+      "ar": "التأكد من أن اللغة المستخدمة في الواجهة واضحة وموجزة ومناسبة للجمهور المستهدف، وتقييم الترجمة لتدعم اللغات المتعددة",
+      "en": "Ensure the language used in the interface is clear, concise, and appropriate for the intended audience, and assess localization efforts for multilingual support",
+      "ref": null,
+      "section": null,
+      "note": null
+    },
+    {
+      "n": 63,
+      "tier": "secondary",
+      "tierAr": "المعايير الثانوية",
+      "ar": "التأكد من ما إذا كانت واجهة المستخدم تتصرف بطريقة يمكن التنبؤ بها، مما يقلل من ارتباك المستخدم وأخطائه",
+      "en": "Evaluate whether the user interface behaves in a predictable manner, reducing user confusion and errors",
+      "ref": null,
+      "section": null,
+      "note": null
+    },
+    {
+      "n": 64,
+      "tier": "secondary",
+      "tierAr": "المعايير الثانوية",
+      "ar": "التأكد من أن أنماط التفاعل (مثل الإيماءات والنقرات والتنقل) متسقة، مما يجعل النظام بديهيًا وقابلاً للتعلم",
+      "en": "Ensure the interaction patterns (eg, gestures, clicks, navigation) are consistent, making the system intuitive and learnable",
+      "ref": null,
+      "section": null,
+      "note": null
+    },
+    {
+      "n": 65,
+      "tier": "secondary",
+      "tierAr": "المعايير الثانوية",
+      "ar": "التأكد من تقديم المحتوى (النصوص والصور ومقاطع الفيديو) بأسلوب موحد ونبرة مناسبة للجمهور المستهدف",
+      "en": "Ensure the content (text, images, videos) is presented in a uniform style and tone appropriate for the target audience",
+      "ref": null,
+      "section": null,
+      "note": null
+    },
+    {
+      "n": 66,
+      "tier": "secondary",
+      "tierAr": "المعايير الثانوية",
+      "ar": "التأكد من أن التغذية الراجعة المقدمة للمستخدمين عن أفعالهم متسقة في الأسلوب والتوقيت عبر التطبيق/الموقع لتجنب الالتباس.",
+      "en": "Ensure that feedback provided to users for their actions is consistent in style and timing across the application/website to avoid confusion",
+      "ref": null,
+      "section": null,
+      "note": null
+    },
+    {
+      "n": 67,
+      "tier": "secondary",
+      "tierAr": "المعايير الثانوية",
+      "ar": "التأكد من الحفاظ على نهج ثابت في كيفية التعامل مع الأخطاء وعرضها عبر التطبيق/الموقع لضمان تجربة مستخدم سلسة",
+      "en": "Ensure a consistent approach in how errors are handled and displayed across the application/website to ensure a smooth user experience",
+      "ref": null,
+      "section": null,
+      "note": null
+    }
+  ]
+}
